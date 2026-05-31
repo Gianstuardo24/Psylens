@@ -28,6 +28,9 @@ const PREMIUM_KEY  = 'psylens_is_premium';
 
 // ─── Portrait images ──────────────────────────────────────────────────────────
 
+const PORTRAIT_HERACLITO = require('../../assets/portraits/heraclito.png');
+const PORTRAIT_DEMOCRITO = require('../../assets/portraits/democrito.png');
+
 const PORTRAITS: Record<string, number | null> = {
   'heraclito-democrito': null,
   'platon':       require('../../assets/portraits/platon.png'),
@@ -80,7 +83,8 @@ function AuthorCard({
   author: typeof authors[0];
   state: AuthorState;
 }) {
-  const portrait = PORTRAITS[author.id] ?? null;
+  const portrait  = PORTRAITS[author.id] ?? null;
+  const isDual    = author.id === 'heraclito-democrito';
 
   const inner = (
     <View
@@ -92,19 +96,38 @@ function AuthorCard({
       ]}
     >
       {/* Left column: portrait */}
-      <View style={ac.leftCol}>
-        <View style={ac.portrait}>
-          {portrait ? (
-            <Image
-              source={portrait}
-              style={ac.portraitImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <Text style={ac.initial}>{author.name[0]}</Text>
-          )}
-          {state === 'locked' && <View style={ac.portraitOverlay} />}
-        </View>
+      <View style={[ac.leftCol, isDual && ac.leftColDual]}>
+        {isDual ? (
+          <View style={ac.dualWrap}>
+            <View style={ac.dualCircle}>
+              {PORTRAIT_HERACLITO ? (
+                <Image source={PORTRAIT_HERACLITO} style={ac.dualImage} resizeMode="cover" />
+              ) : (
+                <Text style={ac.initial}>H</Text>
+              )}
+            </View>
+            <View style={[ac.dualCircle, ac.dualCircleRight]}>
+              {PORTRAIT_DEMOCRITO ? (
+                <Image source={PORTRAIT_DEMOCRITO} style={ac.dualImage} resizeMode="cover" />
+              ) : (
+                <Text style={ac.initial}>D</Text>
+              )}
+            </View>
+          </View>
+        ) : (
+          <View style={ac.portrait}>
+            {portrait ? (
+              <Image
+                source={portrait}
+                style={ac.portraitImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={ac.initial}>{author.name[0]}</Text>
+            )}
+            {state === 'locked' && <View style={ac.portraitOverlay} />}
+          </View>
+        )}
       </View>
 
       {/* Info */}
@@ -365,6 +388,31 @@ const ac = StyleSheet.create({
     width: 100,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  leftColDual: {
+    width: 120,
+  },
+  dualWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dualCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.dark.bg3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  dualCircleRight: {
+    marginLeft: -16,
+    borderWidth: 2,
+    borderColor: colors.dark.bg,
+  },
+  dualImage: {
+    width: 64,
+    height: 64,
   },
   portrait: {
     width: 64,

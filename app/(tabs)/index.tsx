@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-
+  RefreshControl,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import { authors, blocks, glossaryTerms } from '../../constants/data';
 
 const PROGRESS_KEY     = 'psylens_progress';
 const DAYS_VISITED_KEY = 'psylens_days_visited';
+const NAME_KEY         = 'psylens_user_name';
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
@@ -65,30 +66,43 @@ const LAYERS = [
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
-  const [progress, setProgress]     = useState<ProgressMap>({});
+  const [progress,    setProgress]    = useState<ProgressMap>({});
   const [daysVisited, setDaysVisited] = useState<string[]>([]);
+  const [refreshing,  setRefreshing]  = useState(false);
+  const [userName,    setUserName]    = useState('');
 
-  useFocusEffect(
-    useCallback(() => {
-      (async () => {
-        const [rawProg, rawDays] = await Promise.all([
-          AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
-          AsyncStorage.getItem(DAYS_VISITED_KEY).catch(() => null),
-        ]);
+  useEffect(() => {
+    AsyncStorage.getItem(NAME_KEY)
+      .then(n => { if (n) setUserName(n); })
+      .catch(() => {});
+  }, []);
 
-        const prog: ProgressMap = rawProg ? JSON.parse(rawProg) : {};
-        setProgress(prog);
+  async function loadData() {
+    const [rawProg, rawDays] = await Promise.all([
+      AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
+      AsyncStorage.getItem(DAYS_VISITED_KEY).catch(() => null),
+    ]);
+    const prog: ProgressMap = rawProg ? JSON.parse(rawProg) : {};
+    setProgress(prog);
+    const today = todayISO();
+    const days: string[] = rawDays ? JSON.parse(rawDays) : [];
+    if (!days.includes(today)) {
+      days.push(today);
+      AsyncStorage.setItem(DAYS_VISITED_KEY, JSON.stringify(days)).catch(() => {});
+    }
+    setDaysVisited([...days]);
+  }
 
-        const today = todayISO();
-        const days: string[] = rawDays ? JSON.parse(rawDays) : [];
-        if (!days.includes(today)) {
-          days.push(today);
-          AsyncStorage.setItem(DAYS_VISITED_KEY, JSON.stringify(days)).catch(() => {});
-        }
-        setDaysVisited([...days]);
-      })();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { loadData(); }, []));
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await loadData();
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   // ── Derived data ─────────────────────────────────────────────────────────────
 
@@ -123,12 +137,22 @@ export default function DashboardScreen() {
       style={styles.scroll}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xl }]}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={colors.dark.text}
+          colors={[colors.dark.green]}
+        />
+      }
     >
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.wordmark}>Psylens</Text>
-        <Text style={styles.greeting}>{getGreeting()}</Text>
+        <Text style={styles.greeting}>
+          {userName ? `${getGreeting()}, ${userName}` : getGreeting()}
+        </Text>
         <Text style={styles.date}>{formattedDate()}</Text>
       </View>
 

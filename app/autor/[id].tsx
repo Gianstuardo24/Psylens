@@ -30,8 +30,11 @@ type ProgressMap   = Record<string, LayerProgress>;
 
 // Portrait images — require() paths relative to this file (app/autor/)
 // Metro bundles these statically; they must live here, not in a .ts data file.
+const PORTRAIT_HERACLITO = require('../../assets/portraits/heraclito.png');
+const PORTRAIT_DEMOCRITO = require('../../assets/portraits/democrito.png');
+
 const PORTRAITS: Record<string, number | null> = {
-  'heraclito-democrito': null,
+  'heraclito-democrito': PORTRAIT_HERACLITO,
   'platon':        require('../../assets/portraits/platon.png'),
   'aristoteles':   require('../../assets/portraits/aristoteles.png'),
   'hipocrates':    require('../../assets/portraits/hipocrates.png'),
@@ -161,8 +164,9 @@ export default function AutorScreen() {
     );
   }
 
-  const content = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
+  const content  = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
   const portrait = PORTRAITS[author.id] ?? null;
+  const isDual   = author.id === 'heraclito-democrito';
 
   const isAuthorComplete = !!(
     progress[author.id]?.surface &&
@@ -239,13 +243,24 @@ export default function AutorScreen() {
 
       {/* Centered header */}
       <View style={[styles.header, { paddingTop: insets.top + 48 }]}>
-        <View style={styles.portraitCircle}>
-          {portrait ? (
-            <Image source={portrait} style={styles.portraitImage} resizeMode="cover" />
-          ) : (
-            <Text style={styles.portraitInitial}>{author.name[0]}</Text>
-          )}
-        </View>
+        {isDual ? (
+          <View style={[styles.dualPortraitWrap, { marginBottom: spacing.lg }]}>
+            <View style={styles.dualPortraitCircle}>
+              <Image source={PORTRAIT_HERACLITO} style={styles.dualPortraitImage} resizeMode="cover" />
+            </View>
+            <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight]}>
+              <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.portraitCircle}>
+            {portrait ? (
+              <Image source={portrait} style={styles.portraitImage} resizeMode="cover" />
+            ) : (
+              <Text style={styles.portraitInitial}>{author.name[0]}</Text>
+            )}
+          </View>
+        )}
         <View style={styles.blockChip}>
           <Text style={styles.blockChipText}>{block.name}</Text>
         </View>
@@ -362,13 +377,24 @@ export default function AutorScreen() {
       <Modal visible={showCelebration} transparent statusBarTranslucent animationType="none">
         <View style={styles.celebOverlay}>
           <Animated.View style={[styles.celebCard, { opacity: animOpacity, transform: [{ scale: animScale }] }]}>
-            <View style={styles.celebCircle}>
-              {portrait ? (
-                <Image source={portrait} style={styles.celebPortrait} resizeMode="cover" />
-              ) : (
-                <Text style={styles.celebInitial}>{author.name[0]}</Text>
-              )}
-            </View>
+            {isDual ? (
+              <View style={[styles.dualPortraitWrap, { marginBottom: spacing.xl }]}>
+                <View style={styles.dualPortraitCircle}>
+                  <Image source={PORTRAIT_HERACLITO} style={styles.dualPortraitImage} resizeMode="cover" />
+                </View>
+                <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight, { borderColor: colors.dark.bg2 }]}>
+                  <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
+                </View>
+              </View>
+            ) : (
+              <View style={styles.celebCircle}>
+                {portrait ? (
+                  <Image source={portrait} style={styles.celebPortrait} resizeMode="cover" />
+                ) : (
+                  <Text style={styles.celebInitial}>{author.name[0]}</Text>
+                )}
+              </View>
+            )}
             <Text style={styles.celebBadge}>Completado</Text>
             <Text style={styles.celebAuthorName}>{author.name}</Text>
             <Text style={styles.celebSubtitle}>Has leído las tres capas</Text>
@@ -503,6 +529,28 @@ const styles = StyleSheet.create({
     fontSize: 48,
     color: colors.dark.text3,
     lineHeight: 56,
+  },
+  dualPortraitWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dualPortraitCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.dark.bg3,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dualPortraitCircleRight: {
+    marginLeft: -16,
+    borderWidth: 2,
+    borderColor: colors.dark.bg,
+  },
+  dualPortraitImage: {
+    width: 64,
+    height: 64,
   },
   blockChip: {
     alignSelf: 'center',

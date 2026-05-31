@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Animated,
-
+  KeyboardAvoidingView,
+  Platform,
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -18,6 +20,7 @@ import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 
 const ONBOARDING_KEY = 'psylens_onboarding_done';
+const NAME_KEY       = 'psylens_user_name';
 type Step = {
   key: string;
   title: string;
@@ -102,6 +105,7 @@ export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
   const { bottom: insetBottom } = useSafeAreaInsets();
   const [currentPage, setCurrentPage] = useState(0);
+  const [name, setName] = useState('');
 
   // Shared entrance animation — applies to the text block of whichever page
   // is visible when the scroll settles. Only one page is on screen at a time,
@@ -124,7 +128,10 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <ScrollView
         horizontal
         pagingEnabled
@@ -158,19 +165,38 @@ export default function OnboardingScreen() {
               <Text style={styles.description}>{step.description}</Text>
 
               {step.isFinal && (
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={async () => {
-                    try {
-                      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-                    } finally {
-                      router.replace('/(tabs)');
-                    }
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.buttonText}>Empezar</Text>
-                </TouchableOpacity>
+                <>
+                  <Text style={styles.nameLabel}>¿Cómo te llamas?</Text>
+                  <TextInput
+                    style={styles.nameInput}
+                    placeholder="Tu nombre"
+                    placeholderTextColor={colors.dark.text3}
+                    value={name}
+                    onChangeText={setName}
+                    textAlign="center"
+                    autoCapitalize="words"
+                    returnKeyType="done"
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={async () => {
+                      try {
+                        const saves: Promise<void>[] = [
+                          AsyncStorage.setItem(ONBOARDING_KEY, 'true'),
+                        ];
+                        if (name.trim()) {
+                          saves.push(AsyncStorage.setItem(NAME_KEY, name.trim()));
+                        }
+                        await Promise.all(saves);
+                      } finally {
+                        router.replace('/(tabs)');
+                      }
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.buttonText}>Empezar</Text>
+                  </TouchableOpacity>
+                </>
               )}
             </Animated.View>
 
@@ -187,7 +213,7 @@ export default function OnboardingScreen() {
           <View key={i} style={[styles.dot, i === currentPage && styles.dotActive]} />
         ))}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -379,5 +405,22 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: colors.dark.text,
+  },
+
+  // Name input on final step
+  nameLabel: {
+    ...typography.bodyS,
+    color: colors.dark.text2,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  nameInput: {
+    ...typography.body,
+    color: colors.dark.text,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.dark.text,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.xxl,
+    textAlign: 'center',
   },
 });
