@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
@@ -16,12 +18,21 @@ import { authors, blocks } from '../../constants/data';
 
 type AuthorState = 'active' | 'locked' | 'done';
 type BlockStatus  = 'active' | 'locked';
+type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
+type ProgressMap   = Record<string, LayerProgress>;
 
-// ─── Mock progress (replaced by ProgressContext later) ────────────────────────
+const PROGRESS_KEY = 'psylens_progress';
 
-// Number of completed authors per block
-const COMPLETED: Record<string, number> = {
-  b0: 0, b1: 0, b2: 0, b3: 0, b4: 0, b5: 0,
+// ─── Portrait images ──────────────────────────────────────────────────────────
+
+const PORTRAITS: Record<string, number | null> = {
+  'heraclito-democrito': null,
+  'platon':       require('../../assets/portraits/platon.png'),
+  'aristoteles':  require('../../assets/portraits/aristoteles.png'),
+  'hipocrates':   require('../../assets/portraits/hipocrates.png'),
+  'descartes':    require('../../assets/portraits/descartes.png'),
+  'kant':         require('../../assets/portraits/kant.png'),
+  'schopenhauer': require('../../assets/portraits/schopenhauer.png'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -33,11 +44,23 @@ function getBlockStatus(index: number): BlockStatus {
   return index === 0 ? 'active' : 'locked';
 }
 
-function getAuthorState(blockId: string, authorIndex: number): AuthorState {
+function isAuthorDone(p: LayerProgress | undefined): boolean {
+  return !!(p?.surface && p?.concept && p?.fondo);
+}
+
+// Author N+1 unlocks when author N's surface layer is done.
+function getAuthorState(
+  authorId: string,
+  authorIndex: number,
+  blockId: string,
+  blockAuthorIds: string[],
+  progress: ProgressMap,
+): AuthorState {
   if (blockId !== 'b0') return 'locked';
-  const completed = COMPLETED['b0'];
-  if (authorIndex < completed) return 'done';
-  if (authorIndex === completed) return 'active';
+  if (isAuthorDone(progress[authorId])) return 'done';
+  if (authorIndex === 0) return 'active';
+  const prevId = blockAuthorIds[authorIndex - 1];
+  if (progress[prevId]?.surface) return 'active';
   return 'locked';
 }
 
@@ -50,6 +73,8 @@ function AuthorCard({
   author: typeof authors[0];
   state: AuthorState;
 }) {
+  const portrait = PORTRAITS[author.id] ?? null;
+
   const inner = (
     <View
       style={[
@@ -62,7 +87,15 @@ function AuthorCard({
       {/* Left column: portrait */}
       <View style={ac.leftCol}>
         <View style={ac.portrait}>
-          <Text style={ac.initial}>{author.name[0]}</Text>
+          {portrait ? (
+            <Image
+              source={portrait}
+              style={ac.portraitImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={ac.initial}>{author.name[0]}</Text>
+          )}
           {state === 'locked' && <View style={ac.portraitOverlay} />}
         </View>
       </View>
@@ -123,22 +156,25 @@ function BlockNode({
   blockIndex,
   isExpanded,
   onToggle,
+  progress,
 }: {
   block: typeof blocks[0];
   blockIndex: number;
   isExpanded: boolean;
   onToggle: () => void;
+  progress: ProgressMap;
 }) {
   const status    = getBlockStatus(blockIndex);
   const isActive  = status === 'active';
   const isLocked  = status === 'locked';
-  const completed = COMPLETED[block.id] ?? 0;
-  const total     = block.authors.length;
-  const pct       = Math.round((completed / total) * 100);
 
   const blockAuthors = block.authors
     .map((id) => authorById[id])
     .filter(Boolean) as (typeof authors[0])[];
+
+  const completed = blockAuthors.filter(a => isAuthorDone(progress[a.id])).length;
+  const total     = block.authors.length;
+  const pct       = Math.round((completed / total) * 100);
 
   return (
     <View style={[bn.wrapper, isLocked && bn.wrapperLocked]}>
@@ -198,7 +234,7 @@ function BlockNode({
             <AuthorCard
               key={author.id}
               author={author}
-              state={getAuthorState(block.id, i)}
+              state={getAuthorState(author.id, i, block.id, block.authors, progress)}
             />
           ))}
         </View>
@@ -212,8 +248,17 @@ function BlockNode({
 
 export default function CaminoScreen() {
   const insets = useSafeAreaInsets();
-  // b0 starts expanded — it's the block the user is actively working through
   const [expandedId, setExpandedId] = useState<string | null>('b0');
+  const [progress, setProgress] = useState<ProgressMap>({});
+
+  // Reload progress every time the screen is focused (e.g. returning from autor)
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem(PROGRESS_KEY)
+        .then(raw => { if (raw) setProgress(JSON.parse(raw)); })
+        .catch(() => {});
+    }, []),
+  );
 
   function toggleBlock(id: string) {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -246,6 +291,7 @@ export default function CaminoScreen() {
           blockIndex={index}
           isExpanded={expandedId === block.id}
           onToggle={() => toggleBlock(block.id)}
+          progress={progress}
         />
       ))}
 
@@ -297,6 +343,10 @@ const ac = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  portraitImage: {
+    width: 64,
+    height: 64,
   },
   portraitOverlay: {
     position: 'absolute',

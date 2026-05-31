@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authors, blocks, glossaryTerms } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 
 const PORTRAIT_HEIGHT = 240;
+const PROGRESS_KEY = 'psylens_progress';
+
+type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
+type ProgressMap   = Record<string, LayerProgress>;
 const SCREEN_WIDTH = Dimensions.get('window').width;
 // colors.dark.bg is #0f0f0e = rgb(15,15,14) — used for the gradient overlay layers
 const BG = 'rgba(15,15,14,';
@@ -83,6 +88,14 @@ export default function AutorScreen() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabKey>('surface');
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ProgressMap>({});
+
+  // Load persisted progress on mount
+  useEffect(() => {
+    AsyncStorage.getItem(PROGRESS_KEY)
+      .then(raw => { if (raw) setProgress(JSON.parse(raw)); })
+      .catch(() => {});
+  }, []);
 
   const author = authors.find(a => a.id === id);
   const block = author ? blocks.find(b => b.id === author.blockId) : null;
@@ -107,7 +120,18 @@ export default function AutorScreen() {
 
   const portraitHeight = PORTRAIT_HEIGHT + insets.top;
   const portrait = PORTRAITS[author.id] ?? null;
-  console.log('[portrait]', author.id, '→', portrait);
+
+  const isCurrentLayerDone = !!(progress[author.id]?.[activeTab]);
+
+  async function markLayerDone() {
+    const prev = progress[author.id] ?? {};
+    const updated: ProgressMap = {
+      ...progress,
+      [author.id]: { ...prev, [activeTab]: true },
+    };
+    setProgress(updated);
+    await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(updated)).catch(() => {});
+  }
 
   return (
     <View style={styles.container}>
@@ -191,8 +215,14 @@ export default function AutorScreen() {
 
       {/* Fixed "Marcar como leído" button */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.sm }]}>
-        <TouchableOpacity style={styles.readButton} activeOpacity={0.85}>
-          <Text style={styles.readButtonText}>Marcar como leído</Text>
+        <TouchableOpacity
+          style={[styles.readButton, isCurrentLayerDone && styles.readButtonDone]}
+          onPress={isCurrentLayerDone ? undefined : markLayerDone}
+          activeOpacity={isCurrentLayerDone ? 1 : 0.85}
+        >
+          <Text style={[styles.readButtonText, isCurrentLayerDone && styles.readButtonTextDone]}>
+            {isCurrentLayerDone ? '✓ Leído' : 'Marcar como leído'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -347,10 +377,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     alignItems: 'center',
   },
+  readButtonDone: {
+    backgroundColor: colors.dark.greenBg,
+  },
   readButtonText: {
     ...typography.body,
     color: colors.dark.text,
     fontWeight: '600',
+  },
+  readButtonTextDone: {
+    color: colors.dark.green,
   },
   // Portrait placeholder (authors without an image)
   portraitPlaceholder: {
