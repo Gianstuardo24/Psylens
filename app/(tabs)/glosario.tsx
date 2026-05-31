@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,21 @@ import {
   Modal,
   useWindowDimensions,
 } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, glossaryTerms, conceptThreads } from '../../constants/data';
+
+const PROGRESS_KEY = 'psylens_progress';
+type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
+type ProgressMap   = Record<string, LayerProgress>;
+
+function isComplete(prog: ProgressMap, authorId: string): boolean {
+  const p = prog[authorId];
+  return !!(p?.surface && p?.concept && p?.fondo);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -232,13 +243,20 @@ function EmptyState({ query }: { query: string }) {
 export default function GlosarioScreen() {
   const insets = useSafeAreaInsets();
 
+  const [progress,     setProgress]     = useState<ProgressMap>({});
   const [query,        setQuery]        = useState('');
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
 
-  // All terms are unlocked in mock state.
-  // Swap for: glossaryTerms.filter(t => isUnlocked(t.authorId))
-  const unlocked = glossaryTerms;
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem(PROGRESS_KEY)
+        .then(raw => { if (raw) setProgress(JSON.parse(raw)); })
+        .catch(() => {});
+    }, []),
+  );
+
+  const unlocked = glossaryTerms.filter(t => isComplete(progress, t.authorId));
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -269,7 +287,7 @@ export default function GlosarioScreen() {
       {/* ── Header ─────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.title}>Glosario</Text>
-        <Text style={styles.subtitle}>{unlocked.length} términos</Text>
+        <Text style={styles.subtitle}>{unlocked.length} {unlocked.length === 1 ? 'término' : 'términos'} desbloqueados</Text>
       </View>
 
       {/* ── Search bar ─────────────────────────────────── */}

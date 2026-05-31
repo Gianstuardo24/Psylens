@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,24 +6,27 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
+  Modal,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 import { authors, blocks, glossaryTerms } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
+import { BlockCompleteModal } from '../../components/BlockCompleteModal';
+import { PaywallSheet } from '../../components/PaywallSheet';
 
-const PORTRAIT_HEIGHT = 240;
-const PROGRESS_KEY = 'psylens_progress';
+const PROGRESS_KEY       = 'psylens_progress';
+const UNLOCK_KEY         = 'psylens_unlocked';
+const BLOCK_STARTED_KEY  = 'psylens_block_started';
+const PREMIUM_KEY        = 'psylens_is_premium';
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
-const SCREEN_WIDTH = Dimensions.get('window').width;
-// colors.dark.bg is #0f0f0e = rgb(15,15,14) — used for the gradient overlay layers
-const BG = 'rgba(15,15,14,';
 
 // Portrait images — require() paths relative to this file (app/autor/)
 // Metro bundles these statically; they must live here, not in a .ts data file.
@@ -42,7 +45,7 @@ type TabKey = 'surface' | 'concept' | 'fondo';
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'surface', label: 'Superficie' },
   { key: 'concept', label: 'Concepto' },
-  { key: 'fondo', label: 'Fondo' },
+  { key: 'fondo',   label: 'Fondo' },
 ];
 
 interface Term {
@@ -88,18 +91,60 @@ export default function AutorScreen() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabKey>('surface');
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
-  const [progress, setProgress] = useState<ProgressMap>({});
+  const [progress,          setProgress]          = useState<ProgressMap>({});
+  const [isPremium,         setIsPremium]         = useState(false);
+  const [showCelebration,   setShowCelebration]   = useState(false);
+  const [showBlockComplete, setShowBlockComplete] = useState(false);
+  const [blockCompleteDays, setBlockCompleteDays] = useState(1);
+  const [showPaywall,       setShowPaywall]       = useState(false);
+  const [pendingAuthorId,   setPendingAuthorId]   = useState<string | null>(null);
 
-  // Load persisted progress on mount
+  const animScale   = useRef(new Animated.Value(0.85)).current;
+  const animOpacity = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
-    AsyncStorage.getItem(PROGRESS_KEY)
-      .then(raw => { if (raw) setProgress(JSON.parse(raw)); })
-      .catch(() => {});
+    Promise.all([
+      AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
+      AsyncStorage.getItem(PREMIUM_KEY).catch(() => null),
+    ]).then(([rawProg, rawPremium]) => {
+      if (rawProg) setProgress(JSON.parse(rawProg));
+      setIsPremium(rawPremium === 'true');
+    });
   }, []);
 
-  const author = authors.find(a => a.id === id);
-  const block = author ? blocks.find(b => b.id === author.blockId) : null;
+  useEffect(() => {
+    if (showCelebration) {
+      animScale.setValue(0.85);
+      animOpacity.setValue(0);
+      Animated.parallel([
+        Animated.spring(animScale, { toValue: 1, useNativeDriver: true, damping: 15, stiffness: 180 }),
+        Animated.timing(animOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [showCelebration]);
+
+  const author      = authors.find(a => a.id === id);
+  const block       = author ? blocks.find(b => b.id === author.blockId) : null;
   const authorTerms = glossaryTerms.filter(t => t.authorId === id);
+  const authorIndex = authors.findIndex(a => a.id === id);
+  const nextAuthor  = authorIndex >= 0 ? (authors[authorIndex + 1] ?? null) : null;
+
+  // Block-level derived values (safe to compute before the null guard)
+  const blockIdx      = block ? blocks.findIndex(b => b.id === block.id) : -1;
+  const nextBlock     = blockIdx >= 0 && blockIdx < blocks.length - 1 ? blocks[blockIdx + 1] : null;
+  const blockConcepts = block ? glossaryTerms.filter(t => block.authors.includes(t.authorId)).length : 0;
+
+  // Record the first time this block is accessed so we can compute days taken
+  useEffect(() => {
+    if (!block) return;
+    AsyncStorage.getItem(BLOCK_STARTED_KEY).then(raw => {
+      const started: Record<string, string> = raw ? JSON.parse(raw) : {};
+      if (!started[block.id]) {
+        started[block.id] = new Date().toISOString().slice(0, 10);
+        AsyncStorage.setItem(BLOCK_STARTED_KEY, JSON.stringify(started)).catch(() => {});
+      }
+    }).catch(() => {});
+  }, [block?.id]);
 
   if (!author || !block) {
     return (
@@ -117,67 +162,95 @@ export default function AutorScreen() {
   }
 
   const content = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
-
-  const portraitHeight = PORTRAIT_HEIGHT + insets.top;
   const portrait = PORTRAITS[author.id] ?? null;
 
-  const isCurrentLayerDone = !!(progress[author.id]?.[activeTab]);
+  const isAuthorComplete = !!(
+    progress[author.id]?.surface &&
+    progress[author.id]?.concept &&
+    progress[author.id]?.fondo
+  );
 
-  async function markLayerDone() {
-    const prev = progress[author.id] ?? {};
+  // Concepto + Fondo are premium-gated for non-free blocks
+  const isContentLocked =
+    !block.isFree && !isPremium && (activeTab === 'concept' || activeTab === 'fondo');
+
+  async function markAllDone() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const updated: ProgressMap = {
       ...progress,
-      [author.id]: { ...prev, [activeTab]: true },
+      [author.id]: { surface: true, concept: true, fondo: true },
     };
     setProgress(updated);
     await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(updated)).catch(() => {});
+
+    // Unlock the next author for cross-block progression
+    if (nextAuthor) {
+      const raw      = await AsyncStorage.getItem(UNLOCK_KEY).catch(() => null);
+      const unlocked: string[] = raw ? JSON.parse(raw) : [];
+      if (!unlocked.includes(nextAuthor.id)) {
+        unlocked.push(nextAuthor.id);
+        await AsyncStorage.setItem(UNLOCK_KEY, JSON.stringify(unlocked)).catch(() => {});
+      }
+    }
+
+    // Check if every author in the block is now complete
+    const blockDone = block
+      ? block.authors.every(aid =>
+          aid === author.id
+            ? true
+            : !!(updated[aid]?.surface && updated[aid]?.concept && updated[aid]?.fondo)
+        )
+      : false;
+
+    if (blockDone) {
+      const raw = await AsyncStorage.getItem(BLOCK_STARTED_KEY).catch(() => null);
+      const started: Record<string, string> = raw ? JSON.parse(raw) : {};
+      const startStr = started[block!.id];
+      const days = startStr
+        ? Math.max(1, Math.ceil(
+            (Date.now() - new Date(startStr + 'T00:00:00').getTime()) / 86_400_000
+          ))
+        : 1;
+      setBlockCompleteDays(days);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowBlockComplete(true);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setShowCelebration(true);
+    }
+  }
+
+  function navigateToNext() {
+    if (!nextAuthor) return;
+    setShowCelebration(false);
+    router.replace(`/autor/${nextAuthor.id}`);
   }
 
   return (
     <View style={styles.container}>
-      {/* Portrait */}
-      <View style={[styles.portrait, { height: portraitHeight }]}>
-        {/* Portrait image or dark initial placeholder */}
-        {portrait ? (
-          <Image
-            source={portrait}
-            style={{ position: 'absolute', top: 0, left: 0, width: SCREEN_WIDTH, height: portraitHeight }}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFillObject, styles.portraitPlaceholder]}>
+      {/* Back button */}
+      <TouchableOpacity
+        style={[styles.backButton, { top: insets.top + spacing.sm }]}
+        onPress={() => router.back()}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+
+      {/* Centered header */}
+      <View style={[styles.header, { paddingTop: insets.top + 48 }]}>
+        <View style={styles.portraitCircle}>
+          {portrait ? (
+            <Image source={portrait} style={styles.portraitImage} resizeMode="cover" />
+          ) : (
             <Text style={styles.portraitInitial}>{author.name[0]}</Text>
-          </View>
-        )}
-
-        {/* Gradient overlay: transparent → bg */}
-        <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-          <View style={{ flex: 1 }} />
-          <View style={{ height: 28, backgroundColor: `${BG}0.1)` }} />
-          <View style={{ height: 30, backgroundColor: `${BG}0.3)` }} />
-          <View style={{ height: 32, backgroundColor: `${BG}0.56)` }} />
-          <View style={{ height: 32, backgroundColor: `${BG}0.78)` }} />
-          <View style={{ height: 28, backgroundColor: `${BG}0.93)` }} />
-          <View style={{ height: insets.top + 10, backgroundColor: `${BG}1)` }} />
+          )}
         </View>
-
-        {/* Back button */}
-        <TouchableOpacity
-          style={[styles.backButton, { top: insets.top + spacing.sm }]}
-          onPress={() => router.back()}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-
-        {/* Author info at portrait bottom */}
-        <View style={styles.portraitInfo}>
-          <View style={styles.blockChip}>
-            <Text style={styles.blockChipText}>{block.name}</Text>
-          </View>
-          <Text style={styles.authorName} numberOfLines={2}>{author.name}</Text>
-          <Text style={styles.authorDates}>{author.dates}</Text>
+        <View style={styles.blockChip}>
+          <Text style={styles.blockChipText}>{block.name}</Text>
         </View>
+        <Text style={styles.authorName}>{author.name}</Text>
+        <Text style={styles.authorDates}>{author.dates}</Text>
       </View>
 
       {/* Tab bar */}
@@ -186,7 +259,10 @@ export default function AutorScreen() {
           <TouchableOpacity
             key={tab.key}
             style={styles.tabItem}
-            onPress={() => setActiveTab(tab.key)}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActiveTab(tab.key);
+            }}
             activeOpacity={0.7}
           >
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
@@ -197,34 +273,121 @@ export default function AutorScreen() {
         ))}
       </View>
 
-      {/* Scrollable content */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.question}>{content.question}</Text>
-        <View style={styles.divider} />
-        {content.text.split('\n\n').map((para, i) => (
-          <View key={i} style={styles.paragraph}>
-            <HighlightedText text={para} terms={authorTerms} onTermPress={setSelectedTermId} />
-          </View>
-        ))}
-        <Text style={styles.closingLine}>{content.closingLine}</Text>
-      </ScrollView>
-
-      {/* Fixed "Marcar como leído" button */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.sm }]}>
-        <TouchableOpacity
-          style={[styles.readButton, isCurrentLayerDone && styles.readButtonDone]}
-          onPress={isCurrentLayerDone ? undefined : markLayerDone}
-          activeOpacity={isCurrentLayerDone ? 1 : 0.85}
+      {/* Scrollable content + lock overlay */}
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.readButtonText, isCurrentLayerDone && styles.readButtonTextDone]}>
-            {isCurrentLayerDone ? '✓ Leído' : 'Marcar como leído'}
-          </Text>
-        </TouchableOpacity>
+          <Text style={styles.question}>{content.question}</Text>
+          <View style={styles.divider} />
+          {content.text.split('\n\n').map((para, i) => (
+            <View key={i} style={styles.paragraph}>
+              <HighlightedText text={para} terms={authorTerms} onTermPress={setSelectedTermId} />
+            </View>
+          ))}
+          <Text style={styles.closingLine}>{content.closingLine}</Text>
+        </ScrollView>
+
+        {isContentLocked && (
+          <View style={[StyleSheet.absoluteFillObject, styles.lockOverlay]}>
+            <View style={styles.lockContent}>
+              <View style={styles.lockIconCircle}>
+                <Text style={styles.lockIconGlyph}>⊘</Text>
+              </View>
+              <Text style={styles.lockTitle}>Contenido Premium</Text>
+              <Text style={styles.lockSub}>
+                Desbloquea todas las capas y autores con Premium.
+              </Text>
+              <TouchableOpacity
+                style={styles.lockButton}
+                onPress={() => setShowPaywall(true)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.lockButtonText}>Ver planes →</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
+
+      {/* Fixed bottom bar */}
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.sm }]}>
+        {isContentLocked ? (
+          <TouchableOpacity style={styles.paywallButton} onPress={() => setShowPaywall(true)} activeOpacity={0.85}>
+            <Text style={styles.paywallButtonText}>Ver planes →</Text>
+          </TouchableOpacity>
+        ) : activeTab === 'surface' ? (
+          <TouchableOpacity
+            style={styles.deeperButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setActiveTab('concept');
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.deeperButtonText}>Ir más profundo →</Text>
+          </TouchableOpacity>
+        ) : activeTab === 'concept' ? (
+          <TouchableOpacity
+            style={styles.deeperButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setActiveTab('fondo');
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.deeperButtonText}>Ir más profundo →</Text>
+          </TouchableOpacity>
+        ) : activeTab === 'fondo' && !isAuthorComplete ? (
+          <TouchableOpacity style={styles.readButton} onPress={markAllDone} activeOpacity={0.85}>
+            <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <TouchableOpacity style={[styles.readButton, styles.readButtonDone]} activeOpacity={1}>
+              <Text style={[styles.readButtonText, styles.readButtonTextDone]}>Leído ✓</Text>
+            </TouchableOpacity>
+            {nextAuthor && (
+              <TouchableOpacity style={[styles.nextButton, { marginTop: spacing.sm }]} onPress={navigateToNext} activeOpacity={0.85}>
+                <Text style={styles.nextButtonText}>Ir al siguiente autor →</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </View>
+
+      {/* Celebration modal */}
+      <Modal visible={showCelebration} transparent statusBarTranslucent animationType="none">
+        <View style={styles.celebOverlay}>
+          <Animated.View style={[styles.celebCard, { opacity: animOpacity, transform: [{ scale: animScale }] }]}>
+            <View style={styles.celebCircle}>
+              {portrait ? (
+                <Image source={portrait} style={styles.celebPortrait} resizeMode="cover" />
+              ) : (
+                <Text style={styles.celebInitial}>{author.name[0]}</Text>
+              )}
+            </View>
+            <Text style={styles.celebBadge}>Completado</Text>
+            <Text style={styles.celebAuthorName}>{author.name}</Text>
+            <Text style={styles.celebSubtitle}>Has leído las tres capas</Text>
+
+            {nextAuthor && (
+              <TouchableOpacity style={styles.celebNextButton} onPress={navigateToNext} activeOpacity={0.85}>
+                <Text style={styles.celebNextText}>Siguiente autor: {nextAuthor.name} →</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.celebDismiss}
+              onPress={() => setShowCelebration(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.celebDismissText}>Volver</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
 
       {/* Reusable term bottom sheet */}
       <BottomSheet
@@ -232,6 +395,59 @@ export default function AutorScreen() {
         termId={selectedTermId}
         onClose={() => setSelectedTermId(null)}
       />
+
+      {/* Premium paywall */}
+      <PaywallSheet
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onUnlock={() => {
+          setIsPremium(true);
+          if (pendingAuthorId) {
+            const target = pendingAuthorId;
+            setPendingAuthorId(null);
+            setShowPaywall(false);
+            router.replace(`/autor/${target}`);
+          }
+        }}
+      />
+
+      {/* Block completion celebration */}
+      {block && (
+        <BlockCompleteModal
+          visible={showBlockComplete}
+          block={block}
+          nextBlock={nextBlock}
+          nextBlockNumber={nextBlock ? blockIdx + 2 : null}
+          authorsCount={block.authors.length}
+          conceptsCount={blockConcepts}
+          daysTaken={blockCompleteDays}
+          onContinue={() => {
+            if (!nextBlock) {
+              setShowBlockComplete(false);
+              return;
+            }
+            const firstAuthorId = nextBlock.authors[0];
+            const authorExists = !!firstAuthorId && authors.some(a => a.id === firstAuthorId);
+            if (!authorExists) {
+              setShowBlockComplete(false);
+              router.replace('/(tabs)/camino');
+              return;
+            }
+            if (!nextBlock.isFree && !isPremium) {
+              setShowBlockComplete(false);
+              setPendingAuthorId(firstAuthorId);
+              setShowPaywall(true);
+              return;
+            }
+            setShowBlockComplete(false);
+            router.replace(`/autor/${firstAuthorId}`);
+          }}
+          onViewSummary={() => {
+            setShowBlockComplete(false);
+            router.replace('/(tabs)/camino');
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -241,7 +457,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.dark.bg,
   },
-  // Error state
   errorContainer: {
     flex: 1,
     backgroundColor: colors.dark.bg,
@@ -252,10 +467,11 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.dark.text2,
   },
-  // Portrait
-  portrait: {
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
+  // Header
+  header: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   backButton: {
     position: 'absolute',
@@ -268,12 +484,28 @@ const styles = StyleSheet.create({
     color: colors.dark.text,
     lineHeight: 32,
   },
-  portraitInfo: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
+  portraitCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.dark.bg3,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  portraitImage: {
+    width: 120,
+    height: 120,
+  },
+  portraitInitial: {
+    ...typography.h1,
+    fontSize: 48,
+    color: colors.dark.text3,
+    lineHeight: 56,
   },
   blockChip: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     backgroundColor: colors.dark.greenBg,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
@@ -289,10 +521,12 @@ const styles = StyleSheet.create({
     ...typography.h1,
     color: colors.dark.text,
     marginBottom: spacing.xs,
+    textAlign: 'center',
   },
   authorDates: {
     ...typography.bodyS,
     color: colors.dark.text2,
+    textAlign: 'center',
   },
   // Tabs
   tabBar: {
@@ -334,7 +568,7 @@ const styles = StyleSheet.create({
   question: {
     ...typography.h4,
     color: colors.dark.text,
-    fontStyle: 'italic',
+    fontFamily: 'PlayfairDisplay_400Regular_Italic',
     marginBottom: spacing.lg,
   },
   divider: {
@@ -357,7 +591,7 @@ const styles = StyleSheet.create({
   closingLine: {
     ...typography.bodyS,
     color: colors.dark.text3,
-    fontStyle: 'italic',
+    fontFamily: 'PlayfairDisplay_400Regular_Italic',
     marginTop: spacing.md,
     paddingTop: spacing.lg,
     borderTopWidth: 1,
@@ -370,6 +604,19 @@ const styles = StyleSheet.create({
     borderTopColor: colors.dark.border,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+  },
+  deeperButton: {
+    backgroundColor: colors.dark.bg3,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.dark.border,
+  },
+  deeperButtonText: {
+    ...typography.body,
+    color: colors.dark.text,
+    fontWeight: '600',
   },
   readButton: {
     backgroundColor: colors.dark.green,
@@ -388,16 +635,163 @@ const styles = StyleSheet.create({
   readButtonTextDone: {
     color: colors.dark.green,
   },
-  // Portrait placeholder (authors without an image)
-  portraitPlaceholder: {
+  nextButton: {
     backgroundColor: colors.dark.bg3,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.dark.green,
+  },
+  nextButtonText: {
+    ...typography.body,
+    color: colors.dark.green,
+    fontWeight: '600',
+  },
+  // Premium lock overlay
+  lockOverlay: {
+    backgroundColor: 'rgba(15,15,14,0.94)',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: spacing.xxl,
   },
-  portraitInitial: {
+  lockContent: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  lockIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.dark.purpleBg,
+    borderWidth: 1.5,
+    borderColor: colors.dark.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  lockIconGlyph: {
+    fontSize: 28,
+    lineHeight: 36,
+    color: colors.dark.purple,
+  },
+  lockTitle: {
+    ...typography.h3,
+    color: colors.dark.text,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  lockSub: {
+    ...typography.bodyS,
+    color: colors.dark.text2,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.xl,
+  },
+  lockButton: {
+    backgroundColor: colors.dark.purple,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxl,
+    alignItems: 'center',
+  },
+  lockButtonText: {
+    ...typography.body,
+    color: colors.dark.text,
+    fontWeight: '600',
+  },
+  // Paywall CTA in bottom bar
+  paywallButton: {
+    backgroundColor: colors.dark.purpleBg,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.dark.purple,
+  },
+  paywallButtonText: {
+    ...typography.body,
+    color: colors.dark.purple,
+    fontWeight: '600',
+  },
+  // Celebration modal
+  celebOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15,15,14,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xxl,
+  },
+  celebCard: {
+    width: '100%',
+    backgroundColor: colors.dark.bg2,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.dark.border,
+    alignItems: 'center',
+    paddingVertical: spacing.xxxl,
+    paddingHorizontal: spacing.xxl,
+  },
+  celebCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.dark.bg3,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+    borderWidth: 2,
+    borderColor: colors.dark.green,
+  },
+  celebPortrait: {
+    width: 96,
+    height: 96,
+  },
+  celebInitial: {
     ...typography.h1,
-    fontSize: 64,
+    fontSize: 40,
     color: colors.dark.text3,
-    lineHeight: 72,
+    lineHeight: 48,
+  },
+  celebBadge: {
+    ...typography.label,
+    color: colors.dark.green,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: spacing.sm,
+  },
+  celebAuthorName: {
+    ...typography.h2,
+    color: colors.dark.text,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  celebSubtitle: {
+    ...typography.bodyS,
+    color: colors.dark.text3,
+    textAlign: 'center',
+    marginBottom: spacing.xxl,
+  },
+  celebNextButton: {
+    width: '100%',
+    backgroundColor: colors.dark.green,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  celebNextText: {
+    ...typography.body,
+    color: colors.dark.text,
+    fontWeight: '600',
+  },
+  celebDismiss: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  celebDismissText: {
+    ...typography.bodyS,
+    color: colors.dark.text3,
   },
 });

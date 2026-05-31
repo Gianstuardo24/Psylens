@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, blocks } from '../../constants/data';
+import { PaywallSheet } from '../../components/PaywallSheet';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,8 @@ type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
 
 const PROGRESS_KEY = 'psylens_progress';
+const UNLOCK_KEY   = 'psylens_unlocked';
+const PREMIUM_KEY  = 'psylens_is_premium';
 
 // ─── Portrait images ──────────────────────────────────────────────────────────
 
@@ -40,27 +43,31 @@ const PORTRAITS: Record<string, number | null> = {
 const authorById: Record<string, typeof authors[0]> =
   Object.fromEntries(authors.map((a) => [a.id, a]));
 
-function getBlockStatus(index: number): BlockStatus {
-  return index === 0 ? 'active' : 'locked';
-}
-
 function isAuthorDone(p: LayerProgress | undefined): boolean {
   return !!(p?.surface && p?.concept && p?.fondo);
 }
 
-// Author N+1 unlocks when author N's surface layer is done.
+function getBlockStatus(block: typeof blocks[0], isPremium: boolean): BlockStatus {
+  if (block.isFree) return 'active';
+  return isPremium ? 'active' : 'locked';
+}
+
 function getAuthorState(
   authorId: string,
   authorIndex: number,
   blockId: string,
   blockAuthorIds: string[],
   progress: ProgressMap,
+  unlocked: string[],
+  isPremium: boolean,
 ): AuthorState {
-  if (blockId !== 'b0') return 'locked';
   if (isAuthorDone(progress[authorId])) return 'done';
-  if (authorIndex === 0) return 'active';
-  const prevId = blockAuthorIds[authorIndex - 1];
-  if (progress[prevId]?.surface) return 'active';
+  if (blockId === 'b0') {
+    if (authorIndex === 0) return 'active';
+    const prevId = blockAuthorIds[authorIndex - 1];
+    return isAuthorDone(progress[prevId]) ? 'active' : 'locked';
+  }
+  if (isPremium) return 'active';
   return 'locked';
 }
 
@@ -156,15 +163,21 @@ function BlockNode({
   blockIndex,
   isExpanded,
   onToggle,
+  onPaywall,
   progress,
+  unlocked,
+  isPremium,
 }: {
   block: typeof blocks[0];
   blockIndex: number;
   isExpanded: boolean;
   onToggle: () => void;
+  onPaywall: () => void;
   progress: ProgressMap;
+  unlocked: string[];
+  isPremium: boolean;
 }) {
-  const status    = getBlockStatus(blockIndex);
+  const status    = getBlockStatus(block, isPremium);
   const isActive  = status === 'active';
   const isLocked  = status === 'locked';
 
@@ -182,9 +195,8 @@ function BlockNode({
       {/* ── Block header ──────────────────────────────────── */}
       <TouchableOpacity
         style={bn.header}
-        onPress={isActive ? onToggle : undefined}
-        activeOpacity={isActive ? 0.7 : 1}
-        disabled={isLocked}
+        onPress={isLocked ? onPaywall : (isActive ? onToggle : undefined)}
+        activeOpacity={0.7}
       >
         {/* Symbol icon */}
         <View style={[bn.icon, isLocked && bn.iconLocked]}>
@@ -234,7 +246,7 @@ function BlockNode({
             <AuthorCard
               key={author.id}
               author={author}
-              state={getAuthorState(author.id, i, block.id, block.authors, progress)}
+              state={getAuthorState(author.id, i, block.id, block.authors, progress, unlocked, isPremium)}
             />
           ))}
         </View>
@@ -248,15 +260,23 @@ function BlockNode({
 
 export default function CaminoScreen() {
   const insets = useSafeAreaInsets();
-  const [expandedId, setExpandedId] = useState<string | null>('b0');
-  const [progress, setProgress] = useState<ProgressMap>({});
+  const [expandedId,  setExpandedId]  = useState<string | null>('b0');
+  const [progress,    setProgress]    = useState<ProgressMap>({});
+  const [unlocked,    setUnlocked]    = useState<string[]>([]);
+  const [isPremium,   setIsPremium]   = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
-  // Reload progress every time the screen is focused (e.g. returning from autor)
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem(PROGRESS_KEY)
-        .then(raw => { if (raw) setProgress(JSON.parse(raw)); })
-        .catch(() => {});
+      Promise.all([
+        AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
+        AsyncStorage.getItem(UNLOCK_KEY).catch(() => null),
+        AsyncStorage.getItem(PREMIUM_KEY).catch(() => null),
+      ]).then(([rawProg, rawUnlock, rawPremium]) => {
+        if (rawProg)   setProgress(JSON.parse(rawProg));
+        if (rawUnlock) setUnlocked(JSON.parse(rawUnlock));
+        setIsPremium(rawPremium === 'true');
+      });
     }, []),
   );
 
@@ -267,6 +287,7 @@ export default function CaminoScreen() {
   const totalAuthors = blocks.reduce((sum, b) => sum + b.authors.length, 0);
 
   return (
+    <View style={styles.root}>
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={[
@@ -291,11 +312,21 @@ export default function CaminoScreen() {
           blockIndex={index}
           isExpanded={expandedId === block.id}
           onToggle={() => toggleBlock(block.id)}
+          onPaywall={() => setShowPaywall(true)}
           progress={progress}
+          unlocked={unlocked}
+          isPremium={isPremium}
         />
       ))}
 
     </ScrollView>
+
+    <PaywallSheet
+      visible={showPaywall}
+      onClose={() => setShowPaywall(false)}
+      onUnlock={() => setIsPremium(true)}
+    />
+    </View>
   );
 }
 
@@ -551,6 +582,10 @@ const bn = StyleSheet.create({
 // ─── Screen styles ────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.dark.bg,
+  },
   scroll: {
     flex: 1,
     backgroundColor: colors.dark.bg,

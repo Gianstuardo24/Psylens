@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Animated,
+
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -15,22 +17,40 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 
+const ONBOARDING_KEY = 'psylens_onboarding_done';
 type Step = {
   key: string;
   title: string;
+  description: string;
   isFinal?: boolean;
 };
 
-const ONBOARDING_KEY = 'psylens_onboarding_done';
-
 const STEPS: Step[] = [
-  { key: 'mentor', title: 'Un recorrido por la mente humana.' },
-  { key: 'layers', title: 'Tres profundidades.' },
-  { key: 'path',   title: 'Un recorrido con memoria.' },
-  { key: 'start',  title: '¿Por dónde empezamos?', isFinal: true },
+  {
+    key: 'mentor',
+    title: 'Un recorrido por la mente humana.',
+    description: 'Descubre a los pensadores que definieron nuestra comprensión de la psicología, de Platón a Freud.',
+  },
+  {
+    key: 'layers',
+    title: 'Tres profundidades.',
+    description: 'Cada autor tiene tres capas: Superficie, Concepto y Fondo. Avanza cuando estés listo.',
+  },
+  {
+    key: 'path',
+    title: 'Un recorrido con memoria.',
+    description: 'Psylens recuerda dónde lo dejaste. Tu progreso es tuyo.',
+  },
+  {
+    key: 'start',
+    title: '¿Listo para empezar?',
+    description: 'Tu primer autor te espera. El recorrido comienza aquí.',
+    isFinal: true,
+  },
 ];
 
-// ─── Illustrations ────────────────────────────────────────────────────────────
+// ── Illustrations ─────────────────────────────────────────────────────────────
+// Each illustration is at least 120px in its dominant dimension.
 
 function LogoIllustration() {
   return (
@@ -58,7 +78,7 @@ function RingsIllustration() {
 function TimelineIllustration() {
   return (
     <View style={il.timelineWrap}>
-      {[0, 1, 2, 3, 4].map((i) => (
+      {[0, 1, 2, 3, 4].map(i => (
         <View key={i} style={il.timelineItem}>
           <View style={[il.timelineNode, i === 2 && il.timelineNodeActive]} />
           {i < 4 && <View style={il.timelineSegment} />}
@@ -68,12 +88,35 @@ function TimelineIllustration() {
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
+function StartIllustration() {
+  return (
+    <View style={il.startCircle}>
+      <Text style={il.startGlyph}>◎</Text>
+    </View>
+  );
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
   const { bottom: insetBottom } = useSafeAreaInsets();
   const [currentPage, setCurrentPage] = useState(0);
+
+  // Shared entrance animation — applies to the text block of whichever page
+  // is visible when the scroll settles. Only one page is on screen at a time,
+  // so a single shared value works correctly.
+  const fadeAnim  = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    slideAnim.setValue(12);
+    Animated.parallel([
+      Animated.timing(fadeAnim,  { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, [currentPage]);
 
   function handleMomentumScrollEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
     const page = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -92,18 +135,27 @@ export default function OnboardingScreen() {
         {STEPS.map((step, index) => (
           <View key={step.key} style={[styles.page, { width, height }]}>
 
-            {/* Illustration */}
+            {/* Illustration — static, not animated */}
             <View style={styles.illustrationArea}>
               {index === 0 && <LogoIllustration />}
               {index === 1 && <RingsIllustration />}
               {index === 2 && <TimelineIllustration />}
+              {index === 3 && <StartIllustration />}
             </View>
 
-            {/* Text + CTA */}
-            <View style={[styles.textArea, { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl }]}>
+            {/* Text block — animated on step change */}
+            <Animated.View
+              style={[
+                styles.textArea,
+                { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+              ]}
+            >
               <Text style={step.isFinal ? styles.titleFinal : styles.title}>
                 {step.title}
               </Text>
+
+              <Text style={styles.description}>{step.description}</Text>
 
               {step.isFinal && (
                 <TouchableOpacity
@@ -120,29 +172,29 @@ export default function OnboardingScreen() {
                   <Text style={styles.buttonText}>Empezar</Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </Animated.View>
 
           </View>
         ))}
       </ScrollView>
 
-      {/* Dot indicators — float above content, clear home indicator */}
-      <View style={[styles.dotsRow, { bottom: insetBottom + spacing.xl }]} pointerEvents="none">
+      {/* Dot indicators — absolutely positioned, centered */}
+      <View
+        style={[styles.dotsRow, { bottom: insetBottom + spacing.xl }]}
+        pointerEvents="none"
+      >
         {STEPS.map((_, i) => (
-          <View
-            key={i}
-            style={[styles.dot, i === currentPage && styles.dotActive]}
-          />
+          <View key={i} style={[styles.dot, i === currentPage && styles.dotActive]} />
         ))}
       </View>
     </View>
   );
 }
 
-// ─── Illustration styles ──────────────────────────────────────────────────────
+// ── Illustration styles ───────────────────────────────────────────────────────
 
 const il = StyleSheet.create({
-  // Step 1 — logo shape
+  // Step 1 — Psylens logo mark + wordmark
   logoWrap: {
     alignItems: 'center',
   },
@@ -151,50 +203,54 @@ const il = StyleSheet.create({
     alignItems: 'center',
   },
   logoCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1.5,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
     borderColor: colors.dark.text,
   },
   logoLine: {
-    width: 28,
-    height: 1.5,
+    width: 36,
+    height: 2,
     backgroundColor: colors.dark.text,
   },
   wordmark: {
-    ...typography.h2,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: typography.h1.fontSize,
+    lineHeight: typography.h1.lineHeight,
+    fontWeight: '700',
     color: colors.dark.text,
     marginTop: spacing.xl,
+    textAlign: 'center',
   },
 
-  // Step 2 — three concentric rings (Superficie / Concepto / Fondo)
+  // Step 2 — concentric rings (Superficie / Concepto / Fondo)
   ringOuter: {
-    width: 188,
-    height: 188,
-    borderRadius: 94,
-    borderWidth: 1,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 1.5,
     borderColor: colors.dark.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ringMid: {
-    width: 124,
-    height: 124,
-    borderRadius: 62,
-    borderWidth: 1,
+    width: 136,
+    height: 136,
+    borderRadius: 68,
+    borderWidth: 1.5,
     borderColor: colors.dark.text3,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ringInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: colors.dark.green,
   },
 
-  // Step 3 — vertical timeline
+  // Step 3 — vertical reading timeline
   timelineWrap: {
     alignItems: 'center',
   },
@@ -202,28 +258,45 @@ const il = StyleSheet.create({
     alignItems: 'center',
   },
   timelineNode: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: colors.dark.bg3,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.dark.border,
   },
   timelineNodeActive: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: colors.dark.green,
     borderColor: colors.dark.green,
   },
   timelineSegment: {
-    width: 1.5,
-    height: 40,
+    width: 2,
+    height: 52,
     backgroundColor: colors.dark.border,
+  },
+
+  // Step 4 — start glyph
+  startCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.dark.greenBg,
+    borderWidth: 2,
+    borderColor: colors.dark.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  startGlyph: {
+    fontSize: 48,
+    lineHeight: 56,
+    color: colors.dark.green,
   },
 });
 
-// ─── Main styles ──────────────────────────────────────────────────────────────
+// ── Main styles ───────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -232,7 +305,7 @@ const styles = StyleSheet.create({
   },
 
   page: {
-    // width and height set dynamically via useWindowDimensions
+    // width + height applied dynamically
   },
 
   illustrationArea: {
@@ -243,22 +316,34 @@ const styles = StyleSheet.create({
 
   textArea: {
     paddingHorizontal: spacing.xl,
-    // paddingBottom applied inline to incorporate safe area inset dynamically
+    // paddingBottom applied inline to incorporate safe-area inset
   },
 
   title: {
     ...typography.h2,
     color: colors.dark.text,
-    marginBottom: spacing.xxl,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 
   titleFinal: {
     ...typography.h1,
     color: colors.dark.text,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+
+  description: {
+    ...typography.body,
+    color: colors.dark.text2,
+    textAlign: 'center',
+    lineHeight: 26,
     marginBottom: spacing.xxl,
   },
 
+  // "Empezar" — full width, green background
   button: {
+    width: '100%',
     backgroundColor: colors.dark.green,
     paddingVertical: spacing.lg,
     borderRadius: radius.lg,
@@ -271,10 +356,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Dots — absolutely positioned so they sit over the scroll area
+  // Dots — centered via justifyContent
   dotsRow: {
     position: 'absolute',
-    // bottom applied inline to incorporate safe area inset dynamically
     left: 0,
     right: 0,
     flexDirection: 'row',

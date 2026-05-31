@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 
@@ -51,18 +52,22 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{ title: 'Inicio',   tabBarIcon: makeIcon('index') }}
+        listeners={{ tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) }}
       />
       <Tabs.Screen
         name="camino"
         options={{ title: 'Camino',   tabBarIcon: makeIcon('camino') }}
+        listeners={{ tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) }}
       />
       <Tabs.Screen
         name="glosario"
         options={{ title: 'Glosario', tabBarIcon: makeIcon('glosario') }}
+        listeners={{ tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) }}
       />
       <Tabs.Screen
         name="yo"
         options={{ title: 'Yo',       tabBarIcon: makeIcon('yo') }}
+        listeners={{ tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) }}
       />
     </Tabs>
   );

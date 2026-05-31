@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,21 +10,37 @@ import {
   Platform,
   RefreshControl,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
+import { authors } from '../../constants/data';
 
-// ─── Mock data (replaced by AuthContext + ProgressContext later) ──────────────
+const PROGRESS_KEY     = 'psylens_progress';
+const DAYS_VISITED_KEY = 'psylens_days_visited';
 
 const USER_NAME  = 'Usuario';
 const USER_EMAIL = 'usuario@email.com';
 
-const MOCK_STATS = {
-  streak:    3,
-  authors:   0,
-  layers:    0,
-};
+type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
+type ProgressMap   = Record<string, LayerProgress>;
+
+function isComplete(prog: ProgressMap, authorId: string): boolean {
+  const p = prog[authorId];
+  return !!(p?.surface && p?.concept && p?.fondo);
+}
+
+function computeStreak(days: string[]): number {
+  let count = 0;
+  const d = new Date();
+  while (true) {
+    const iso = d.toISOString().slice(0, 10);
+    if (days.includes(iso)) { count++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  return count;
+}
 
 // ─── SettingRow ───────────────────────────────────────────────────────────────
 
@@ -76,12 +92,31 @@ function SettingRow({
 export default function YoScreen() {
   const insets = useSafeAreaInsets();
 
-  // Settings state — replaced by ThemeContext / UserContext when built
+  const [progress,    setProgress]    = useState<ProgressMap>({});
+  const [daysVisited, setDaysVisited] = useState<string[]>([]);
   const [isDark,        setIsDark]        = useState(true);
   const [language,      setLanguage]      = useState<'Español' | 'English'>('Español');
   const [reminderTime,  setReminderTime]  = useState('9:00');
   const [isPremium]                       = useState(false);
   const [refreshing,    setRefreshing]    = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([
+        AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
+        AsyncStorage.getItem(DAYS_VISITED_KEY).catch(() => null),
+      ]).then(([rawProg, rawDays]) => {
+        if (rawProg) setProgress(JSON.parse(rawProg));
+        if (rawDays) setDaysVisited(JSON.parse(rawDays));
+      });
+    }, []),
+  );
+
+  const completedAuthors = authors.filter(a => isComplete(progress, a.id)).length;
+  const layersRead = Object.values(progress).reduce((sum, p) => (
+    sum + (p.surface ? 1 : 0) + (p.concept ? 1 : 0) + (p.fondo ? 1 : 0)
+  ), 0);
+  const streak = computeStreak(daysVisited);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -149,6 +184,33 @@ export default function YoScreen() {
     );
   }
 
+  function handleResetProgress() {
+    Alert.alert(
+      'Resetear progreso',
+      '¿Seguro que quieres borrar todo tu progreso? Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Resetear',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.multiRemove([
+              'psylens_progress',
+              'psylens_streak',
+              'psylens_last_active',
+              'psylens_onboarding_done',
+              'psylens_concepts',
+              'psylens_is_premium',
+              'psylens_unlocked',
+              'psylens_days_visited',
+            ]).catch(() => {});
+            router.replace('/splash');
+          },
+        },
+      ],
+    );
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -182,25 +244,22 @@ export default function YoScreen() {
       {/* ── Stats ──────────────────────────────────────── */}
       <Text style={styles.sectionLabel}>Estadísticas</Text>
       <View style={styles.statsCard}>
-        {/* Racha */}
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{MOCK_STATS.streak}</Text>
+          <Text style={styles.statValue}>{streak}</Text>
           <Text style={styles.statLabel}>{'días de\nracha'}</Text>
         </View>
 
         <View style={styles.statDivider} />
 
-        {/* Autores */}
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{MOCK_STATS.authors}</Text>
+          <Text style={styles.statValue}>{completedAuthors}</Text>
           <Text style={styles.statLabel}>{'autores\ncompletados'}</Text>
         </View>
 
         <View style={styles.statDivider} />
 
-        {/* Capas */}
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{MOCK_STATS.layers}</Text>
+          <Text style={styles.statValue}>{layersRead}</Text>
           <Text style={styles.statLabel}>{'capas\nleídas'}</Text>
         </View>
       </View>
@@ -258,6 +317,12 @@ export default function YoScreen() {
           label="Cerrar sesión"
           labelColor={colors.dark.text2}
           onPress={handleSignOut}
+        />
+
+        <SettingRow
+          label="Resetear progreso"
+          labelColor={colors.dark.coral}
+          onPress={handleResetProgress}
         />
 
         <SettingRow
