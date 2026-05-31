@@ -2,9 +2,11 @@ import { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -14,8 +16,21 @@ import { authors, blocks, glossaryTerms } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 
 const PORTRAIT_HEIGHT = 240;
+const SCREEN_WIDTH = Dimensions.get('window').width;
 // colors.dark.bg is #0f0f0e = rgb(15,15,14) — used for the gradient overlay layers
 const BG = 'rgba(15,15,14,';
+
+// Portrait images — require() paths relative to this file (app/autor/)
+// Metro bundles these statically; they must live here, not in a .ts data file.
+const PORTRAITS: Record<string, number | null> = {
+  'heraclito-democrito': null,
+  'platon':        require('../../assets/portraits/platon.png'),
+  'aristoteles':   require('../../assets/portraits/aristoteles.png'),
+  'hipocrates':    require('../../assets/portraits/hipocrates.png'),
+  'descartes':     require('../../assets/portraits/descartes.png'),
+  'kant':          require('../../assets/portraits/kant.png'),
+  'schopenhauer':  require('../../assets/portraits/schopenhauer.png'),
+};
 
 type TabKey = 'surface' | 'concept' | 'fondo';
 
@@ -91,13 +106,25 @@ export default function AutorScreen() {
   const content = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
 
   const portraitHeight = PORTRAIT_HEIGHT + insets.top;
+  const portrait = PORTRAITS[author.id] ?? null;
+  console.log('[portrait]', author.id, '→', portrait);
 
   return (
     <View style={styles.container}>
       {/* Portrait */}
       <View style={[styles.portrait, { height: portraitHeight }]}>
-        {/* Placeholder image background */}
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.dark.bg3 }]} />
+        {/* Portrait image or dark initial placeholder */}
+        {portrait ? (
+          <Image
+            source={portrait}
+            style={{ position: 'absolute', top: 0, left: 0, width: SCREEN_WIDTH, height: portraitHeight }}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFillObject, styles.portraitPlaceholder]}>
+            <Text style={styles.portraitInitial}>{author.name[0]}</Text>
+          </View>
+        )}
 
         {/* Gradient overlay: transparent → bg */}
         <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
@@ -324,5 +351,17 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.dark.text,
     fontWeight: '600',
+  },
+  // Portrait placeholder (authors without an image)
+  portraitPlaceholder: {
+    backgroundColor: colors.dark.bg3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  portraitInitial: {
+    ...typography.h1,
+    fontSize: 64,
+    color: colors.dark.text3,
+    lineHeight: 72,
   },
 });
