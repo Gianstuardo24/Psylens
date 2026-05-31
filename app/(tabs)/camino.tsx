@@ -398,7 +398,7 @@ const bn = StyleSheet.create({
     backgroundColor: colors.dark.bg,
   },
   iconGlyph: {
-    fontSize: 20,
+    fontSize: typography.h3.fontSize,
     color: colors.dark.text2,
   },
   iconGlyphLocked: {
@@ -435,7 +435,7 @@ const bn = StyleSheet.create({
   // Tags
   freeTag: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: spacing.xs,
     borderRadius: radius.full,
     backgroundColor: colors.dark.greenBg,
   },
@@ -445,7 +445,7 @@ const bn = StyleSheet.create({
   },
   premiumTag: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: spacing.xs,
     borderRadius: radius.full,
     backgroundColor: colors.dark.purpleBg,
   },
@@ -488,7 +488,7 @@ const bn = StyleSheet.create({
   },
   chevronLocked: {
     color: colors.dark.text3,
-    fontSize: 14,
+    fontSize: typography.bodyS.fontSize,
   },
 
   // Authors list (expanded)

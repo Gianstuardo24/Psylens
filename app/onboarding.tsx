@@ -10,6 +10,8 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 
@@ -19,8 +21,10 @@ type Step = {
   isFinal?: boolean;
 };
 
+const ONBOARDING_KEY = 'psylens_onboarding_done';
+
 const STEPS: Step[] = [
-  { key: 'mentor', title: 'Conocimiento de experto,\nvoz de mentor.' },
+  { key: 'mentor', title: 'Un recorrido por la mente humana.' },
   { key: 'layers', title: 'Tres profundidades.' },
   { key: 'path',   title: 'Un recorrido con memoria.' },
   { key: 'start',  title: '¿Por dónde empezamos?', isFinal: true },
@@ -68,6 +72,7 @@ function TimelineIllustration() {
 
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
+  const { bottom: insetBottom } = useSafeAreaInsets();
   const [currentPage, setCurrentPage] = useState(0);
 
   function handleMomentumScrollEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -95,7 +100,7 @@ export default function OnboardingScreen() {
             </View>
 
             {/* Text + CTA */}
-            <View style={styles.textArea}>
+            <View style={[styles.textArea, { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl }]}>
               <Text style={step.isFinal ? styles.titleFinal : styles.title}>
                 {step.title}
               </Text>
@@ -103,7 +108,13 @@ export default function OnboardingScreen() {
               {step.isFinal && (
                 <TouchableOpacity
                   style={styles.button}
-                  onPress={() => router.replace('/(tabs)')}
+                  onPress={async () => {
+                    try {
+                      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+                    } finally {
+                      router.replace('/(tabs)');
+                    }
+                  }}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.buttonText}>Empezar</Text>
@@ -115,8 +126,8 @@ export default function OnboardingScreen() {
         ))}
       </ScrollView>
 
-      {/* Dot indicators — float above content */}
-      <View style={styles.dotsRow} pointerEvents="none">
+      {/* Dot indicators — float above content, clear home indicator */}
+      <View style={[styles.dotsRow, { bottom: insetBottom + spacing.xl }]} pointerEvents="none">
         {STEPS.map((_, i) => (
           <View
             key={i}
@@ -232,7 +243,7 @@ const styles = StyleSheet.create({
 
   textArea: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: 88, // clears dots row (40px bottom) with breathing room
+    // paddingBottom applied inline to incorporate safe area inset dynamically
   },
 
   title: {
@@ -263,7 +274,7 @@ const styles = StyleSheet.create({
   // Dots — absolutely positioned so they sit over the scroll area
   dotsRow: {
     position: 'absolute',
-    bottom: spacing.xxxl,
+    // bottom applied inline to incorporate safe area inset dynamically
     left: 0,
     right: 0,
     flexDirection: 'row',

@@ -423,12 +423,15 @@ const bs = StyleSheet.create({
     paddingBottom: spacing.xs,
   },
   chip: {
+    minHeight: 44,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.dark.border,
     backgroundColor: colors.dark.bg3,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chipText: {
     ...typography.bodyXS,

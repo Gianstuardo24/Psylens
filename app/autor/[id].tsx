@@ -14,6 +14,7 @@ import { authors, blocks, glossaryTerms } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 
 const PORTRAIT_HEIGHT = 240;
+// colors.dark.bg is #0f0f0e = rgb(15,15,14) — used for the gradient overlay layers
 const BG = 'rgba(15,15,14,';
 
 type TabKey = 'surface' | 'concept' | 'fondo';
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dark.greenBg,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingVertical: 3,
+    paddingVertical: spacing.xs,
     marginBottom: spacing.sm,
   },
   blockChipText: {

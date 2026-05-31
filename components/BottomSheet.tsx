@@ -206,8 +206,8 @@ const styles = StyleSheet.create({
     right: 0,
     height: SHEET_HEIGHT,
     backgroundColor: colors.dark.bg2,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     paddingHorizontal: spacing.xl,
   },
   // Handle
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dark.greenBg,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingVertical: 3,
+    paddingVertical: spacing.xs,
     marginBottom: spacing.md,
   },
   tagText: {
@@ -276,12 +276,15 @@ const styles = StyleSheet.create({
     paddingRight: spacing.xl,
   },
   chip: {
+    minHeight: 44,
     backgroundColor: colors.dark.bg3,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
     borderColor: colors.dark.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chipActive: {
     backgroundColor: colors.dark.greenBg,

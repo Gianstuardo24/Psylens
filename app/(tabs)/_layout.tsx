@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
+import { typography } from '../../constants/typography';
 
 type IonName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -12,11 +13,13 @@ const ICONS: Record<string, { active: IonName; inactive: IonName }> = {
   yo:       { active: 'person',  inactive: 'person-outline' },
 };
 
+const ICON_SIZE = 24;
+
 function makeIcon(tab: string) {
-  return ({ color, focused, size }: { color: string; focused: boolean; size: number }) => (
+  return ({ color, focused }: { color: string; focused: boolean }) => (
     <Ionicons
       name={focused ? ICONS[tab].active : ICONS[tab].inactive}
-      size={size}
+      size={ICON_SIZE}
       color={color}
     />
   );
@@ -38,9 +41,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.dark.text,
         tabBarInactiveTintColor: colors.dark.text3,
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-          letterSpacing: 0.5,
+          fontSize: typography.label.fontSize,
+          fontWeight: typography.label.fontWeight,
+          letterSpacing: 0.4,
           marginTop: 2,
         },
       }}
