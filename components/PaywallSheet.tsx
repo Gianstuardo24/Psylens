@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
+import { useTheme } from '../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const PREMIUM_KEY = 'psylens_is_premium';
 
@@ -34,10 +37,13 @@ interface Props {
 export function PaywallSheet({ visible, onClose, onUnlock }: Props) {
   const { height: screenH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<Plan>('annual');
 
   const translateY      = useRef(new Animated.Value(screenH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  const s = useMemo(() => makeStyles(theme), [theme]);
 
   useEffect(() => {
     if (!visible) return;
@@ -178,162 +184,164 @@ export function PaywallSheet({ visible, onClose, onUnlock }: Props) {
   );
 }
 
-const s = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-  },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.dark.bg2,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    maxHeight: '88%',
-  },
-  handleWrap: {
-    alignItems: 'center',
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.dark.bg3,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-  },
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.65)',
+    },
+    sheet: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.bg2,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      maxHeight: '88%',
+    },
+    handleWrap: {
+      alignItems: 'center',
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    handle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.bg3,
+    },
+    content: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+    },
 
-  // Header
-  title: {
-    ...typography.h2,
-    color: colors.dark.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.xl,
-  },
+    // Header
+    title: {
+      ...typography.h2,
+      color: theme.text,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      ...typography.bodyS,
+      color: theme.text2,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: spacing.xl,
+    },
 
-  // Value props
-  valueProps: {
-    gap: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  valueProp: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-  },
-  checkCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.dark.greenBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-  },
-  checkMark: {
-    ...typography.label,
-    color: colors.dark.green,
-    fontWeight: '700',
-  },
-  valuePropText: {
-    ...typography.bodyS,
-    color: colors.dark.text,
-    flex: 1,
-    lineHeight: 22,
-  },
+    // Value props
+    valueProps: {
+      gap: spacing.md,
+      marginBottom: spacing.xl,
+    },
+    valueProp: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.md,
+    },
+    checkCircle: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: theme.greenBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 1,
+    },
+    checkMark: {
+      ...typography.label,
+      color: theme.green,
+      fontWeight: '700',
+    },
+    valuePropText: {
+      ...typography.bodyS,
+      color: theme.text,
+      flex: 1,
+      lineHeight: 22,
+    },
 
-  // Plan options
-  plans: {
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  plan: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.dark.bg3,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.dark.border,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  planSelected: {
-    borderColor: colors.dark.purple,
-    backgroundColor: colors.dark.purpleBg,
-  },
-  radio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: colors.dark.text3,
-  },
-  radioSelected: {
-    borderColor: colors.dark.purple,
-    backgroundColor: colors.dark.purple,
-  },
-  planInfo: {
-    flex: 1,
-  },
-  planName: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-    fontWeight: '600',
-  },
-  planNameSelected: {
-    color: colors.dark.text,
-  },
-  planPrice: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    marginTop: 2,
-  },
-  savingsBadge: {
-    backgroundColor: colors.dark.purpleBg,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.dark.purple,
-  },
-  savingsText: {
-    ...typography.label,
-    color: colors.dark.purple,
-  },
+    // Plan options
+    plans: {
+      gap: spacing.sm,
+      marginBottom: spacing.xl,
+    },
+    plan: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      borderWidth: 1.5,
+      borderColor: theme.border,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      gap: spacing.md,
+    },
+    planSelected: {
+      borderColor: theme.purple,
+      backgroundColor: theme.purpleBg,
+    },
+    radio: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 2,
+      borderColor: theme.text3,
+    },
+    radioSelected: {
+      borderColor: theme.purple,
+      backgroundColor: theme.purple,
+    },
+    planInfo: {
+      flex: 1,
+    },
+    planName: {
+      ...typography.bodyS,
+      color: theme.text2,
+      fontWeight: '600',
+    },
+    planNameSelected: {
+      color: theme.text,
+    },
+    planPrice: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      marginTop: 2,
+    },
+    savingsBadge: {
+      backgroundColor: theme.purpleBg,
+      borderRadius: radius.full,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderWidth: 1,
+      borderColor: theme.purple,
+    },
+    savingsText: {
+      ...typography.label,
+      color: theme.purple,
+    },
 
-  // CTA
-  ctaButton: {
-    backgroundColor: colors.dark.green,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  ctaText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
+    // CTA
+    ctaButton: {
+      backgroundColor: theme.green,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    ctaText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
 
-  // Footer
-  footer: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    textAlign: 'center',
-  },
-});
+    // Footer
+    footer: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      textAlign: 'center',
+    },
+  });
+}

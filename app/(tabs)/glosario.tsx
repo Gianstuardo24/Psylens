@@ -17,6 +17,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, glossaryTerms, conceptThreads } from '../../constants/data';
+import { useTheme } from '../../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const PROGRESS_KEY = 'psylens_progress';
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
@@ -88,6 +91,9 @@ function BottomSheet({
   onClose: () => void;
   onSelectTerm: (t: Term) => void;
 }) {
+  const { theme } = useTheme();
+  const bs = useMemo(() => makeBsStyles(theme), [theme]);
+
   const { height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const translateY      = useRef(new Animated.Value(screenHeight)).current;
@@ -210,6 +216,8 @@ function BottomSheet({
 // ─── TermRow ──────────────────────────────────────────────────────────────────
 
 function TermRow({ term, onPress }: { term: Term; onPress: () => void }) {
+  const { theme } = useTheme();
+  const tr = useMemo(() => makeTrStyles(theme), [theme]);
   return (
     <TouchableOpacity style={tr.row} onPress={onPress} activeOpacity={0.7}>
       <View style={tr.body}>
@@ -224,6 +232,8 @@ function TermRow({ term, onPress }: { term: Term; onPress: () => void }) {
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyState({ query }: { query: string }) {
+  const { theme } = useTheme();
+  const es = useMemo(() => makeEsStyles(theme), [theme]);
   const hasQuery = query.trim().length > 0;
   return (
     <View style={es.container}>
@@ -242,6 +252,7 @@ function EmptyState({ query }: { query: string }) {
 
 export default function GlosarioScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
 
   const [progress,     setProgress]     = useState<ProgressMap>({});
   const [query,        setQuery]        = useState('');
@@ -270,6 +281,8 @@ export default function GlosarioScreen() {
 
   const groups = useMemo(() => buildGroups(filtered), [filtered]);
 
+  const styles = useMemo(() => makeStyles(theme), [theme]);
+
   function openSheet(term: Term) {
     setSelectedTerm(term);
     setSheetVisible(true);
@@ -296,7 +309,7 @@ export default function GlosarioScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar…"
-            placeholderTextColor={colors.dark.text3}
+            placeholderTextColor={theme.text3}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
@@ -365,237 +378,245 @@ export default function GlosarioScreen() {
 
 // ─── BottomSheet styles ───────────────────────────────────────────────────────
 
-const bs = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.dark.bg2,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    maxHeight: '80%',
-  },
-  handleWrap: {
-    alignItems: 'center',
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.dark.bg3,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-  },
+function makeBsStyles(theme: Theme) {
+  return StyleSheet.create({
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+    sheet: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.bg2,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      maxHeight: '80%',
+    },
+    handleWrap: {
+      alignItems: 'center',
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    handle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.bg3,
+    },
+    content: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+    },
 
-  // Author tag (green pill)
-  authorTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    backgroundColor: colors.dark.greenBg,
-    marginBottom: spacing.md,
-  },
-  authorTagText: {
-    ...typography.label,
-    color: colors.dark.green,
-  },
+    // Author tag (green pill)
+    authorTag: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: theme.greenBg,
+      marginBottom: spacing.md,
+    },
+    authorTagText: {
+      ...typography.label,
+      color: theme.green,
+    },
 
-  // Term title
-  termTitle: {
-    ...typography.h2,
-    color: colors.dark.text,
-    marginBottom: spacing.md,
-  },
+    // Term title
+    termTitle: {
+      ...typography.h2,
+      color: theme.text,
+      marginBottom: spacing.md,
+    },
 
-  // Definition
-  definition: {
-    ...typography.body,
-    color: colors.dark.text2,
-    lineHeight: 26,
-  },
+    // Definition
+    definition: {
+      ...typography.body,
+      color: theme.text2,
+      lineHeight: 26,
+    },
 
-  // Connections
-  connectSection: {
-    marginTop: spacing.xl,
-  },
-  connectLabel: {
-    ...typography.label,
-    color: colors.dark.text3,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: spacing.md,
-  },
-  chipsRow: {
-    gap: spacing.sm,
-    paddingBottom: spacing.xs,
-  },
-  chip: {
-    minHeight: 44,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    backgroundColor: colors.dark.bg3,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chipText: {
-    ...typography.bodyXS,
-    color: colors.dark.text2,
-  },
-});
+    // Connections
+    connectSection: {
+      marginTop: spacing.xl,
+    },
+    connectLabel: {
+      ...typography.label,
+      color: theme.text3,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      marginBottom: spacing.md,
+    },
+    chipsRow: {
+      gap: spacing.sm,
+      paddingBottom: spacing.xs,
+    },
+    chip: {
+      minHeight: 44,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: theme.border,
+      backgroundColor: theme.bg3,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    chipText: {
+      ...typography.bodyXS,
+      color: theme.text2,
+    },
+  });
+}
 
 // ─── TermRow styles ───────────────────────────────────────────────────────────
 
-const tr = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.dark.border,
-    gap: spacing.sm,
-  },
-  body: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  term: {
-    ...typography.body,
-    color: colors.dark.green,
-    fontWeight: '500',
-  },
-  preview: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-  },
-  chevron: {
-    ...typography.h3,
-    color: colors.dark.text3,
-    lineHeight: 22,
-  },
-});
+function makeTrStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      gap: spacing.sm,
+    },
+    body: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    term: {
+      ...typography.body,
+      color: theme.green,
+      fontWeight: '500',
+    },
+    preview: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
+    chevron: {
+      ...typography.h3,
+      color: theme.text3,
+      lineHeight: 22,
+    },
+  });
+}
 
 // ─── Empty state styles ───────────────────────────────────────────────────────
 
-const es = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xxxl,
-  },
-  glyph: {
-    fontSize: 40,
-    color: colors.dark.text3,
-    marginBottom: spacing.lg,
-  },
-  title: {
-    ...typography.h3,
-    color: colors.dark.text,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-});
+function makeEsStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.xxl,
+      paddingBottom: spacing.xxxl,
+    },
+    glyph: {
+      fontSize: 40,
+      color: theme.text3,
+      marginBottom: spacing.lg,
+    },
+    title: {
+      ...typography.h3,
+      color: theme.text,
+      marginBottom: spacing.sm,
+      textAlign: 'center',
+    },
+    subtitle: {
+      ...typography.bodyS,
+      color: theme.text3,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+  });
+}
 
 // ─── Screen styles ────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
 
-  // Header
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.h2,
-    color: colors.dark.text,
-  },
-  subtitle: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-    marginTop: spacing.xs,
-  },
+    // Header
+    header: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    title: {
+      ...typography.h2,
+      color: theme.text,
+    },
+    subtitle: {
+      ...typography.bodyS,
+      color: theme.text3,
+      marginTop: spacing.xs,
+    },
 
-  // Search bar
-  searchWrap: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.lg,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    ...typography.body,
-    color: colors.dark.text,
-    padding: 0,
-    margin: 0,
-  },
-  clearBtn: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-  },
+    // Search bar
+    searchWrap: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.lg,
+    },
+    searchBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.bg2,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    searchInput: {
+      flex: 1,
+      ...typography.body,
+      color: theme.text,
+      padding: 0,
+      margin: 0,
+    },
+    clearBtn: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
 
-  // Term list
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl,
-  },
+    // Term list
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xxxl,
+    },
 
-  // Author section
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  sectionLabel: {
-    ...typography.label,
-    color: colors.dark.text3,
-    letterSpacing: 0.8,
-  },
-  sectionRule: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.dark.border,
-  },
-});
+    // Author section
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    sectionLabel: {
+      ...typography.label,
+      color: theme.text3,
+      letterSpacing: 0.8,
+    },
+    sectionRule: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.border,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
+import { useTheme } from '../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const ONBOARDING_KEY = 'psylens_onboarding_done';
 const NAME_KEY       = 'psylens_user_name';
@@ -53,9 +56,10 @@ const STEPS: Step[] = [
 ];
 
 // ── Illustrations ─────────────────────────────────────────────────────────────
-// Each illustration is at least 120px in its dominant dimension.
 
-function LogoIllustration() {
+type IlStyles = ReturnType<typeof makeIlStyles>;
+
+function LogoIllustration({ il }: { il: IlStyles }) {
   return (
     <View style={il.logoWrap}>
       <View style={il.logoRow}>
@@ -68,7 +72,7 @@ function LogoIllustration() {
   );
 }
 
-function RingsIllustration() {
+function RingsIllustration({ il }: { il: IlStyles }) {
   return (
     <View style={il.ringOuter}>
       <View style={il.ringMid}>
@@ -78,7 +82,7 @@ function RingsIllustration() {
   );
 }
 
-function TimelineIllustration() {
+function TimelineIllustration({ il }: { il: IlStyles }) {
   return (
     <View style={il.timelineWrap}>
       {[0, 1, 2, 3, 4].map(i => (
@@ -91,7 +95,7 @@ function TimelineIllustration() {
   );
 }
 
-function StartIllustration() {
+function StartIllustration({ il }: { il: IlStyles }) {
   return (
     <View style={il.startCircle}>
       <Text style={il.startGlyph}>◎</Text>
@@ -104,8 +108,12 @@ function StartIllustration() {
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
   const { bottom: insetBottom } = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [currentPage, setCurrentPage] = useState(0);
   const [name, setName] = useState('');
+
+  const il     = useMemo(() => makeIlStyles(theme), [theme]);
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   // Shared entrance animation — applies to the text block of whichever page
   // is visible when the scroll settles. Only one page is on screen at a time,
@@ -144,10 +152,10 @@ export default function OnboardingScreen() {
 
             {/* Illustration — static, not animated */}
             <View style={styles.illustrationArea}>
-              {index === 0 && <LogoIllustration />}
-              {index === 1 && <RingsIllustration />}
-              {index === 2 && <TimelineIllustration />}
-              {index === 3 && <StartIllustration />}
+              {index === 0 && <LogoIllustration il={il} />}
+              {index === 1 && <RingsIllustration il={il} />}
+              {index === 2 && <TimelineIllustration il={il} />}
+              {index === 3 && <StartIllustration il={il} />}
             </View>
 
             {/* Text block — animated on step change */}
@@ -170,7 +178,7 @@ export default function OnboardingScreen() {
                   <TextInput
                     style={styles.nameInput}
                     placeholder="Tu nombre"
-                    placeholderTextColor={colors.dark.text3}
+                    placeholderTextColor={theme.text3}
                     value={name}
                     onChangeText={setName}
                     textAlign="center"
@@ -219,208 +227,212 @@ export default function OnboardingScreen() {
 
 // ── Illustration styles ───────────────────────────────────────────────────────
 
-const il = StyleSheet.create({
-  // Step 1 — Psylens logo mark + wordmark
-  logoWrap: {
-    alignItems: 'center',
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: colors.dark.text,
-  },
-  logoLine: {
-    width: 36,
-    height: 2,
-    backgroundColor: colors.dark.text,
-  },
-  wordmark: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: typography.h1.fontSize,
-    lineHeight: typography.h1.lineHeight,
-    fontWeight: '700',
-    color: colors.dark.text,
-    marginTop: spacing.xl,
-    textAlign: 'center',
-  },
+function makeIlStyles(theme: Theme) {
+  return StyleSheet.create({
+    // Step 1 — Psylens logo mark + wordmark
+    logoWrap: {
+      alignItems: 'center',
+    },
+    logoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    logoCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      borderWidth: 2,
+      borderColor: theme.text,
+    },
+    logoLine: {
+      width: 36,
+      height: 2,
+      backgroundColor: theme.text,
+    },
+    wordmark: {
+      fontFamily: 'PlayfairDisplay_700Bold',
+      fontSize: typography.h1.fontSize,
+      lineHeight: typography.h1.lineHeight,
+      fontWeight: '700',
+      color: theme.text,
+      marginTop: spacing.xl,
+      textAlign: 'center',
+    },
 
-  // Step 2 — concentric rings (Superficie / Concepto / Fondo)
-  ringOuter: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 1.5,
-    borderColor: colors.dark.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ringMid: {
-    width: 136,
-    height: 136,
-    borderRadius: 68,
-    borderWidth: 1.5,
-    borderColor: colors.dark.text3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ringInner: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.dark.green,
-  },
+    // Step 2 — concentric rings (Superficie / Concepto / Fondo)
+    ringOuter: {
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      borderWidth: 1.5,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ringMid: {
+      width: 136,
+      height: 136,
+      borderRadius: 68,
+      borderWidth: 1.5,
+      borderColor: theme.text3,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ringInner: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: theme.green,
+    },
 
-  // Step 3 — vertical reading timeline
-  timelineWrap: {
-    alignItems: 'center',
-  },
-  timelineItem: {
-    alignItems: 'center',
-  },
-  timelineNode: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.dark.bg3,
-    borderWidth: 1.5,
-    borderColor: colors.dark.border,
-  },
-  timelineNodeActive: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.dark.green,
-    borderColor: colors.dark.green,
-  },
-  timelineSegment: {
-    width: 2,
-    height: 52,
-    backgroundColor: colors.dark.border,
-  },
+    // Step 3 — vertical reading timeline
+    timelineWrap: {
+      alignItems: 'center',
+    },
+    timelineItem: {
+      alignItems: 'center',
+    },
+    timelineNode: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: theme.bg3,
+      borderWidth: 1.5,
+      borderColor: theme.border,
+    },
+    timelineNodeActive: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: theme.green,
+      borderColor: theme.green,
+    },
+    timelineSegment: {
+      width: 2,
+      height: 52,
+      backgroundColor: theme.border,
+    },
 
-  // Step 4 — start glyph
-  startCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.dark.greenBg,
-    borderWidth: 2,
-    borderColor: colors.dark.green,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  startGlyph: {
-    fontSize: 48,
-    lineHeight: 56,
-    color: colors.dark.green,
-  },
-});
+    // Step 4 — start glyph
+    startCircle: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: theme.greenBg,
+      borderWidth: 2,
+      borderColor: theme.green,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    startGlyph: {
+      fontSize: 48,
+      lineHeight: 56,
+      color: theme.green,
+    },
+  });
+}
 
 // ── Main styles ───────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
 
-  page: {
-    // width + height applied dynamically
-  },
+    page: {
+      // width + height applied dynamically
+    },
 
-  illustrationArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    illustrationArea: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  textArea: {
-    paddingHorizontal: spacing.xl,
-    // paddingBottom applied inline to incorporate safe-area inset
-  },
+    textArea: {
+      paddingHorizontal: spacing.xl,
+      // paddingBottom applied inline to incorporate safe-area inset
+    },
 
-  title: {
-    ...typography.h2,
-    color: colors.dark.text,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
+    title: {
+      ...typography.h2,
+      color: theme.text,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
 
-  titleFinal: {
-    ...typography.h1,
-    color: colors.dark.text,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
+    titleFinal: {
+      ...typography.h1,
+      color: theme.text,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
 
-  description: {
-    ...typography.body,
-    color: colors.dark.text2,
-    textAlign: 'center',
-    lineHeight: 26,
-    marginBottom: spacing.xxl,
-  },
+    description: {
+      ...typography.body,
+      color: theme.text2,
+      textAlign: 'center',
+      lineHeight: 26,
+      marginBottom: spacing.xxl,
+    },
 
-  // "Empezar" — full width, green background
-  button: {
-    width: '100%',
-    backgroundColor: colors.dark.green,
-    paddingVertical: spacing.lg,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-  },
+    // "Empezar" — full width, green background
+    button: {
+      width: '100%',
+      backgroundColor: theme.green,
+      paddingVertical: spacing.lg,
+      borderRadius: radius.lg,
+      alignItems: 'center',
+    },
 
-  buttonText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
+    buttonText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
 
-  // Dots — centered via justifyContent
-  dotsRow: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
+    // Dots — centered via justifyContent
+    dotsRow: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
 
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.dark.bg3,
-  },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.bg3,
+    },
 
-  dotActive: {
-    width: 20,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.dark.text,
-  },
+    dotActive: {
+      width: 20,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.text,
+    },
 
-  // Name input on final step
-  nameLabel: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  nameInput: {
-    ...typography.body,
-    color: colors.dark.text,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.dark.text,
-    paddingVertical: spacing.md,
-    marginBottom: spacing.xxl,
-    textAlign: 'center',
-  },
-});
+    // Name input on final step
+    nameLabel: {
+      ...typography.bodyS,
+      color: theme.text2,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    nameInput: {
+      ...typography.body,
+      color: theme.text,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.text,
+      paddingVertical: spacing.md,
+      marginBottom: spacing.xxl,
+      textAlign: 'center',
+    },
+  });
+}

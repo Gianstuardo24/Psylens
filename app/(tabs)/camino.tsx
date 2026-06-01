@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, blocks } from '../../constants/data';
 import { PaywallSheet } from '../../components/PaywallSheet';
+import { useTheme } from '../../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,6 +86,9 @@ function AuthorCard({
   author: typeof authors[0];
   state: AuthorState;
 }) {
+  const { theme } = useTheme();
+  const ac = useMemo(() => makeAcStyles(theme), [theme]);
+
   const portrait  = PORTRAITS[author.id] ?? null;
   const isDual    = author.id === 'heraclito-democrito';
 
@@ -200,6 +206,9 @@ function BlockNode({
   unlocked: string[];
   isPremium: boolean;
 }) {
+  const { theme } = useTheme();
+  const bn = useMemo(() => makeBnStyles(theme), [theme]);
+
   const status    = getBlockStatus(block, isPremium);
   const isActive  = status === 'active';
   const isLocked  = status === 'locked';
@@ -283,6 +292,7 @@ function BlockNode({
 
 export default function CaminoScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [expandedId,  setExpandedId]  = useState<string | null>('b0');
   const [progress,    setProgress]    = useState<ProgressMap>({});
   const [unlocked,    setUnlocked]    = useState<string[]>([]);
@@ -308,6 +318,7 @@ export default function CaminoScreen() {
   }
 
   const totalAuthors = blocks.reduce((sum, b) => sum + b.authors.length, 0);
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   return (
     <View style={styles.root}>
@@ -355,303 +366,309 @@ export default function CaminoScreen() {
 
 // ─── AuthorCard styles ────────────────────────────────────────────────────────
 
-const ac = StyleSheet.create({
-  card: {
-    height: 110,
-    borderRadius: radius.xl,           // 16px
-    backgroundColor: colors.dark.bg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'transparent',
-    marginBottom: spacing.sm,
-  },
-  cardActive: {
-    borderWidth: 1.5,
-    borderColor: colors.dark.purple,
-    shadowColor: colors.dark.purple,
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  cardDone: {
-    borderWidth: 1,
-    borderColor: colors.dark.green,
-  },
-  cardLocked: {
-    opacity: 0.45,
-  },
+function makeAcStyles(theme: Theme) {
+  return StyleSheet.create({
+    card: {
+      height: 110,
+      borderRadius: radius.xl,           // 16px
+      backgroundColor: theme.bg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: 'transparent',
+      marginBottom: spacing.sm,
+    },
+    cardActive: {
+      borderWidth: 1.5,
+      borderColor: theme.purple,
+      shadowColor: theme.purple,
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 3,
+    },
+    cardDone: {
+      borderWidth: 1,
+      borderColor: theme.green,
+    },
+    cardLocked: {
+      opacity: 0.45,
+    },
 
-  // Portrait
-  leftCol: {
-    width: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  leftColDual: {
-    width: 120,
-  },
-  dualWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dualCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.dark.bg3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  dualCircleRight: {
-    marginLeft: -16,
-    borderWidth: 2,
-    borderColor: colors.dark.bg,
-  },
-  dualImage: {
-    width: 64,
-    height: 64,
-  },
-  portrait: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.dark.bg3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  portraitImage: {
-    width: 64,
-    height: 64,
-  },
-  portraitOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: colors.dark.bg2,
-    opacity: 0.6,
-  },
-  initial: {
-    ...typography.h3,
-    color: colors.dark.text2,
-  },
+    // Portrait
+    leftCol: {
+      width: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    leftColDual: {
+      width: 120,
+    },
+    dualWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    dualCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    },
+    dualCircleRight: {
+      marginLeft: -16,
+      borderWidth: 2,
+      borderColor: theme.bg,
+    },
+    dualImage: {
+      width: 64,
+      height: 64,
+    },
+    portrait: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    },
+    portraitImage: {
+      width: 64,
+      height: 64,
+    },
+    portraitOverlay: {
+      position: 'absolute',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: theme.bg2,
+      opacity: 0.6,
+    },
+    initial: {
+      ...typography.h3,
+      color: theme.text2,
+    },
 
-  // Info
-  info: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  name: {
-    ...typography.bodyS,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
-  subtitle: {
-    ...typography.bodyXS,
-    color: colors.dark.text2,
-  },
-  dates: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-  },
-  dimText: {
-    color: colors.dark.text3,
-  },
+    // Info
+    info: {
+      flex: 1,
+      justifyContent: 'center',
+      gap: spacing.xs,
+    },
+    name: {
+      ...typography.bodyS,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    subtitle: {
+      ...typography.bodyXS,
+      color: theme.text2,
+    },
+    dates: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
+    dimText: {
+      color: theme.text3,
+    },
 
-  // Trailing badges
-  trailing: {
-    paddingRight: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 56,
-  },
-  badgePurple: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    backgroundColor: colors.dark.purpleBg,
-  },
-  badgePurpleText: {
-    ...typography.label,
-    color: colors.dark.purple,
-  },
-  badgeGreen: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.dark.greenBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeGreenText: {
-    ...typography.bodyS,
-    color: colors.dark.green,
-    fontWeight: '700',
-  },
-});
+    // Trailing badges
+    trailing: {
+      paddingRight: spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 56,
+    },
+    badgePurple: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: theme.purpleBg,
+    },
+    badgePurpleText: {
+      ...typography.label,
+      color: theme.purple,
+    },
+    badgeGreen: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: theme.greenBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeGreenText: {
+      ...typography.bodyS,
+      color: theme.green,
+      fontWeight: '700',
+    },
+  });
+}
 
 // ─── BlockNode styles ─────────────────────────────────────────────────────────
 
-const bn = StyleSheet.create({
-  wrapper: {
-    marginBottom: spacing.lg,
-    borderRadius: radius.xl,
-    backgroundColor: colors.dark.bg2,
-    overflow: 'hidden',
-  },
-  wrapperLocked: {
-    opacity: 0.55,
-  },
+function makeBnStyles(theme: Theme) {
+  return StyleSheet.create({
+    wrapper: {
+      marginBottom: spacing.lg,
+      borderRadius: radius.xl,
+      backgroundColor: theme.bg2,
+      overflow: 'hidden',
+    },
+    wrapperLocked: {
+      opacity: 0.55,
+    },
 
-  // Header row
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
+    // Header row
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.lg,
+      gap: spacing.md,
+    },
 
-  // Symbol icon box
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.dark.bg3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconLocked: {
-    backgroundColor: colors.dark.bg,
-  },
-  iconGlyph: {
-    fontSize: typography.h3.fontSize,
-    color: colors.dark.text2,
-  },
-  iconGlyphLocked: {
-    color: colors.dark.text3,
-  },
+    // Symbol icon box
+    icon: {
+      width: 44,
+      height: 44,
+      borderRadius: radius.md,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconLocked: {
+      backgroundColor: theme.bg,
+    },
+    iconGlyph: {
+      fontSize: typography.h3.fontSize,
+      color: theme.text2,
+    },
+    iconGlyphLocked: {
+      color: theme.text3,
+    },
 
-  // Text meta area
-  meta: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  name: {
-    ...typography.bodyS,
-    color: colors.dark.text,
-    fontWeight: '600',
-    flexShrink: 1,
-  },
-  nameLocked: {
-    color: colors.dark.text3,
-  },
-  era: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-  },
-  eraLocked: {
-    color: colors.dark.text3,
-  },
+    // Text meta area
+    meta: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    name: {
+      ...typography.bodyS,
+      color: theme.text,
+      fontWeight: '600',
+      flexShrink: 1,
+    },
+    nameLocked: {
+      color: theme.text3,
+    },
+    era: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
+    eraLocked: {
+      color: theme.text3,
+    },
 
-  // Tags
-  freeTag: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    backgroundColor: colors.dark.greenBg,
-  },
-  freeTagText: {
-    ...typography.label,
-    color: colors.dark.green,
-  },
-  premiumTag: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    backgroundColor: colors.dark.purpleBg,
-  },
-  premiumTagText: {
-    ...typography.label,
-    color: colors.dark.purple,
-  },
+    // Tags
+    freeTag: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: theme.greenBg,
+    },
+    freeTagText: {
+      ...typography.label,
+      color: theme.green,
+    },
+    premiumTag: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: theme.purpleBg,
+    },
+    premiumTagText: {
+      ...typography.label,
+      color: theme.purple,
+    },
 
-  // Progress bar
-  progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  progressTrack: {
-    flex: 1,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.dark.bg3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.dark.green,
-  },
-  progressText: {
-    ...typography.label,
-    color: colors.dark.text3,
-    minWidth: 28,
-    textAlign: 'right',
-  },
+    // Progress bar
+    progressRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    progressTrack: {
+      flex: 1,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: theme.bg3,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: theme.green,
+    },
+    progressText: {
+      ...typography.label,
+      color: theme.text3,
+      minWidth: 28,
+      textAlign: 'right',
+    },
 
-  // Chevron / lock indicator
-  chevron: {
-    ...typography.body,
-    color: colors.dark.text2,
-    paddingLeft: spacing.xs,
-  },
-  chevronLocked: {
-    color: colors.dark.text3,
-    fontSize: typography.bodyS.fontSize,
-  },
+    // Chevron / lock indicator
+    chevron: {
+      ...typography.body,
+      color: theme.text2,
+      paddingLeft: spacing.xs,
+    },
+    chevronLocked: {
+      color: theme.text3,
+      fontSize: typography.bodyS.fontSize,
+    },
 
-  // Authors list (expanded)
-  authorsList: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-});
+    // Authors list (expanded)
+    authorsList: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+  });
+}
 
 // ─── Screen styles ────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
-  scroll: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl,
-  },
-  header: {
-    marginBottom: spacing.xxl,
-  },
-  title: {
-    ...typography.h2,
-    color: colors.dark.text,
-  },
-  subtitle: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-    marginTop: spacing.xs,
-  },
-});
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
+    scroll: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
+    content: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xxxl,
+    },
+    header: {
+      marginBottom: spacing.xxl,
+    },
+    title: {
+      ...typography.h2,
+      color: theme.text,
+    },
+    subtitle: {
+      ...typography.bodyS,
+      color: theme.text3,
+      marginTop: spacing.xs,
+    },
+  });
+}

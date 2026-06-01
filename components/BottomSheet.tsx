@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 import { glossaryTerms, authors, conceptThreads } from '../constants/data';
+import { useTheme } from '../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const SHEET_HEIGHT = 460;
 
@@ -24,6 +27,7 @@ interface BottomSheetProps {
 
 export default function BottomSheet({ visible, termId, onClose }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   // Internal term navigation — chips can switch the displayed term without closing
   const [currentTermId, setCurrentTermId] = useState<string | null>(termId);
 
@@ -94,6 +98,8 @@ export default function BottomSheet({ visible, termId, onClose }: BottomSheetPro
       },
     })
   ).current;
+
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   if (!visible) return null;
 
@@ -195,106 +201,108 @@ export default function BottomSheet({ visible, termId, onClose }: BottomSheetPro
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    backgroundColor: 'rgba(0,0,0,0.65)',
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: SHEET_HEIGHT,
-    backgroundColor: colors.dark.bg2,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.xl,
-  },
-  // Handle
-  handleRow: {
-    alignItems: 'center',
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    backgroundColor: colors.dark.bg3,
-    borderRadius: 2,
-  },
-  // Tag
-  tag: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.dark.greenBg,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  tagText: {
-    ...typography.label,
-    color: colors.dark.green,
-    textTransform: 'uppercase',
-  },
-  // Title (h2 weight; Playfair Display in v2)
-  title: {
-    ...typography.h2,
-    color: colors.dark.text,
-    marginBottom: spacing.xs,
-  },
-  // Author origin
-  origin: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    letterSpacing: 0.3,
-    marginBottom: spacing.lg,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.dark.border,
-    marginBottom: spacing.lg,
-  },
-  // Definition
-  definition: {
-    ...typography.body,
-    color: colors.dark.text2,
-    lineHeight: 26,
-  },
-  // Related chips
-  chipsSection: {
-    marginTop: spacing.xl,
-  },
-  chipsLabel: {
-    ...typography.label,
-    color: colors.dark.text3,
-    textTransform: 'uppercase',
-    marginBottom: spacing.sm,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingRight: spacing.xl,
-  },
-  chip: {
-    minHeight: 44,
-    backgroundColor: colors.dark.bg3,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chipActive: {
-    backgroundColor: colors.dark.greenBg,
-    borderColor: colors.dark.green,
-  },
-  chipText: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-  },
-  chipTextActive: {
-    color: colors.dark.green,
-  },
-});
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      backgroundColor: 'rgba(0,0,0,0.65)',
+    },
+    sheet: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: SHEET_HEIGHT,
+      backgroundColor: theme.bg2,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      paddingHorizontal: spacing.xl,
+    },
+    // Handle
+    handleRow: {
+      alignItems: 'center',
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+    },
+    handle: {
+      width: 36,
+      height: 4,
+      backgroundColor: theme.bg3,
+      borderRadius: 2,
+    },
+    // Tag
+    tag: {
+      alignSelf: 'flex-start',
+      backgroundColor: theme.greenBg,
+      borderRadius: radius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    tagText: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+    },
+    // Title (h2 weight; Playfair Display in v2)
+    title: {
+      ...typography.h2,
+      color: theme.text,
+      marginBottom: spacing.xs,
+    },
+    // Author origin
+    origin: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      letterSpacing: 0.3,
+      marginBottom: spacing.lg,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: theme.border,
+      marginBottom: spacing.lg,
+    },
+    // Definition
+    definition: {
+      ...typography.body,
+      color: theme.text2,
+      lineHeight: 26,
+    },
+    // Related chips
+    chipsSection: {
+      marginTop: spacing.xl,
+    },
+    chipsLabel: {
+      ...typography.label,
+      color: theme.text3,
+      textTransform: 'uppercase',
+      marginBottom: spacing.sm,
+    },
+    chipsRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingRight: spacing.xl,
+    },
+    chip: {
+      minHeight: 44,
+      backgroundColor: theme.bg3,
+      borderRadius: radius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderWidth: 1,
+      borderColor: theme.border,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    chipActive: {
+      backgroundColor: theme.greenBg,
+      borderColor: theme.green,
+    },
+    chipText: {
+      ...typography.bodyS,
+      color: theme.text2,
+    },
+    chipTextActive: {
+      color: theme.green,
+    },
+  });
+}

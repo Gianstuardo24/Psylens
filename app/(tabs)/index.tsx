@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +15,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, blocks, glossaryTerms } from '../../constants/data';
+import { useTheme } from '../../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const PROGRESS_KEY     = 'psylens_progress';
 const DAYS_VISITED_KEY = 'psylens_days_visited';
@@ -77,13 +81,14 @@ const PORTRAITS: Record<string, number> = {
 };
 
 function PortraitCircle({ authorId, size }: { authorId: string; size: number }) {
+  const { theme } = useTheme();
   const [errored, setErrored] = useState(false);
   const source = PORTRAITS[authorId];
   return (
     <View style={{
       width: size, height: size, borderRadius: size / 2,
-      borderWidth: 2, borderColor: colors.dark.green,
-      backgroundColor: colors.dark.bg3, overflow: 'hidden',
+      borderWidth: 2, borderColor: theme.green,
+      backgroundColor: theme.bg3, overflow: 'hidden',
     }}>
       {!errored && source && (
         <Image
@@ -107,6 +112,7 @@ const LAYERS = [
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [progress,    setProgress]    = useState<ProgressMap>({});
   const [daysVisited, setDaysVisited] = useState<string[]>([]);
   const [refreshing,  setRefreshing]  = useState(false);
@@ -179,11 +185,14 @@ export default function DashboardScreen() {
   const unlockedConcepts = glossaryTerms.filter(t => isComplete(progress, t.authorId));
   const lastConcepts     = [...unlockedConcepts].reverse().slice(0, 3);
 
-  const completedInBlock = activeBlock.authors.filter(id => isComplete(progress, id)).length;
-  const blockPct         = Math.round((completedInBlock / activeBlock.authors.length) * 100);
+  const completedInBlock  = activeBlock.authors.filter(id => isComplete(progress, id)).length;
+  const blockPct          = Math.round((completedInBlock / activeBlock.authors.length) * 100);
+  const isActiveComplete  = isComplete(progress, activeAuthor.id);
 
   // Streak chips
   const last7 = getLast7Days();
+
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -196,8 +205,8 @@ export default function DashboardScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.dark.text}
-          colors={[colors.dark.green]}
+          tintColor={theme.text}
+          colors={[theme.green]}
         />
       }
     >
@@ -319,8 +328,11 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Próximo en el camino</Text>
           <TouchableOpacity
-            style={[styles.nextCard, { flexDirection: 'row', alignItems: 'center' }]}
-            onPress={() => router.push(`/autor/${nextAuthor.id}`)}
+            style={[styles.nextCard, { flexDirection: 'row', alignItems: 'center' }, !isActiveComplete && { opacity: 0.5 }]}
+            onPress={isActiveComplete
+              ? () => router.push(`/autor/${nextAuthor.id}`)
+              : () => Alert.alert('Autor bloqueado', `Completa a ${activeAuthor.name} primero para continuar`)
+            }
             activeOpacity={0.85}
           >
             <View style={{ flex: 1 }}>
@@ -343,247 +355,249 @@ export default function DashboardScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl,
-  },
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    scroll: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
+    content: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xxxl,
+    },
 
-  // Header
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing.xxl,
-  },
-  wordmark: {
-    ...typography.h2,
-    color: colors.dark.text,
-    marginBottom: spacing.xs,
-  },
-  greeting: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-  },
-  date: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    marginTop: spacing.xs,
-    textTransform: 'capitalize',
-  },
+    // Header
+    header: {
+      alignItems: 'center',
+      marginBottom: spacing.xxl,
+    },
+    wordmark: {
+      ...typography.h2,
+      color: theme.text,
+      marginBottom: spacing.xs,
+    },
+    greeting: {
+      ...typography.bodyS,
+      color: theme.text2,
+    },
+    date: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      marginTop: spacing.xs,
+      textTransform: 'capitalize',
+    },
 
-  // Section wrapper
-  section: {
-    marginBottom: spacing.xxl,
-  },
-  sectionLabel: {
-    ...typography.label,
-    color: colors.dark.text3,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: spacing.md,
-  },
+    // Section wrapper
+    section: {
+      marginBottom: spacing.xxl,
+    },
+    sectionLabel: {
+      ...typography.label,
+      color: theme.text3,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.md,
+    },
 
-  // Streak
-  streakHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  streakCount: {
-    ...typography.bodyS,
-    color: colors.dark.green,
-    fontWeight: '600',
-  },
-  streakRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  streakChip: {
-    flex: 1,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.dark.bg3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  streakChipDone: {
-    backgroundColor: colors.dark.greenBg,
-  },
-  streakLabel: {
-    ...typography.label,
-    color: colors.dark.text3,
-  },
-  streakLabelDone: {
-    color: colors.dark.green,
-  },
+    // Streak
+    streakHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    streakCount: {
+      ...typography.bodyS,
+      color: theme.green,
+      fontWeight: '600',
+    },
+    streakRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+    },
+    streakChip: {
+      flex: 1,
+      height: 44,
+      borderRadius: radius.md,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    streakChipDone: {
+      backgroundColor: theme.greenBg,
+    },
+    streakLabel: {
+      ...typography.label,
+      color: theme.text3,
+    },
+    streakLabelDone: {
+      color: theme.green,
+    },
 
-  // Continuar card
-  continueCard: {
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    padding: spacing.lg,
-  },
-  continuePortrait: {
-    position: 'absolute',
-    top: 24,
-    right: 24,
-    zIndex: 1,
-  },
-  blockChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.dark.greenBg,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  blockChipText: {
-    ...typography.label,
-    color: colors.dark.green,
-    textTransform: 'uppercase',
-  },
-  continueAuthorName: {
-    fontSize: typography.h2.fontSize,
-    lineHeight: typography.h2.lineHeight,
-    fontWeight: '700',
-    fontFamily: 'PlayfairDisplay_700Bold',
-    color: colors.dark.text,
-    marginBottom: spacing.xs,
-  },
-  continueDates: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-    marginBottom: spacing.lg,
-  },
-  layerRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  layerChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    backgroundColor: colors.dark.bg3,
-  },
-  layerChipDone: {
-    backgroundColor: colors.dark.greenBg,
-  },
-  layerChipText: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-  },
-  layerChipTextDone: {
-    color: colors.dark.green,
-  },
-  layerCount: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    marginBottom: spacing.lg,
-  },
-  readButton: {
-    backgroundColor: colors.dark.green,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  readButtonText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
+    // Continuar card
+    continueCard: {
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: spacing.lg,
+    },
+    continuePortrait: {
+      position: 'absolute',
+      top: 24,
+      right: 24,
+      zIndex: 1,
+    },
+    blockChip: {
+      alignSelf: 'flex-start',
+      backgroundColor: theme.greenBg,
+      borderRadius: radius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    blockChipText: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+    },
+    continueAuthorName: {
+      fontSize: typography.h2.fontSize,
+      lineHeight: typography.h2.lineHeight,
+      fontWeight: '700',
+      fontFamily: 'PlayfairDisplay_700Bold',
+      color: theme.text,
+      marginBottom: spacing.xs,
+    },
+    continueDates: {
+      ...typography.bodyS,
+      color: theme.text3,
+      marginBottom: spacing.lg,
+    },
+    layerRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+    layerChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: theme.bg3,
+    },
+    layerChipDone: {
+      backgroundColor: theme.greenBg,
+    },
+    layerChipText: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
+    layerChipTextDone: {
+      color: theme.green,
+    },
+    layerCount: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      marginBottom: spacing.lg,
+    },
+    readButton: {
+      backgroundColor: theme.green,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    readButtonText: {
+      ...typography.body,
+      color: '#ffffff',
+      fontWeight: '600',
+    },
 
-  // Stats
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.sm,
-    alignItems: 'center',
-  },
-  statValue: {
-    ...typography.h2,
-    color: colors.dark.text,
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    textAlign: 'center',
-    lineHeight: 16,
-  },
+    // Stats
+    statsRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    statBox: {
+      flex: 1,
+      backgroundColor: theme.bg2,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+    },
+    statValue: {
+      ...typography.h2,
+      color: theme.text,
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      textAlign: 'center',
+      lineHeight: 16,
+    },
 
-  // Últimos conceptos
-  conceptsRow: {
-    gap: spacing.sm,
-    paddingRight: spacing.xl,
-  },
-  conceptChip: {
-    width: 148,
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    padding: spacing.md,
-  },
-  conceptBlock: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    marginBottom: spacing.xs,
-  },
-  conceptTerm: {
-    ...typography.bodyS,
-    color: colors.dark.text,
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  conceptAuthor: {
-    ...typography.bodyXS,
-    color: colors.dark.text2,
-  },
+    // Últimos conceptos
+    conceptsRow: {
+      gap: spacing.sm,
+      paddingRight: spacing.xl,
+    },
+    conceptChip: {
+      width: 148,
+      backgroundColor: theme.bg2,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: spacing.md,
+    },
+    conceptBlock: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      marginBottom: spacing.xs,
+    },
+    conceptTerm: {
+      ...typography.bodyS,
+      color: theme.text,
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+    },
+    conceptAuthor: {
+      ...typography.bodyXS,
+      color: theme.text2,
+    },
 
-  // Próximo card
-  nextCard: {
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    padding: spacing.lg,
-    opacity: 0.7,
-  },
-  nextBlockChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.dark.bg3,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  nextBlockChipText: {
-    ...typography.label,
-    color: colors.dark.text3,
-    textTransform: 'uppercase',
-  },
-  nextAuthorName: {
-    ...typography.h3,
-    color: colors.dark.text2,
-    marginBottom: spacing.xs,
-  },
-  nextDates: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-  },
-});
+    // Próximo card
+    nextCard: {
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: spacing.lg,
+      opacity: 0.7,
+    },
+    nextBlockChip: {
+      alignSelf: 'flex-start',
+      backgroundColor: theme.bg3,
+      borderRadius: radius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    nextBlockChipText: {
+      ...typography.label,
+      color: theme.text3,
+      textTransform: 'uppercase',
+    },
+    nextAuthorName: {
+      ...typography.h3,
+      color: theme.text2,
+      marginBottom: spacing.xs,
+    },
+    nextDates: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
+  });
+}

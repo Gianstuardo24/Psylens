@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,11 +16,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors } from '../../constants/data';
+import { useTheme } from '../../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const PROGRESS_KEY     = 'psylens_progress';
 const DAYS_VISITED_KEY = 'psylens_days_visited';
+const NAME_KEY         = 'psylens_user_name';
 
-const USER_NAME  = 'Usuario';
 const USER_EMAIL = 'usuario@email.com';
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
@@ -51,6 +54,7 @@ type SettingRowProps = {
   rightElement?: React.ReactNode;
   labelColor?: string;
   isLast?: boolean;
+  theme: Theme;
 };
 
 function SettingRow({
@@ -60,7 +64,10 @@ function SettingRow({
   rightElement,
   labelColor,
   isLast,
+  theme,
 }: SettingRowProps) {
+  const sr = useMemo(() => makeSrStyles(theme), [theme]);
+
   const inner = (
     <View style={[sr.row, !isLast && sr.rowBorder]}>
       <Text style={[sr.label, labelColor ? { color: labelColor } : undefined]}>
@@ -91,10 +98,11 @@ function SettingRow({
 
 export default function YoScreen() {
   const insets = useSafeAreaInsets();
+  const { theme, isDark, toggleTheme } = useTheme();
 
   const [progress,    setProgress]    = useState<ProgressMap>({});
   const [daysVisited, setDaysVisited] = useState<string[]>([]);
-  const [isDark,        setIsDark]        = useState(true);
+  const [userName,    setUserName]    = useState('');
   const [language,      setLanguage]      = useState<'Español' | 'English'>('Español');
   const [reminderTime,  setReminderTime]  = useState('9:00');
   const [isPremium]                       = useState(false);
@@ -105,9 +113,11 @@ export default function YoScreen() {
       Promise.all([
         AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
         AsyncStorage.getItem(DAYS_VISITED_KEY).catch(() => null),
-      ]).then(([rawProg, rawDays]) => {
+        AsyncStorage.getItem(NAME_KEY).catch(() => null),
+      ]).then(([rawProg, rawDays, rawName]) => {
         if (rawProg) setProgress(JSON.parse(rawProg));
         if (rawDays) setDaysVisited(JSON.parse(rawDays));
+        setUserName(rawName ?? '');
       });
     }, []),
   );
@@ -117,6 +127,8 @@ export default function YoScreen() {
     sum + (p.surface ? 1 : 0) + (p.concept ? 1 : 0) + (p.fondo ? 1 : 0)
   ), 0);
   const streak = computeStreak(daysVisited);
+
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -179,7 +191,23 @@ export default function YoScreen() {
       'Esta acción es permanente y no se puede deshacer. Todos tus datos serán eliminados.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar cuenta', style: 'destructive', onPress: () => {} },
+        {
+          text: 'Eliminar cuenta',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.multiRemove([
+              'psylens_progress',
+              'psylens_streak',
+              'psylens_last_active',
+              'psylens_onboarding_done',
+              'psylens_concepts',
+              'psylens_is_premium',
+              'psylens_unlocked',
+              'psylens_days_visited',
+            ]).catch(() => {});
+            router.replace('/splash');
+          },
+        },
       ],
     );
   }
@@ -215,7 +243,7 @@ export default function YoScreen() {
 
   return (
     <ScrollView
-      style={[styles.scroll, { backgroundColor: colors.dark.bg }]}
+      style={[styles.scroll, { backgroundColor: theme.bg }]}
       contentContainerStyle={[
         styles.content,
         { paddingTop: insets.top + spacing.lg },
@@ -225,7 +253,7 @@ export default function YoScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.dark.text3}
+          tintColor={theme.text3}
         />
       }
     >
@@ -234,10 +262,10 @@ export default function YoScreen() {
       <View style={styles.avatarSection}>
         <View style={styles.avatar}>
           <Text style={styles.avatarInitial}>
-            {USER_NAME[0].toUpperCase()}
+            {(userName || 'Explorador')[0].toUpperCase()}
           </Text>
         </View>
-        <Text style={styles.userName}>{USER_NAME}</Text>
+        <Text style={styles.userName}>{userName || 'Explorador'}</Text>
         <Text style={styles.userEmail}>{USER_EMAIL}</Text>
       </View>
 
@@ -269,38 +297,42 @@ export default function YoScreen() {
       <View style={styles.card}>
 
         <SettingRow
+          theme={theme}
           label="Modo oscuro"
           rightElement={
             <Switch
               value={isDark}
-              onValueChange={setIsDark}
+              onValueChange={toggleTheme}
               trackColor={{
-                false: colors.dark.bg3,
-                true:  colors.dark.green,
+                false: theme.bg3,
+                true:  theme.green,
               }}
               thumbColor={
                 Platform.OS === 'android'
-                  ? isDark ? colors.dark.text : colors.dark.text3
+                  ? isDark ? theme.text : theme.text3
                   : undefined
               }
-              ios_backgroundColor={colors.dark.bg3}
+              ios_backgroundColor={theme.bg3}
             />
           }
         />
 
         <SettingRow
+          theme={theme}
           label="Idioma"
           value={language}
           onPress={handleLanguage}
         />
 
         <SettingRow
+          theme={theme}
           label="Recordatorio diario"
           value={`${reminderTime} AM`}
           onPress={handleReminder}
         />
 
         <SettingRow
+          theme={theme}
           label="Suscripción"
           value={isPremium ? 'Premium' : 'Gratuita'}
           onPress={handleSubscription}
@@ -314,20 +346,23 @@ export default function YoScreen() {
       <View style={styles.card}>
 
         <SettingRow
+          theme={theme}
           label="Cerrar sesión"
-          labelColor={colors.dark.text2}
+          labelColor={theme.text2}
           onPress={handleSignOut}
         />
 
         <SettingRow
+          theme={theme}
           label="Resetear progreso"
-          labelColor={colors.dark.coral}
+          labelColor={theme.coral}
           onPress={handleResetProgress}
         />
 
         <SettingRow
+          theme={theme}
           label="Eliminar cuenta"
-          labelColor={colors.dark.coral}
+          labelColor={theme.coral}
           onPress={handleDeleteAccount}
           isLast
         />
@@ -343,138 +378,142 @@ export default function YoScreen() {
 
 // ─── SettingRow styles ────────────────────────────────────────────────────────
 
-const sr = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    minHeight: 52,
-  },
-  rowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.dark.border,
-  },
-  label: {
-    ...typography.body,
-    color: colors.dark.text,
-    flex: 1,
-  },
-  right: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  value: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-  },
-  chevron: {
-    ...typography.h3,
-    color: colors.dark.text3,
-    lineHeight: 24,
-  },
-});
+function makeSrStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xl,
+      minHeight: 52,
+    },
+    rowBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    label: {
+      ...typography.body,
+      color: theme.text,
+      flex: 1,
+    },
+    right: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    value: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
+    chevron: {
+      ...typography.h3,
+      color: theme.text3,
+      lineHeight: 24,
+    },
+  });
+}
 
 // ─── Screen styles ────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl,
-  },
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xxxl,
+    },
 
-  // ── Avatar section
-  avatarSection: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.dark.purpleBg,
-    borderWidth: 1.5,
-    borderColor: colors.dark.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  avatarInitial: {
-    ...typography.h1,
-    color: colors.dark.purple,
-  },
-  userName: {
-    ...typography.h2,
-    color: colors.dark.text,
-    marginBottom: spacing.xs,
-  },
-  userEmail: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-  },
+    // ── Avatar section
+    avatarSection: {
+      alignItems: 'center',
+      paddingVertical: spacing.xxl,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.purpleBg,
+      borderWidth: 1.5,
+      borderColor: theme.purple,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+    },
+    avatarInitial: {
+      ...typography.h1,
+      color: theme.purple,
+    },
+    userName: {
+      ...typography.h2,
+      color: theme.text,
+      marginBottom: spacing.xs,
+    },
+    userEmail: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
 
-  // ── Section label (shared)
-  sectionLabel: {
-    ...typography.label,
-    color: colors.dark.text3,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
+    // ── Section label (shared)
+    sectionLabel: {
+      ...typography.label,
+      color: theme.text3,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      marginBottom: spacing.sm,
+      marginTop: spacing.md,
+    },
 
-  // ── Stats card
-  statsCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    overflow: 'hidden',
-    marginBottom: spacing.lg,
-  },
-  stat: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xl,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: colors.dark.border,
-    marginVertical: spacing.lg,
-  },
-  statValue: {
-    ...typography.h2,
-    color: colors.dark.text,
-  },
-  statLabel: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-    lineHeight: 16,
-  },
+    // ── Stats card
+    statsCard: {
+      flexDirection: 'row',
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      overflow: 'hidden',
+      marginBottom: spacing.lg,
+    },
+    stat: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xl,
+    },
+    statDivider: {
+      width: 1,
+      backgroundColor: theme.border,
+      marginVertical: spacing.lg,
+    },
+    statValue: {
+      ...typography.h2,
+      color: theme.text,
+    },
+    statLabel: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      textAlign: 'center',
+      marginTop: spacing.xs,
+      lineHeight: 16,
+    },
 
-  // ── Settings / account card
-  card: {
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    overflow: 'hidden',
-    marginBottom: spacing.lg,
-  },
+    // ── Settings / account card
+    card: {
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      overflow: 'hidden',
+      marginBottom: spacing.lg,
+    },
 
-  // ── Version note
-  versionText: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-  },
-});
+    // ── Version note
+    versionText: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      textAlign: 'center',
+      marginTop: spacing.xl,
+    },
+  });
+}

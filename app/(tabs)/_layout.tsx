@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
+import { useTheme } from '../../hooks/useTheme';
 
 type IonName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -27,20 +27,21 @@ function makeIcon(tab: string) {
 }
 
 export default function TabLayout() {
+  const { theme } = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.dark.bg2,
-          borderTopColor: colors.dark.border,
+          backgroundColor: theme.bg2,
+          borderTopColor: theme.border,
           borderTopWidth: 1,
           height: 84,
           paddingBottom: 28,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: colors.dark.text,
-        tabBarInactiveTintColor: colors.dark.text3,
+        tabBarActiveTintColor: theme.text,
+        tabBarInactiveTintColor: theme.text3,
         tabBarLabelStyle: {
           fontSize: typography.label.fontSize,
           fontWeight: typography.label.fontWeight,

@@ -8,7 +8,8 @@ import {
   PlayfairDisplay_400Regular_Italic,
 } from '@expo-google-fonts/playfair-display';
 import * as SplashScreen from 'expo-splash-screen';
-import { colors } from '../constants/colors';
+import { ThemeProvider } from '../context/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,33 +19,15 @@ export const unstable_settings = {
   initialRouteName: 'splash',
 };
 
-export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    PlayfairDisplay_400Regular,
-    PlayfairDisplay_700Bold,
-    PlayfairDisplay_400Regular_Italic,
-  });
-
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
-
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
-
+function ThemedStack() {
+  const { theme, isDark } = useTheme();
   return (
     <>
-      {/* Force light-on-dark status bar across all screens */}
-      <StatusBar style="light" backgroundColor={colors.dark.bg} />
-
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={theme.bg} />
       <Stack
         screenOptions={{
           headerShown: false,
-          // Prevents a white flash between navigations on Android
-          contentStyle: { backgroundColor: colors.dark.bg },
+          contentStyle: { backgroundColor: theme.bg },
         }}
       >
         {/* Root redirect — no animation, just hands off immediately */}
@@ -69,5 +52,29 @@ export default function RootLayout() {
         />
       </Stack>
     </>
+  );
+}
+
+export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_700Bold,
+    PlayfairDisplay_400Regular_Italic,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
+  return (
+    <ThemeProvider>
+      <ThemedStack />
+    </ThemeProvider>
   );
 }

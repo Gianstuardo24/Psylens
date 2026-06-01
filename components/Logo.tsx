@@ -12,7 +12,7 @@ interface LogoProps {
 export function Logo({ color = colors.dark.text, size = 22 }: LogoProps) {
   const circleDiameter = Math.round(size * (8 / 22));
   const bridgeWidth    = Math.round(size * (4 / 22));
-  const strokeWidth    = 1.2;
+  const strokeWidth    = 2.2;
 
   const circleStyle = {
     width:        circleDiameter,

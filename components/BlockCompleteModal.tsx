@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
 } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
+import { useTheme } from '../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -25,6 +28,7 @@ const SYMBOL_MAP: Record<string, string> = {
 
 // ── Particles ─────────────────────────────────────────────────────────────────
 
+// green and purple are identical in dark and light themes
 const PALETTE = [
   colors.dark.green, colors.dark.green, colors.dark.green,
   colors.dark.purple, colors.dark.purple,
@@ -152,8 +156,11 @@ export function BlockCompleteModal({
   onContinue,
   onViewSummary,
 }: Props) {
+  const { theme } = useTheme();
   const cardScale   = useRef(new Animated.Value(0.88)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
+
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   useEffect(() => {
     if (visible) {
@@ -255,121 +262,123 @@ export function BlockCompleteModal({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
-  },
-  card: {
-    width: '100%',
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    alignItems: 'center',
-    paddingVertical: spacing.xxxl,
-    paddingHorizontal: spacing.xxl,
-  },
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: theme.bg,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xxl,
+    },
+    card: {
+      width: '100%',
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      paddingVertical: spacing.xxxl,
+      paddingHorizontal: spacing.xxl,
+    },
 
-  // Icon
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.dark.greenBg,
-    borderWidth: 2,
-    borderColor: colors.dark.green,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  iconGlyph: {
-    fontSize: 32,
-    lineHeight: 40,
-    color: colors.dark.green,
-  },
+    // Icon
+    iconCircle: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.greenBg,
+      borderWidth: 2,
+      borderColor: theme.green,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+    },
+    iconGlyph: {
+      fontSize: 32,
+      lineHeight: 40,
+      color: theme.green,
+    },
 
-  // Labels
-  completedLabel: {
-    ...typography.label,
-    color: colors.dark.green,
-    textTransform: 'uppercase',
-    letterSpacing: 1.4,
-    marginBottom: spacing.sm,
-  },
-  blockName: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: typography.h1.fontSize,
-    lineHeight: typography.h1.lineHeight,
-    fontWeight: '700',
-    color: colors.dark.text,
-    textAlign: 'center',
-    marginBottom: spacing.xxl,
-  },
+    // Labels
+    completedLabel: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+      letterSpacing: 1.4,
+      marginBottom: spacing.sm,
+    },
+    blockName: {
+      fontFamily: 'PlayfairDisplay_700Bold',
+      fontSize: typography.h1.fontSize,
+      lineHeight: typography.h1.lineHeight,
+      fontWeight: '700',
+      color: theme.text,
+      textAlign: 'center',
+      marginBottom: spacing.xxl,
+    },
 
-  // Stats
-  statsRow: {
-    flexDirection: 'row',
-    width: '100%',
-    backgroundColor: colors.dark.bg3,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: colors.dark.border,
-    marginVertical: spacing.xs,
-  },
-  statValue: {
-    ...typography.h3,
-    color: colors.dark.text,
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    ...typography.bodyXS,
-    color: colors.dark.text3,
-  },
+    // Stats
+    statsRow: {
+      flexDirection: 'row',
+      width: '100%',
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      marginBottom: spacing.xl,
+    },
+    statBox: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    statDivider: {
+      width: 1,
+      backgroundColor: theme.border,
+      marginVertical: spacing.xs,
+    },
+    statValue: {
+      ...typography.h3,
+      color: theme.text,
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
 
-  // Next block hint
-  nextHint: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-    textAlign: 'center',
-    marginBottom: spacing.xxl,
-  },
+    // Next block hint
+    nextHint: {
+      ...typography.bodyS,
+      color: theme.text2,
+      textAlign: 'center',
+      marginBottom: spacing.xxl,
+    },
 
-  // Buttons
-  primaryButton: {
-    width: '100%',
-    backgroundColor: colors.dark.green,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  primaryButtonText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    width: '100%',
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-  },
-  secondaryButtonText: {
-    ...typography.body,
-    color: colors.dark.text2,
-  },
-});
+    // Buttons
+    primaryButton: {
+      width: '100%',
+      backgroundColor: theme.green,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    primaryButtonText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    secondaryButton: {
+      width: '100%',
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    secondaryButtonText: {
+      ...typography.body,
+      color: theme.text2,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,9 @@ import { authors, blocks, glossaryTerms } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
+import { useTheme } from '../../hooks/useTheme';
+
+type Theme = typeof colors.dark;
 
 const PROGRESS_KEY       = 'psylens_progress';
 const UNLOCK_KEY         = 'psylens_unlocked';
@@ -69,10 +72,12 @@ function HighlightedText({
   text,
   terms,
   onTermPress,
+  styles,
 }: {
   text: string;
   terms: Term[];
   onTermPress: (termId: string) => void;
+  styles: { contentText: object; termLink: object };
 }) {
   if (!terms.length) {
     return <Text style={styles.contentText}>{text}</Text>;
@@ -100,6 +105,7 @@ function HighlightedText({
 export default function AutorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>('surface');
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
   const [progress,          setProgress]          = useState<ProgressMap>({});
@@ -112,6 +118,8 @@ export default function AutorScreen() {
 
   const animScale   = useRef(new Animated.Value(0.85)).current;
   const animOpacity = useRef(new Animated.Value(0)).current;
+
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   useEffect(() => {
     Promise.all([
@@ -322,7 +330,12 @@ export default function AutorScreen() {
           <View style={styles.divider} />
           {content.text.split('\n\n').map((para, i) => (
             <View key={i} style={styles.paragraph}>
-              <HighlightedText text={para} terms={authorTerms} onTermPress={setSelectedTermId} />
+              <HighlightedText
+                text={para}
+                terms={authorTerms}
+                onTermPress={setSelectedTermId}
+                styles={{ contentText: styles.contentText, termLink: styles.termLink }}
+              />
             </View>
           ))}
           <Text style={styles.closingLine}>{content.closingLine}</Text>
@@ -405,7 +418,7 @@ export default function AutorScreen() {
                 <View style={styles.dualPortraitCircle}>
                   <Image source={PORTRAIT_HERACLITO} style={styles.dualPortraitImage} resizeMode="cover" />
                 </View>
-                <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight, { borderColor: colors.dark.bg2 }]}>
+                <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight, { borderColor: theme.bg2 }]}>
                   <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
                 </View>
               </View>
@@ -501,368 +514,370 @@ export default function AutorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
-  errorContainer: {
-    flex: 1,
-    backgroundColor: colors.dark.bg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    ...typography.h3,
-    color: colors.dark.text2,
-  },
-  // Header
-  header: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  backButton: {
-    position: 'absolute',
-    left: spacing.lg,
-    zIndex: 10,
-    padding: spacing.xs,
-  },
-  backButtonText: {
-    fontSize: 26,
-    color: colors.dark.text,
-    lineHeight: 32,
-  },
-  portraitCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.dark.bg3,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  portraitImage: {
-    width: 120,
-    height: 120,
-  },
-  portraitInitial: {
-    ...typography.h1,
-    fontSize: 48,
-    color: colors.dark.text3,
-    lineHeight: 56,
-  },
-  dualPortraitWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dualPortraitCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.dark.bg3,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dualPortraitCircleRight: {
-    marginLeft: -16,
-    borderWidth: 2,
-    borderColor: colors.dark.bg,
-  },
-  dualPortraitImage: {
-    width: 64,
-    height: 64,
-  },
-  blockChip: {
-    alignSelf: 'center',
-    backgroundColor: colors.dark.greenBg,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  blockChipText: {
-    ...typography.label,
-    color: colors.dark.green,
-    textTransform: 'uppercase',
-  },
-  authorName: {
-    ...typography.h1,
-    color: colors.dark.text,
-    marginBottom: spacing.xs,
-    textAlign: 'center',
-  },
-  authorDates: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-    textAlign: 'center',
-  },
-  // Tabs
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: colors.dark.bg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.dark.border,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    position: 'relative',
-  },
-  tabLabel: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-  },
-  tabLabelActive: {
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
-  tabUnderline: {
-    position: 'absolute',
-    bottom: 0,
-    left: spacing.xl,
-    right: spacing.xl,
-    height: 2,
-    backgroundColor: colors.dark.green,
-    borderRadius: radius.full,
-  },
-  // Content
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-  },
-  question: {
-    ...typography.h4,
-    color: colors.dark.text,
-    fontFamily: 'PlayfairDisplay_400Regular_Italic',
-    marginBottom: spacing.lg,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.dark.border,
-    marginBottom: spacing.lg,
-  },
-  paragraph: {
-    marginBottom: spacing.lg,
-  },
-  contentText: {
-    ...typography.body,
-    color: colors.dark.text2,
-    lineHeight: 26,
-  },
-  termLink: {
-    color: colors.dark.green,
-    fontWeight: '600',
-  },
-  closingLine: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-    fontFamily: 'PlayfairDisplay_400Regular_Italic',
-    marginTop: spacing.md,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.dark.border,
-  },
-  // Bottom bar
-  bottomBar: {
-    backgroundColor: colors.dark.bg,
-    borderTopWidth: 1,
-    borderTopColor: colors.dark.border,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  deeperButton: {
-    backgroundColor: colors.dark.bg3,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-  },
-  deeperButtonText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
-  readButton: {
-    backgroundColor: colors.dark.green,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-  },
-  readButtonDone: {
-    backgroundColor: colors.dark.greenBg,
-  },
-  readButtonText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
-  readButtonTextDone: {
-    color: colors.dark.green,
-  },
-  nextButton: {
-    backgroundColor: colors.dark.bg3,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.dark.green,
-  },
-  nextButtonText: {
-    ...typography.body,
-    color: colors.dark.green,
-    fontWeight: '600',
-  },
-  // Premium lock overlay
-  lockOverlay: {
-    backgroundColor: 'rgba(15,15,14,0.94)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xxl,
-  },
-  lockContent: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  lockIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.dark.purpleBg,
-    borderWidth: 1.5,
-    borderColor: colors.dark.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  lockIconGlyph: {
-    fontSize: 28,
-    lineHeight: 36,
-    color: colors.dark.purple,
-  },
-  lockTitle: {
-    ...typography.h3,
-    color: colors.dark.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  lockSub: {
-    ...typography.bodyS,
-    color: colors.dark.text2,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.xl,
-  },
-  lockButton: {
-    backgroundColor: colors.dark.purple,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xxl,
-    alignItems: 'center',
-  },
-  lockButtonText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
-  // Paywall CTA in bottom bar
-  paywallButton: {
-    backgroundColor: colors.dark.purpleBg,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.dark.purple,
-  },
-  paywallButtonText: {
-    ...typography.body,
-    color: colors.dark.purple,
-    fontWeight: '600',
-  },
-  // Celebration modal
-  celebOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15,15,14,0.92)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
-  },
-  celebCard: {
-    width: '100%',
-    backgroundColor: colors.dark.bg2,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.dark.border,
-    alignItems: 'center',
-    paddingVertical: spacing.xxxl,
-    paddingHorizontal: spacing.xxl,
-  },
-  celebCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: colors.dark.bg3,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-    borderWidth: 2,
-    borderColor: colors.dark.green,
-  },
-  celebPortrait: {
-    width: 96,
-    height: 96,
-  },
-  celebInitial: {
-    ...typography.h1,
-    fontSize: 40,
-    color: colors.dark.text3,
-    lineHeight: 48,
-  },
-  celebBadge: {
-    ...typography.label,
-    color: colors.dark.green,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: spacing.sm,
-  },
-  celebAuthorName: {
-    ...typography.h2,
-    color: colors.dark.text,
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-  },
-  celebSubtitle: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-    textAlign: 'center',
-    marginBottom: spacing.xxl,
-  },
-  celebNextButton: {
-    width: '100%',
-    backgroundColor: colors.dark.green,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  celebNextText: {
-    ...typography.body,
-    color: colors.dark.text,
-    fontWeight: '600',
-  },
-  celebDismiss: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-  },
-  celebDismissText: {
-    ...typography.bodyS,
-    color: colors.dark.text3,
-  },
-});
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
+    errorContainer: {
+      flex: 1,
+      backgroundColor: theme.bg,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    errorText: {
+      ...typography.h3,
+      color: theme.text2,
+    },
+    // Header
+    header: {
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    backButton: {
+      position: 'absolute',
+      left: spacing.lg,
+      zIndex: 10,
+      padding: spacing.xs,
+    },
+    backButtonText: {
+      fontSize: 26,
+      color: theme.text,
+      lineHeight: 32,
+    },
+    portraitCircle: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: theme.bg3,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+    },
+    portraitImage: {
+      width: 120,
+      height: 120,
+    },
+    portraitInitial: {
+      ...typography.h1,
+      fontSize: 48,
+      color: theme.text3,
+      lineHeight: 56,
+    },
+    dualPortraitWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    dualPortraitCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.bg3,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dualPortraitCircleRight: {
+      marginLeft: -16,
+      borderWidth: 2,
+      borderColor: theme.bg,
+    },
+    dualPortraitImage: {
+      width: 64,
+      height: 64,
+    },
+    blockChip: {
+      alignSelf: 'center',
+      backgroundColor: theme.greenBg,
+      borderRadius: radius.full,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+    blockChipText: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+    },
+    authorName: {
+      ...typography.h1,
+      color: theme.text,
+      marginBottom: spacing.xs,
+      textAlign: 'center',
+    },
+    authorDates: {
+      ...typography.bodyS,
+      color: theme.text2,
+      textAlign: 'center',
+    },
+    // Tabs
+    tabBar: {
+      flexDirection: 'row',
+      backgroundColor: theme.bg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    tabItem: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      position: 'relative',
+    },
+    tabLabel: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
+    tabLabelActive: {
+      color: theme.text,
+      fontWeight: '600',
+    },
+    tabUnderline: {
+      position: 'absolute',
+      bottom: 0,
+      left: spacing.xl,
+      right: spacing.xl,
+      height: 2,
+      backgroundColor: theme.green,
+      borderRadius: radius.full,
+    },
+    // Content
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: spacing.lg,
+    },
+    question: {
+      ...typography.h4,
+      color: theme.text,
+      fontFamily: 'PlayfairDisplay_400Regular_Italic',
+      marginBottom: spacing.lg,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: theme.border,
+      marginBottom: spacing.lg,
+    },
+    paragraph: {
+      marginBottom: spacing.lg,
+    },
+    contentText: {
+      ...typography.body,
+      color: theme.text2,
+      lineHeight: 26,
+    },
+    termLink: {
+      color: theme.green,
+      fontWeight: '600',
+    },
+    closingLine: {
+      ...typography.bodyS,
+      color: theme.text3,
+      fontFamily: 'PlayfairDisplay_400Regular_Italic',
+      marginTop: spacing.md,
+      paddingTop: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+    },
+    // Bottom bar
+    bottomBar: {
+      backgroundColor: theme.bg,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+    },
+    deeperButton: {
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    deeperButtonText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    readButton: {
+      backgroundColor: theme.green,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+    },
+    readButtonDone: {
+      backgroundColor: theme.greenBg,
+    },
+    readButtonText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    readButtonTextDone: {
+      color: theme.green,
+    },
+    nextButton: {
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.green,
+    },
+    nextButtonText: {
+      ...typography.body,
+      color: theme.green,
+      fontWeight: '600',
+    },
+    // Premium lock overlay
+    lockOverlay: {
+      backgroundColor: 'rgba(15,15,14,0.94)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.xxl,
+    },
+    lockContent: {
+      alignItems: 'center',
+      width: '100%',
+    },
+    lockIconCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.purpleBg,
+      borderWidth: 1.5,
+      borderColor: theme.purple,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+    },
+    lockIconGlyph: {
+      fontSize: 28,
+      lineHeight: 36,
+      color: theme.purple,
+    },
+    lockTitle: {
+      ...typography.h3,
+      color: theme.text,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    lockSub: {
+      ...typography.bodyS,
+      color: theme.text2,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: spacing.xl,
+    },
+    lockButton: {
+      backgroundColor: theme.purple,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xxl,
+      alignItems: 'center',
+    },
+    lockButtonText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    // Paywall CTA in bottom bar
+    paywallButton: {
+      backgroundColor: theme.purpleBg,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: theme.purple,
+    },
+    paywallButtonText: {
+      ...typography.body,
+      color: theme.purple,
+      fontWeight: '600',
+    },
+    // Celebration modal
+    celebOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(15,15,14,0.92)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xxl,
+    },
+    celebCard: {
+      width: '100%',
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      paddingVertical: spacing.xxxl,
+      paddingHorizontal: spacing.xxl,
+    },
+    celebCircle: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: theme.bg3,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+      borderWidth: 2,
+      borderColor: theme.green,
+    },
+    celebPortrait: {
+      width: 96,
+      height: 96,
+    },
+    celebInitial: {
+      ...typography.h1,
+      fontSize: 40,
+      color: theme.text3,
+      lineHeight: 48,
+    },
+    celebBadge: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+      letterSpacing: 1.2,
+      marginBottom: spacing.sm,
+    },
+    celebAuthorName: {
+      ...typography.h2,
+      color: theme.text,
+      textAlign: 'center',
+      marginBottom: spacing.xs,
+    },
+    celebSubtitle: {
+      ...typography.bodyS,
+      color: theme.text3,
+      textAlign: 'center',
+      marginBottom: spacing.xxl,
+    },
+    celebNextButton: {
+      width: '100%',
+      backgroundColor: theme.green,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    celebNextText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    celebDismiss: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
+    celebDismissText: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
+  });
+}
