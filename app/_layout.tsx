@@ -56,7 +56,10 @@ export default function RootLayout() {
         {/* Onboarding — replaces splash, then replaces itself with tabs */}
         <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
 
-        {/* Main tab shell — replaces onboarding; no back-navigation desired */}
+        {/* Returning user welcome — shown after splash when onboarding is done */}
+        <Stack.Screen name="returning" options={{ animation: 'fade' }} />
+
+        {/* Main tab shell — replaces onboarding/returning; no back-navigation desired */}
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
 
         {/* Author detail — pushed from camino or dashboard, slides in from right */}

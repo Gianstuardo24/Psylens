@@ -24,6 +24,14 @@ const PROGRESS_KEY       = 'psylens_progress';
 const UNLOCK_KEY         = 'psylens_unlocked';
 const BLOCK_STARTED_KEY  = 'psylens_block_started';
 const PREMIUM_KEY        = 'psylens_is_premium';
+const STREAK_KEY         = 'psylens_streak';
+const LAST_ACTIVE_KEY    = 'psylens_last_active';
+
+function diffDays(isoEarlier: string, isoLater: string): number {
+  const a = new Date(isoEarlier + 'T00:00:00').getTime();
+  const b = new Date(isoLater   + 'T00:00:00').getTime();
+  return Math.round((b - a) / 86_400_000);
+}
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
@@ -186,6 +194,21 @@ export default function AutorScreen() {
     };
     setProgress(updated);
     await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(updated)).catch(() => {});
+
+    // Update streak — only increments once per calendar day
+    const today = new Date().toISOString().slice(0, 10);
+    const [rawStreak, lastActive] = await Promise.all([
+      AsyncStorage.getItem(STREAK_KEY).catch(() => null),
+      AsyncStorage.getItem(LAST_ACTIVE_KEY).catch(() => null),
+    ]);
+    if (lastActive !== today) {
+      const prev = rawStreak ? parseInt(rawStreak, 10) : 0;
+      const newStreak = lastActive && diffDays(lastActive, today) === 1 ? prev + 1 : 1;
+      await Promise.all([
+        AsyncStorage.setItem(STREAK_KEY, String(newStreak)),
+        AsyncStorage.setItem(LAST_ACTIVE_KEY, today),
+      ]).catch(() => {});
+    }
 
     // Unlock the next author for cross-block progression
     if (nextAuthor) {

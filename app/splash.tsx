@@ -33,7 +33,7 @@ export default function SplashScreen() {
     async function navigate() {
       const flag = await AsyncStorage.getItem(ONBOARDING_KEY).catch(() => null);
       await new Promise<void>(r => setTimeout(r, SPLASH_DURATION));
-      router.replace(flag !== null ? '/(tabs)' : '/onboarding');
+      router.replace(flag !== null ? '/returning' : '/onboarding');
     }
     navigate();
 

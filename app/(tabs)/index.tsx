@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -17,6 +18,8 @@ import { authors, blocks, glossaryTerms } from '../../constants/data';
 const PROGRESS_KEY     = 'psylens_progress';
 const DAYS_VISITED_KEY = 'psylens_days_visited';
 const NAME_KEY         = 'psylens_user_name';
+const STREAK_KEY       = 'psylens_streak';
+const LAST_ACTIVE_KEY  = 'psylens_last_active';
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
@@ -39,6 +42,12 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function diffDays(isoEarlier: string, isoLater: string): number {
+  const a = new Date(isoEarlier + 'T00:00:00').getTime();
+  const b = new Date(isoLater   + 'T00:00:00').getTime();
+  return Math.round((b - a) / 86_400_000);
+}
+
 function formattedDate(): string {
   return new Date().toLocaleDateString('es-ES', {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -56,6 +65,38 @@ function getLast7Days(): { iso: string; label: string }[] {
   return result;
 }
 
+// Static portrait map — Metro requires literal require() paths
+const PORTRAITS: Record<string, number> = {
+  'heraclito-democrito': require('../../assets/portraits/heraclito.png'),
+  'platon':              require('../../assets/portraits/platon.png'),
+  'aristoteles':         require('../../assets/portraits/aristoteles.png'),
+  'hipocrates':          require('../../assets/portraits/hipocrates.png'),
+  'descartes':           require('../../assets/portraits/descartes.png'),
+  'kant':                require('../../assets/portraits/kant.png'),
+  'schopenhauer':        require('../../assets/portraits/schopenhauer.png'),
+};
+
+function PortraitCircle({ authorId, size }: { authorId: string; size: number }) {
+  const [errored, setErrored] = useState(false);
+  const source = PORTRAITS[authorId];
+  return (
+    <View style={{
+      width: size, height: size, borderRadius: size / 2,
+      borderWidth: 2, borderColor: colors.dark.green,
+      backgroundColor: colors.dark.bg3, overflow: 'hidden',
+    }}>
+      {!errored && source && (
+        <Image
+          source={source}
+          style={{ width: size, height: size }}
+          resizeMode="cover"
+          onError={() => setErrored(true)}
+        />
+      )}
+    </View>
+  );
+}
+
 const LAYERS = [
   { key: 'surface' as const, label: 'Superficie' },
   { key: 'concept' as const, label: 'Concepto'  },
@@ -70,6 +111,7 @@ export default function DashboardScreen() {
   const [daysVisited, setDaysVisited] = useState<string[]>([]);
   const [refreshing,  setRefreshing]  = useState(false);
   const [userName,    setUserName]    = useState('');
+  const [streak,      setStreak]      = useState(0);
 
   useEffect(() => {
     AsyncStorage.getItem(NAME_KEY)
@@ -78,12 +120,16 @@ export default function DashboardScreen() {
   }, []);
 
   async function loadData() {
-    const [rawProg, rawDays] = await Promise.all([
+    const [rawProg, rawDays, rawStreak, lastActive] = await Promise.all([
       AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
       AsyncStorage.getItem(DAYS_VISITED_KEY).catch(() => null),
+      AsyncStorage.getItem(STREAK_KEY).catch(() => null),
+      AsyncStorage.getItem(LAST_ACTIVE_KEY).catch(() => null),
     ]);
+
     const prog: ProgressMap = rawProg ? JSON.parse(rawProg) : {};
     setProgress(prog);
+
     const today = todayISO();
     const days: string[] = rawDays ? JSON.parse(rawDays) : [];
     if (!days.includes(today)) {
@@ -91,6 +137,15 @@ export default function DashboardScreen() {
       AsyncStorage.setItem(DAYS_VISITED_KEY, JSON.stringify(days)).catch(() => {});
     }
     setDaysVisited([...days]);
+
+    // Reset streak to 0 if 2+ days have passed since last layer completion.
+    // last_active is only updated when a layer is completed, not on open.
+    let currentStreak = rawStreak ? parseInt(rawStreak, 10) : 0;
+    if (lastActive && diffDays(lastActive, today) >= 2) {
+      currentStreak = 0;
+      AsyncStorage.setItem(STREAK_KEY, '0').catch(() => {});
+    }
+    setStreak(currentStreak);
   }
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
@@ -158,7 +213,12 @@ export default function DashboardScreen() {
 
       {/* ── RACHA ──────────────────────────────────────────────────────────── */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Racha</Text>
+        <View style={styles.streakHeader}>
+          <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>Racha</Text>
+          <Text style={styles.streakCount}>
+            {streak} {streak === 1 ? 'día' : 'días'}
+          </Text>
+        </View>
         <View style={styles.streakRow}>
           {last7.map(({ iso, label }) => {
             const done = daysVisited.includes(iso);
@@ -179,6 +239,10 @@ export default function DashboardScreen() {
           onPress={() => router.push(`/autor/${activeAuthor.id}`)}
           activeOpacity={0.85}
         >
+          <View style={styles.continuePortrait}>
+            <PortraitCircle authorId={activeAuthor.id} size={112} />
+          </View>
+
           <View style={styles.blockChip}>
             <Text style={styles.blockChipText}>{activeBlock.name}</Text>
           </View>
@@ -255,15 +319,20 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Próximo en el camino</Text>
           <TouchableOpacity
-            style={styles.nextCard}
+            style={[styles.nextCard, { flexDirection: 'row', alignItems: 'center' }]}
             onPress={() => router.push(`/autor/${nextAuthor.id}`)}
             activeOpacity={0.85}
           >
-            <View style={styles.nextBlockChip}>
-              <Text style={styles.nextBlockChipText}>{nextBlock?.name}</Text>
+            <View style={{ flex: 1 }}>
+              <View style={styles.nextBlockChip}>
+                <Text style={styles.nextBlockChipText}>{nextBlock?.name}</Text>
+              </View>
+              <Text style={styles.nextAuthorName}>{nextAuthor.name}</Text>
+              <Text style={styles.nextDates}>{nextAuthor.dates}</Text>
             </View>
-            <Text style={styles.nextAuthorName}>{nextAuthor.name}</Text>
-            <Text style={styles.nextDates}>{nextAuthor.dates}</Text>
+            <View style={{ marginRight: 20 }}>
+              <PortraitCircle authorId={nextAuthor.id} size={80} />
+            </View>
           </TouchableOpacity>
         </View>
       )}
@@ -318,6 +387,17 @@ const styles = StyleSheet.create({
   },
 
   // Streak
+  streakHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  streakCount: {
+    ...typography.bodyS,
+    color: colors.dark.green,
+    fontWeight: '600',
+  },
   streakRow: {
     flexDirection: 'row',
     gap: spacing.xs,
@@ -348,6 +428,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.dark.border,
     padding: spacing.lg,
+  },
+  continuePortrait: {
+    position: 'absolute',
+    top: 24,
+    right: 24,
+    zIndex: 1,
   },
   blockChip: {
     alignSelf: 'flex-start',
