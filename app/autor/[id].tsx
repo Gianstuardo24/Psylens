@@ -19,6 +19,7 @@ import { authors, blocks, glossaryTerms } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
+import { IntroIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
 
 type Theme = typeof colors.dark;
@@ -180,9 +181,10 @@ export default function AutorScreen() {
     );
   }
 
-  const content  = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
-  const portrait = PORTRAITS[author.id] ?? null;
-  const isDual   = author.id === 'heraclito-democrito';
+  const content        = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
+  const portrait       = PORTRAITS[author.id] ?? null;
+  const isDual         = author.id === 'heraclito-democrito';
+  const isIntroAuthor  = author.id.startsWith('intro-');
 
   const isAuthorComplete = !!(
     progress[author.id]?.surface &&
@@ -282,6 +284,10 @@ export default function AutorScreen() {
             <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight]}>
               <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
             </View>
+          </View>
+        ) : isIntroAuthor ? (
+          <View style={styles.introIllustrationWrap}>
+            <IntroIllustration authorId={author.id} />
           </View>
         ) : (
           <View style={styles.portraitCircle}>
@@ -546,6 +552,13 @@ function makeStyles(theme: Theme) {
       fontSize: 26,
       color: theme.text,
       lineHeight: 32,
+    },
+    introIllustrationWrap: {
+      width: 120,
+      height: 120,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
     },
     portraitCircle: {
       width: 120,

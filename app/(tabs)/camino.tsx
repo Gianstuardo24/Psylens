@@ -25,9 +25,10 @@ type BlockStatus  = 'active' | 'locked';
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
 
-const PROGRESS_KEY = 'psylens_progress';
-const UNLOCK_KEY   = 'psylens_unlocked';
-const PREMIUM_KEY  = 'psylens_is_premium';
+const PROGRESS_KEY     = 'psylens_progress';
+const UNLOCK_KEY       = 'psylens_unlocked';
+const PREMIUM_KEY      = 'psylens_is_premium';
+const INTRO_AUTHOR_IDS = ['intro-1', 'intro-2', 'intro-3', 'intro-4'];
 
 // ─── Portrait images ──────────────────────────────────────────────────────────
 
@@ -53,7 +54,12 @@ function isAuthorDone(p: LayerProgress | undefined): boolean {
   return !!(p?.surface && p?.concept && p?.fondo);
 }
 
-function getBlockStatus(block: typeof blocks[0], isPremium: boolean): BlockStatus {
+function getBlockStatus(block: typeof blocks[0], isPremium: boolean, progress: ProgressMap): BlockStatus {
+  if (block.id === 'intro') return 'active';
+  if (block.id === 'b0') {
+    const introDone = INTRO_AUTHOR_IDS.every(id => isAuthorDone(progress[id]));
+    return introDone ? 'active' : 'locked';
+  }
   if (block.isFree) return 'active';
   return isPremium ? 'active' : 'locked';
 }
@@ -68,7 +74,14 @@ function getAuthorState(
   isPremium: boolean,
 ): AuthorState {
   if (isAuthorDone(progress[authorId])) return 'done';
+  if (blockId === 'intro') {
+    if (authorIndex === 0) return 'active';
+    const prevId = blockAuthorIds[authorIndex - 1];
+    return isAuthorDone(progress[prevId]) ? 'active' : 'locked';
+  }
   if (blockId === 'b0') {
+    const introDone = INTRO_AUTHOR_IDS.every(id => isAuthorDone(progress[id]));
+    if (!introDone) return 'locked';
     if (authorIndex === 0) return 'active';
     const prevId = blockAuthorIds[authorIndex - 1];
     return isAuthorDone(progress[prevId]) ? 'active' : 'locked';
@@ -209,7 +222,7 @@ function BlockNode({
   const { theme } = useTheme();
   const bn = useMemo(() => makeBnStyles(theme), [theme]);
 
-  const status    = getBlockStatus(block, isPremium);
+  const status    = getBlockStatus(block, isPremium, progress);
   const isActive  = status === 'active';
   const isLocked  = status === 'locked';
 
@@ -293,7 +306,7 @@ function BlockNode({
 export default function CaminoScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const [expandedId,  setExpandedId]  = useState<string | null>('b0');
+  const [expandedId,  setExpandedId]  = useState<string | null>('intro');
   const [progress,    setProgress]    = useState<ProgressMap>({});
   const [unlocked,    setUnlocked]    = useState<string[]>([]);
   const [isPremium,   setIsPremium]   = useState(false);
