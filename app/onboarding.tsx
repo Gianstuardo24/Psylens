@@ -146,9 +146,10 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         scrollEventThrottle={16}
+        style={{ flex: 1 }}
       >
         {STEPS.map((step, index) => (
-          <View key={step.key} style={[styles.page, { width, height }]}>
+          <View key={step.key} style={[styles.page, { width }]}>
 
             {/* Illustration — static, not animated */}
             <View style={styles.illustrationArea}>
@@ -158,55 +159,63 @@ export default function OnboardingScreen() {
               {index === 3 && <StartIllustration il={il} />}
             </View>
 
-            {/* Text block — animated on step change */}
-            <Animated.View
-              style={[
-                styles.textArea,
-                { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
-                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-              ]}
-            >
-              <Text style={step.isFinal ? styles.titleFinal : styles.title}>
-                {step.title}
-              </Text>
-
-              <Text style={styles.description}>{step.description}</Text>
-
-              {step.isFinal && (
-                <>
-                  <Text style={styles.nameLabel}>¿Cómo te llamas?</Text>
-                  <TextInput
-                    style={styles.nameInput}
-                    placeholder="Tu nombre"
-                    placeholderTextColor={theme.text3}
-                    value={name}
-                    onChangeText={setName}
-                    textAlign="center"
-                    autoCapitalize="words"
-                    returnKeyType="done"
-                  />
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={async () => {
-                      try {
-                        const saves: Promise<void>[] = [
-                          AsyncStorage.setItem(ONBOARDING_KEY, 'true'),
-                        ];
-                        if (name.trim()) {
-                          saves.push(AsyncStorage.setItem(NAME_KEY, name.trim()));
-                        }
-                        await Promise.all(saves);
-                      } finally {
-                        router.replace('/(tabs)');
+            {step.isFinal ? (
+              /* Final step: vertical ScrollView so content stays above keyboard */
+              <ScrollView
+                style={{ flex: 1 }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[
+                  styles.textArea,
+                  { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
+                ]}
+              >
+                <Text style={styles.titleFinal}>{step.title}</Text>
+                <Text style={styles.description}>{step.description}</Text>
+                <Text style={styles.nameLabel}>¿Cómo te llamas?</Text>
+                <TextInput
+                  style={styles.nameInput}
+                  placeholder="Tu nombre"
+                  placeholderTextColor={theme.text3}
+                  value={name}
+                  onChangeText={setName}
+                  textAlign="center"
+                  autoCapitalize="words"
+                  returnKeyType="done"
+                />
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={async () => {
+                    try {
+                      const saves: Promise<void>[] = [
+                        AsyncStorage.setItem(ONBOARDING_KEY, 'true'),
+                      ];
+                      if (name.trim()) {
+                        saves.push(AsyncStorage.setItem(NAME_KEY, name.trim()));
                       }
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.buttonText}>Empezar</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </Animated.View>
+                      await Promise.all(saves);
+                    } finally {
+                      router.replace('/(tabs)');
+                    }
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.buttonText}>Empezar</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            ) : (
+              /* Text block — animated on step change */
+              <Animated.View
+                style={[
+                  styles.textArea,
+                  { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
+                  { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+                ]}
+              >
+                <Text style={styles.title}>{step.title}</Text>
+                <Text style={styles.description}>{step.description}</Text>
+              </Animated.View>
+            )}
 
           </View>
         ))}
@@ -342,7 +351,7 @@ function makeStyles(theme: Theme) {
     },
 
     page: {
-      // width + height applied dynamically
+      flex: 1,
     },
 
     illustrationArea: {
@@ -389,7 +398,7 @@ function makeStyles(theme: Theme) {
 
     buttonText: {
       ...typography.body,
-      color: theme.text,
+      color: '#ffffff',
       fontWeight: '600',
     },
 

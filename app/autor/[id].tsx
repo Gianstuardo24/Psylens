@@ -185,6 +185,11 @@ export default function AutorScreen() {
   const portrait       = PORTRAITS[author.id] ?? null;
   const isDual         = author.id === 'heraclito-democrito';
   const isIntroAuthor  = author.id.startsWith('intro-');
+  const isTwoLayer     = author.layerType === 'two';
+  const activeTabs     = isTwoLayer
+    ? [{ key: 'surface' as TabKey, label: 'Entrada' }, { key: 'concept' as TabKey, label: 'Profundidad' }]
+    : TABS;
+  const isLastTab      = isTwoLayer ? activeTab === 'concept' : activeTab === 'fondo';
 
   const isAuthorComplete = !!(
     progress[author.id]?.surface &&
@@ -307,7 +312,7 @@ export default function AutorScreen() {
 
       {/* Tab bar */}
       <View style={styles.tabBar}>
-        {TABS.map(tab => (
+        {activeTabs.map(tab => (
           <TouchableOpacity
             key={tab.key}
             style={styles.tabItem}
@@ -386,7 +391,7 @@ export default function AutorScreen() {
           >
             <Text style={styles.deeperButtonText}>Ir más profundo →</Text>
           </TouchableOpacity>
-        ) : activeTab === 'concept' ? (
+        ) : activeTab === 'concept' && !isTwoLayer ? (
           <TouchableOpacity
             style={styles.deeperButton}
             onPress={() => {
@@ -397,7 +402,7 @@ export default function AutorScreen() {
           >
             <Text style={styles.deeperButtonText}>Ir más profundo →</Text>
           </TouchableOpacity>
-        ) : activeTab === 'fondo' && !isAuthorComplete ? (
+        ) : isLastTab && !isAuthorComplete ? (
           <TouchableOpacity style={styles.readButton} onPress={markAllDone} activeOpacity={0.85}>
             <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
           </TouchableOpacity>
@@ -439,7 +444,7 @@ export default function AutorScreen() {
             )}
             <Text style={styles.celebBadge}>Completado</Text>
             <Text style={styles.celebAuthorName}>{author.name}</Text>
-            <Text style={styles.celebSubtitle}>Has leído las tres capas</Text>
+            <Text style={styles.celebSubtitle}>{isTwoLayer ? 'Has leído las dos capas' : 'Has leído las tres capas'}</Text>
 
             {nextAuthor && (
               <TouchableOpacity style={styles.celebNextButton} onPress={navigateToNext} activeOpacity={0.85}>
@@ -665,6 +670,7 @@ function makeStyles(theme: Theme) {
     },
     question: {
       ...typography.h4,
+      fontSize: 21,
       color: theme.text,
       fontFamily: 'PlayfairDisplay_400Regular_Italic',
       marginBottom: spacing.lg,
@@ -688,6 +694,7 @@ function makeStyles(theme: Theme) {
     },
     closingLine: {
       ...typography.bodyS,
+      fontSize: 16,
       color: theme.text3,
       fontFamily: 'PlayfairDisplay_400Regular_Italic',
       marginTop: spacing.md,
@@ -727,11 +734,11 @@ function makeStyles(theme: Theme) {
     },
     readButtonText: {
       ...typography.body,
-      color: theme.text,
+      color: '#ffffff',
       fontWeight: '600',
     },
     readButtonTextDone: {
-      color: theme.green,
+      color: theme.text,
     },
     nextButton: {
       backgroundColor: theme.bg3,
@@ -876,13 +883,16 @@ function makeStyles(theme: Theme) {
       backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.lg,
+      paddingHorizontal: 20,
       alignItems: 'center',
       marginBottom: spacing.md,
     },
     celebNextText: {
       ...typography.body,
-      color: theme.text,
+      color: '#ffffff',
       fontWeight: '600',
+      paddingHorizontal: 8,
+      textAlign: 'center',
     },
     celebDismiss: {
       paddingVertical: spacing.sm,

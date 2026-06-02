@@ -360,13 +360,16 @@ function makeStyles(theme: Theme) {
       backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.lg,
+      paddingHorizontal: 20,
       alignItems: 'center',
       marginBottom: spacing.md,
     },
     primaryButtonText: {
       ...typography.body,
-      color: theme.text,
+      color: '#ffffff',
       fontWeight: '600',
+      paddingHorizontal: 8,
+      textAlign: 'center',
     },
     secondaryButton: {
       width: '100%',

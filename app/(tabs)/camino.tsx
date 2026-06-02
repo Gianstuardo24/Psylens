@@ -6,7 +6,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
+import Svg, { Circle, Ellipse, Line, Path } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -104,6 +106,7 @@ function AuthorCard({
 
   const portrait  = PORTRAITS[author.id] ?? null;
   const isDual    = author.id === 'heraclito-democrito';
+  const isIntro   = author.id.startsWith('intro-');
 
   const inner = (
     <View
@@ -132,6 +135,39 @@ function AuthorCard({
                 <Text style={ac.initial}>D</Text>
               )}
             </View>
+          </View>
+        ) : isIntro ? (
+          <View style={[ac.portrait, { borderWidth: 2, borderColor: '#0f6e56' }]}>
+            {author.id === 'intro-1' && (
+              <Svg width={38} height={38} viewBox="0 0 120 120">
+                <Ellipse cx="60" cy="60" rx="50" ry="28" stroke="#0f6e56" strokeWidth="2" fill="none" />
+                <Circle cx="60" cy="60" r="14" stroke="#0f6e56" strokeWidth="2" fill="none" />
+              </Svg>
+            )}
+            {author.id === 'intro-2' && (
+              <Svg width={38} height={38} viewBox="0 0 22 14">
+                <Circle cx="5" cy="7" r="4" stroke="#0f6e56" strokeWidth="1.8" fill="none" />
+                <Circle cx="17" cy="7" r="4" stroke="#0f6e56" strokeWidth="1.8" fill="none" />
+                <Line x1="9" y1="7" x2="13" y2="7" stroke="#0f6e56" strokeWidth="1.8" />
+              </Svg>
+            )}
+            {author.id === 'intro-3' && (
+              <Svg width={38} height={38} viewBox="0 0 120 120">
+                <Line x1="15" y1="60" x2="105" y2="60" stroke="#0f6e56" strokeWidth="2" />
+                <Circle cx="22" cy="60" r="4" fill="#0f6e56" />
+                <Circle cx="48" cy="60" r="6" fill="#0f6e56" />
+                <Circle cx="74" cy="60" r="8" fill="#0f6e56" />
+                <Circle cx="100" cy="60" r="10" fill="#0f6e56" />
+              </Svg>
+            )}
+            {author.id === 'intro-4' && (
+              <Svg width={38} height={38} viewBox="0 0 120 120">
+                <Circle cx="60" cy="60" r="18" stroke="#0f6e56" strokeWidth="2" fill="none" />
+                <Circle cx="60" cy="60" r="34" stroke="#0f6e56" strokeWidth="2" fill="none" />
+                <Circle cx="60" cy="60" r="50" stroke="#0f6e56" strokeWidth="2" fill="none" />
+              </Svg>
+            )}
+            {state === 'locked' && <View style={ac.portraitOverlay} />}
           </View>
         ) : (
           <View style={ac.portrait}>
@@ -240,14 +276,25 @@ function BlockNode({
       {/* ── Block header ──────────────────────────────────── */}
       <TouchableOpacity
         style={bn.header}
-        onPress={isLocked ? onPaywall : (isActive ? onToggle : undefined)}
+        onPress={isLocked
+          ? (block.id === 'b0'
+              ? () => Alert.alert('Introducción requerida', 'Completa la Introducción primero para desbloquear este bloque.')
+              : onPaywall)
+          : (isActive ? onToggle : undefined)}
         activeOpacity={0.7}
       >
         {/* Symbol icon */}
         <View style={[bn.icon, isLocked && bn.iconLocked]}>
-          <Text style={[bn.iconGlyph, isLocked && bn.iconGlyphLocked]}>
-            {SYMBOL[block.symbol] ?? block.symbol[0].toUpperCase()}
-          </Text>
+          {block.symbol === 'lens' ? (
+            <Svg width={28} height={28} viewBox="0 0 28 28">
+              <Path d="M14 4 Q4 14 14 24" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
+              <Path d="M14 4 Q24 14 14 24" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
+            </Svg>
+          ) : (
+            <Text style={[bn.iconGlyph, isLocked && bn.iconGlyphLocked]}>
+              {SYMBOL[block.symbol] ?? block.symbol[0].toUpperCase()}
+            </Text>
+          )}
         </View>
 
         {/* Name + era + progress */}

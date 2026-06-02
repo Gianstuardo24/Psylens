@@ -106,7 +106,7 @@ function makeStyles(theme: Theme) {
     },
     buttonText: {
       ...typography.body,
-      color: theme.text,
+      color: '#ffffff',
       fontWeight: '600',
     },
   });

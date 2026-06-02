@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import Svg, { Circle, Ellipse, Line } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -84,6 +85,49 @@ function PortraitCircle({ authorId, size }: { authorId: string; size: number }) 
   const { theme } = useTheme();
   const [errored, setErrored] = useState(false);
   const source = PORTRAITS[authorId];
+
+  if (authorId.startsWith('intro-')) {
+    const svgSize = Math.round(size * 0.6);
+    return (
+      <View style={{
+        width: size, height: size, borderRadius: size / 2,
+        borderWidth: 2, borderColor: '#0f6e56',
+        backgroundColor: theme.bg3,
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        {authorId === 'intro-1' && (
+          <Svg width={svgSize} height={svgSize} viewBox="0 0 120 120">
+            <Ellipse cx="60" cy="60" rx="50" ry="28" stroke="#0f6e56" strokeWidth="2" fill="none" />
+            <Circle cx="60" cy="60" r="14" stroke="#0f6e56" strokeWidth="2" fill="none" />
+          </Svg>
+        )}
+        {authorId === 'intro-2' && (
+          <Svg width={svgSize} height={svgSize} viewBox="0 0 22 14">
+            <Circle cx="5" cy="7" r="4" stroke="#0f6e56" strokeWidth="1.8" fill="none" />
+            <Circle cx="17" cy="7" r="4" stroke="#0f6e56" strokeWidth="1.8" fill="none" />
+            <Line x1="9" y1="7" x2="13" y2="7" stroke="#0f6e56" strokeWidth="1.8" />
+          </Svg>
+        )}
+        {authorId === 'intro-3' && (
+          <Svg width={svgSize} height={svgSize} viewBox="0 0 120 120">
+            <Line x1="15" y1="60" x2="105" y2="60" stroke="#0f6e56" strokeWidth="2" />
+            <Circle cx="22" cy="60" r="4" fill="#0f6e56" />
+            <Circle cx="48" cy="60" r="6" fill="#0f6e56" />
+            <Circle cx="74" cy="60" r="8" fill="#0f6e56" />
+            <Circle cx="100" cy="60" r="10" fill="#0f6e56" />
+          </Svg>
+        )}
+        {authorId === 'intro-4' && (
+          <Svg width={svgSize} height={svgSize} viewBox="0 0 120 120">
+            <Circle cx="60" cy="60" r="18" stroke="#0f6e56" strokeWidth="2" fill="none" />
+            <Circle cx="60" cy="60" r="34" stroke="#0f6e56" strokeWidth="2" fill="none" />
+            <Circle cx="60" cy="60" r="50" stroke="#0f6e56" strokeWidth="2" fill="none" />
+          </Svg>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={{
       width: size, height: size, borderRadius: size / 2,
@@ -272,7 +316,9 @@ export default function DashboardScreen() {
             })}
           </View>
 
-          <Text style={styles.layerCount}>Capa {currentLayer} de 3</Text>
+          <Text style={styles.layerCount}>
+            Capa {currentLayer} de {activeAuthor.id === 'intro-4' ? 3 : activeAuthor.id.startsWith('intro-') ? 2 : 3}
+          </Text>
 
           <View style={styles.readButton}>
             <Text style={styles.readButtonText}>Seguir leyendo →</Text>
