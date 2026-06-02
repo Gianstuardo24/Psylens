@@ -467,6 +467,7 @@ function makeStyles(theme: Theme) {
       fontWeight: '700',
       fontFamily: 'PlayfairDisplay_700Bold',
       color: theme.text,
+      paddingRight: 130,
       marginBottom: spacing.xs,
     },
     continueDates: {

@@ -204,6 +204,7 @@ export default function YoScreen() {
               'psylens_is_premium',
               'psylens_unlocked',
               'psylens_days_visited',
+              'psylens_user_name',
             ]).catch(() => {});
             router.replace('/splash');
           },

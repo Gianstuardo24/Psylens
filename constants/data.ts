@@ -1,5 +1,13 @@
 export const blocks = [
   {
+    id: 'intro',
+    name: 'Introducción',
+    era: 'Antes de empezar',
+    symbol: 'lens',
+    isFree: true,
+    authors: ['intro-1', 'intro-2', 'intro-3', 'intro-4'],
+  },
+  {
     id: 'b0',
     name: 'Orígenes filosóficos',
     era: 'Antigüedad y Edad Media',
@@ -50,6 +58,87 @@ export const blocks = [
 ];
 
 export const authors = [
+
+  {
+    id: 'intro-1',
+    name: 'El origen de la pregunta',
+    subtitle: 'Mesopotamia y Egipto',
+    dates: '3000–500 a.C.',
+    blockId: 'intro',
+    layerType: 'two',
+    surface: {
+      question: '¿Sabías que el sufrimiento psicológico buscó nombre y cuidado miles de años antes de que existiera la psicología?',
+      text: `Hace cinco mil años, en Mesopotamia, alguien que no podía dormir — que veía cosas que otros no veían, que sentía un peso que no tenía nombre — buscaba a alguien que lo escuchara. No un médico. No un psicólogo. Esos nombres no existían todavía. Solo alguien que supiera qué hacer con ese dolor.\n\nLo interesante no es que eso haya ocurrido. Lo interesante es que nunca dejó de ocurrir.\n\nEn esa misma época, en Egipto, los médicos ya describían algo que hoy reconoceríamos como tristeza profunda — el retiro del mundo, la incapacidad de actuar, la sensación de que nada tiene sentido. Y entre sus tratamientos incluían una práctica que llamaban "hablar al corazón". La primera referencia conocida a la palabra como herramienta terapéutica. Tres mil años antes de que alguien la llamara psicoterapia.\n\nEso es lo que encontrarás en este recorrido: que las preguntas que te haces hoy tienen historia. Que el sufrimiento humano siempre buscó nombre, explicación y cuidado. Y que entender ese camino — desde sus orígenes hasta hoy — cambia cómo te ves a ti mismo y cómo ves a los demás.`,
+      closingLine: 'Lo interesante no es que eso haya ocurrido. Lo interesante es que nunca dejó de ocurrir.',
+    },
+    concept: {
+      question: '¿Qué tienen en común las culturas curativas de todas las épocas?',
+      text: `Lo que Mesopotamia y Egipto tenían — y que a veces la psicología moderna olvida — era una comprensión simple pero poderosa: el sufrimiento psicológico es real, merece atención, y no hay que enfrentarlo solo.\n\nEl especialista mesopotámico que atendía a alguien en crisis no le decía que estaba simulando ni que era débil. Identificaba lo que ocurría, le daba un nombre y proponía algo concreto. La estructura era: síntoma — especialista — procedimiento. Eso, en su forma más básica, es exactamente lo que sigue ocurriendo hoy en cualquier consulta de psicología o psiquiatría.\n\nSiglos después, el psiquiatra Jerome Frank estudió culturas curativas de todo el mundo y encontró algo sorprendente: todas, sin excepción, compartían cuatro elementos. Una relación con alguien percibido como sanador. Un espacio que la comunidad reconoce como lugar legítimo para sanar. Una explicación que da sentido al sufrimiento. Y un procedimiento que tanto el sanador como quien sufre creen que puede ayudar.\n\nMesopotamia tenía los cuatro. La psicoterapia contemporánea también los tiene. La forma cambió. La estructura, no.`,
+      closingLine: '¿Hay algo sobre ti mismo o sobre los demás que siempre quisiste entender mejor? Ese es exactamente el tipo de pregunta que este recorrido existe para acompañar.',
+    },
+  },
+
+  {
+    id: 'intro-2',
+    name: 'Qué es y qué no es la psicología',
+    subtitle: 'Desmonta mitos, define el campo honestamente',
+    dates: '',
+    blockId: 'intro',
+    layerType: 'two',
+    surface: {
+      question: '¿Qué imagen tienes de la psicología?',
+      text: `La psicología no es lo que aparece en las películas.\n\nNo es un consultorio oscuro donde alguien te pide que hables de tu madre. No es leer la mente. No es tener respuestas para todo lo que te pasa. Y definitivamente no es dividir a las personas en tipos — los introvertidos por acá, los extrovertidos por allá.\n\nLo que la psicología sí es resulta más interesante y más útil que cualquiera de esas versiones. Es el estudio sistemático de la experiencia y el comportamiento humano — cómo percibimos, cómo pensamos, cómo sentimos, cómo actuamos, y por qué hacemos lo que hacemos aunque a veces no tenga ningún sentido.\n\nNo tiene una sola respuesta para esas preguntas. Tiene varias escuelas, varios métodos, varios marcos. Eso no es una debilidad — es la señal de que el objeto de estudio es genuinamente complejo.\n\nLo que encontrarás en este recorrido no es la verdad sobre la mente humana. Es algo mejor: las mejores preguntas que la humanidad ha sabido hacerse sobre ella, y los marcos más sólidos que ha construido para responderlas.`,
+      closingLine: 'Lo que encontrarás aquí no es la verdad sobre la mente humana. Es algo mejor.',
+    },
+    concept: {
+      question: '¿Qué ganas cuando aprendes a usar varios marcos en lugar de buscar el correcto?',
+      text: `Hay una distinción que vale la pena tener clara desde el principio: la psicología no es una sola cosa.\n\nEs, al mismo tiempo, una ciencia básica que estudia procesos como la memoria, la percepción y la atención. Una ciencia aplicada que desarrolla intervenciones para el sufrimiento psicológico. Una disciplina con raíces filosóficas que se remontan dos mil quinientos años. Y un campo en conversación permanente con la neurociencia, la biología, la sociología y la cultura.\n\nA lo largo de este recorrido vas a encontrar pensadores que se contradicen entre sí. Freud y Skinner no estarían de acuerdo en casi nada. Rogers y Beck tampoco. Eso no significa que uno tenga razón y el otro esté equivocado — significa que cada uno ilumina algo que el otro no ve.\n\nLa forma más honesta de acercarse a la psicología no es buscar el marco correcto. Es aprender a usar varios marcos como lentes distintos sobre el mismo objeto. Algunos te van a servir más que otros. Pero cuantos más tengas, más clara se vuelve la imagen.`,
+      closingLine: 'Eso es exactamente lo que Psylens intenta hacer: darte más lentes.',
+    },
+  },
+
+  {
+    id: 'intro-3',
+    name: 'Por qué este camino tiene este orden',
+    subtitle: 'Por qué Aristóteles viene antes que Beck',
+    dates: '',
+    blockId: 'intro',
+    layerType: 'two',
+    surface: {
+      question: '¿Por qué empezar por los griegos y no directamente con Freud?',
+      text: `Podrías preguntarte por qué este recorrido empieza con filósofos griegos y no directamente con Freud o con la psicoterapia moderna.\n\nLa respuesta corta es que las ideas no aparecen de la nada.\n\nEn los años sesenta, un psiquiatra llamado Aaron Beck propuso algo que en su momento sonó radical: que el sufrimiento psicológico no viene solo de lo que nos pasa, sino de cómo interpretamos lo que nos pasa. Que si alguien te ignora en la calle y concluyes automáticamente "me odia" o "soy invisible", esa conclusión — no el hecho — es lo que produce el malestar.\n\nLo que Beck probablemente no sabía es que Aristóteles había llegado a algo muy similar dos mil años antes. Para Aristóteles, las emociones no eran reacciones que simplemente te ocurrían — eran formas de leer la situación. El miedo aparece cuando percibes que algo te amenaza. La tristeza, cuando percibes que perdiste algo valioso. Cada emoción lleva dentro una interpretación del mundo. Y si la interpretación cambia, la emoción también cambia.\n\nLas ideas viajan a través del tiempo aunque no siempre sepamos de dónde vienen. Este recorrido sigue el orden cronológico porque ese orden tiene una lógica. Cada autor respondió a alguien que vino antes. Entender ese hilo hace que cada idea tenga más peso.`,
+      closingLine: 'Cada autor respondió a alguien que vino antes. Entender ese hilo hace que cada idea tenga más peso.',
+    },
+    concept: {
+      question: '¿Qué se pierde cuando aprendes solo los resultados y no el contexto?',
+      text: `Hay otra razón para el orden cronológico que es más personal.\n\nCuando aprendes solo los resultados — las técnicas, los modelos, los nombres — tienes herramientas. Pero no sabes por qué esas herramientas tienen la forma que tienen. No sabes qué pregunta intentaban responder. Y eso importa, porque una herramienta sin contexto puede usarse mal.\n\nLos filósofos estoicos — Epicteto, Marco Aurelio, Séneca — enseñaban que el sufrimiento no viene de los hechos sino de cómo los juzgamos. Que entre lo que ocurre y lo que sentimos hay siempre una interpretación, y que esa interpretación es el único lugar donde tenemos algo de control. Esa idea, formulada hace dos mil años en el Mediterráneo, es el fundamento filosófico de buena parte de la psicoterapia contemporánea. Llegará más adelante en el recorrido con nombres y métodos distintos. Pero la raíz está aquí.\n\nEl orden cronológico también hace algo más sutil: te muestra que la psicología es un proyecto colectivo e inacabado. Que cada autor aportó algo y dejó preguntas abiertas. Que lo que hoy parece obvio fue, en su momento, una ruptura radical con todo lo anterior.\n\nY que las preguntas más importantes — qué somos, por qué sufrimos, cómo cambiamos — siguen siendo preguntas.`,
+      closingLine: 'El recorrido no termina con una respuesta definitiva. Termina con una forma más clara de seguir preguntando.',
+    },
+  },
+
+  {
+    id: 'intro-4',
+    name: 'Así funciona cada capa',
+    subtitle: 'Superficie, Concepto y Fondo',
+    dates: '',
+    blockId: 'intro',
+    layerType: 'three',
+    surface: {
+      question: '¿Cómo funciona este recorrido?',
+      text: `A partir de ahora, cada autor que encuentres en el camino tiene tres capas.\n\nLa primera es esta — la Superficie. Siempre empieza cerca: una situación reconocible, una pregunta que no requiere ningún conocimiento previo. No necesitas haber estudiado psicología ni filosofía para seguirla. Solo necesitas estar dispuesto a mirar.`,
+      closingLine: 'Es la puerta de entrada a cada idea. Y todas las puertas de este recorrido están abiertas.',
+    },
+    concept: {
+      question: '¿Cuál es la diferencia entre reconocer una idea y poder usarla?',
+      text: `La segunda capa es donde aparece el mecanismo.\n\nSi la Superficie te sitúa — te muestra el paisaje desde afuera — el Concepto te lleva adentro. Aquí es donde los términos técnicos entran al texto, siempre explicados, nunca como adorno. Donde se describe cómo funciona una idea, no solo qué es.\n\nNo es más difícil. Es más preciso. La diferencia entre saber que el miedo "tiene que ver con amenazas" y entender que para Aristóteles el miedo era una lectura de la situación — una interpretación de lo que está pasando — es la diferencia entre reconocer algo y poder usarlo.`,
+      closingLine: 'El Concepto existe para darte ese segundo nivel. El que convierte la intuición en comprensión.',
+    },
+    fondo: {
+      question: '¿Qué convierte la información en lente?',
+      text: `La tercera capa es la más lenta — en el buen sentido.\n\nNo explica un mecanismo. Pregunta qué implica ese mecanismo. Qué cambió en la historia del pensamiento cuando alguien propuso esa idea. Cómo conecta con lo que vino antes y con lo que vendrá después.\n\nEs la capa donde las ideas dejan de ser información y se convierten en lentes. Donde Schopenhauer deja de ser un nombre en una línea de tiempo y se convierte en alguien que vio algo que nadie había visto antes — y que Freud vería de nuevo, décadas después, por otro camino.\n\nEs la capa que más se queda.`,
+      closingLine: 'Ya sabes por qué estás aquí. Ahora comienza tu propio camino.',
+    },
+  },
 
   {
     id: 'heraclito-democrito',
