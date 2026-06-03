@@ -13,7 +13,7 @@ export const blocks = [
     era: 'Antigüedad y Edad Media',
     symbol: 'eye',
     isFree: true,
-    authors: ['heraclito-democrito', 'platon', 'aristoteles', 'hipocrates', 'descartes', 'kant', 'schopenhauer'],
+    authors: ['heraclito-democrito', 'platon', 'aristoteles', 'hipocrates', 'descartes', 'spinoza', 'kant', 'schopenhauer'],
   },
   {
     id: 'b1',
@@ -252,6 +252,29 @@ export const authors = [
       question: '¿Cómo el dualismo de Descartes llegó hasta la psicología cognitiva?',
       text: `El cogito estableció la mente como punto de partida del conocimiento. Esa prioridad de lo mental tiene una línea directa hacia el cognitivismo del siglo XX.\n\nPero Descartes también heredó a la psicología su problema más persistente. El error de Descartes, como lo llamó Damasio, no fue pensar — fue creer que pensar podía existir separado de sentir.`,
       closingLine: 'Lo que Descartes construyó fue tan sólido que tardamos trescientos años en encontrarle la grieta.',
+    },
+  },
+
+  {
+    id: 'spinoza',
+    name: 'Baruch Spinoza',
+    subtitle: 'El error de Descartes, corregido',
+    dates: '1632–1677',
+    blockId: 'b0',
+    surface: {
+      question: '¿Alguna vez sentiste que tu cuerpo y tu mente no son dos cosas separadas sino una sola que se expresa de formas distintas?',
+      text: `Descartes dejó un problema sin resolver. Si la mente y el cuerpo son sustancias completamente distintas — una sin extensión física, la otra pura materia — ¿cómo se comunican? ¿Cómo puede un pensamiento mover un brazo?\n\nSpinoza, un filósofo holandés del siglo XVII que pulía lentes para vivir, leyó a Descartes con cuidado. Y propuso algo radicalmente distinto: mente y cuerpo no son dos sustancias separadas. Son dos formas de ver la misma cosa.\n\nComo las dos caras de una moneda. No son la misma cara — pero tampoco son dos monedas distintas.`,
+      closingLine: 'Lo que Descartes separó, Spinoza lo volvió a unir. Y tardamos trescientos años en entender por qué eso importaba.',
+    },
+    concept: {
+      question: '¿Qué significa que mente y cuerpo sean lo mismo visto desde ángulos distintos?',
+      text: `Spinoza llamó a esta idea el paralelismo — o más precisamente, el monismo de atributos. Solo existe una sustancia, que él llamó Dios o Naturaleza. Esa sustancia tiene infinitos atributos, pero los seres humanos solo podemos percibir dos: el pensamiento y la extensión.\n\nEl pensamiento es la mente. La extensión es el cuerpo. No interactúan — son el mismo proceso visto desde dos perspectivas distintas. Cuando sientes miedo, hay simultáneamente un estado mental y un estado corporal. No es que uno cause al otro. Son dos descripciones del mismo evento.\n\nEsto tiene una consecuencia importante: para Spinoza, no tiene sentido hablar de la mente sin el cuerpo, ni del cuerpo sin la mente. Son inseparables por definición.`,
+      closingLine: 'Esa idea llegará tres siglos después al escritorio de Antonio Damasio, quien la confirmará estudiando pacientes con lesiones cerebrales.',
+    },
+    fondo: {
+      question: '¿Por qué Spinoza es el filósofo que la neurociencia estaba esperando sin saberlo?',
+      text: `Spinoza escribió en el siglo XVII, pero su pensamiento apunta directamente al siglo XXI.\n\nAntonio Damasio — el neurocientífico que aparecerá al final de este recorrido — tituló uno de sus libros más importantes En busca de Spinoza. No es una metáfora. Damasio encontró en Spinoza el marco filosófico que la neurociencia necesitaba: uno que no separa la razón de la emoción, ni la mente del cuerpo.\n\nSpinoza también propuso algo que resuena en la psicología contemporánea: que las emociones no son obstáculos para el pensamiento sino información sobre nuestra relación con el mundo. El miedo, la alegría, la tristeza — todas son formas en que el cuerpo registra cómo le va en su entorno. No hay que suprimirlas. Hay que entenderlas.\n\nAristóteles había dicho algo similar. Spinoza lo articuló con una precisión que el siglo XVII no supo reconocer.`,
+      closingLine: 'A veces las ideas más importantes llegan demasiado pronto. Spinoza esperó trescientos años. Valió la pena.',
     },
   },
 
@@ -501,6 +524,7 @@ export const glossaryTerms = [
   { id: 'melancolia',      term: 'Melancolía',       definition: 'Primera descripción clínica de la depresión, por Hipócrates. Exceso de bilis negra (melan kholé). Primer intento de explicar el sufrimiento mental en términos físicos.',   authorId: 'hipocrates' },
   { id: 'cogito',          term: 'Cogito',           definition: '"Cogito ergo sum" — pienso, luego soy. El punto de certeza indudable de Descartes: todo puede dudarse excepto el hecho de que hay un sujeto que duda.',                     authorId: 'descartes' },
   { id: 'dualismo',        term: 'Dualismo',         definition: 'La posición de Descartes: mente (res cogitans) y cuerpo (res extensa) son dos sustancias radicalmente distintas e independientes.',                                         authorId: 'descartes' },
+  { id: 'monismo',         term: 'Monismo de atributos', definition: 'La propuesta de Spinoza: solo existe una sustancia (Dios o Naturaleza) que puede verse desde dos perspectivas — como mente (pensamiento) o como cuerpo (extensión). No son dos cosas distintas sino dos descripciones del mismo evento.', authorId: 'spinoza' },
   { id: 'fenomeno',        term: 'Fenómeno',         definition: 'Para Kant: la cosa tal como aparece ante nuestra mente, organizada por estructuras cognitivas previas. Todo lo que podemos conocer son fenómenos.',                         authorId: 'kant' },
   { id: 'noumeno',         term: 'Noúmeno',          definition: 'Para Kant: la cosa en sí misma, tal como existe independientemente de cualquier observador. Completamente inaccesible a la experiencia.',                                   authorId: 'kant' },
   { id: 'la-voluntad',     term: 'La Voluntad',      definition: 'Fuerza ciega e irracional que impulsa toda vida según Schopenhauer. La conciencia la conoce solo superficialmente. Prefigura el inconsciente freudiano.',                   authorId: 'schopenhauer' },

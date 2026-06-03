@@ -77,6 +77,7 @@ const PORTRAITS: Record<string, number> = {
   'aristoteles':         require('../../assets/portraits/aristoteles.png'),
   'hipocrates':          require('../../assets/portraits/hipocrates.png'),
   'descartes':           require('../../assets/portraits/descartes.png'),
+  'spinoza':             require('../../assets/portraits/spinoza.png'),
   'kant':                require('../../assets/portraits/kant.png'),
   'schopenhauer':        require('../../assets/portraits/schopenhauer.png'),
 };
