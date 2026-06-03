@@ -182,6 +182,8 @@ export default function AutorScreen() {
   }
 
   const content        = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
+  const PLACEHOLDER_TEXT = 'Este contenido estará disponible pronto.';
+  const isPlaceholder  = !content?.text || content.text === PLACEHOLDER_TEXT;
   const portrait       = PORTRAITS[author.id] ?? null;
   const isDual         = author.id === 'heraclito-democrito';
   const isIntroAuthor  = author.id.startsWith('intro-');
@@ -337,19 +339,37 @@ export default function AutorScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.question}>{content.question}</Text>
-          <View style={styles.divider} />
-          {content.text.split('\n\n').map((para, i) => (
-            <View key={i} style={styles.paragraph}>
-              <HighlightedText
-                text={para}
-                terms={authorTerms}
-                onTermPress={setSelectedTermId}
-                styles={{ contentText: styles.contentText, termLink: styles.termLink }}
-              />
+          {isPlaceholder ? (
+            <View style={styles.placeholderContainer}>
+              <View style={styles.placeholderCircle}>
+                {portrait ? (
+                  <Image source={portrait} style={styles.placeholderPortraitImage} resizeMode="cover" />
+                ) : (
+                  <Text style={styles.placeholderInitial}>{author.name[0]}</Text>
+                )}
+              </View>
+              <Text style={styles.placeholderTitle}>Contenido en preparación</Text>
+              <Text style={styles.placeholderSub}>
+                El contenido de este autor estará disponible próximamente.
+              </Text>
             </View>
-          ))}
-          <Text style={styles.closingLine}>{content.closingLine}</Text>
+          ) : (
+            <>
+              <Text style={styles.question}>{content!.question}</Text>
+              <View style={styles.divider} />
+              {content!.text.split('\n\n').map((para, i) => (
+                <View key={i} style={styles.paragraph}>
+                  <HighlightedText
+                    text={para}
+                    terms={authorTerms}
+                    onTermPress={setSelectedTermId}
+                    styles={{ contentText: styles.contentText, termLink: styles.termLink }}
+                  />
+                </View>
+              ))}
+              <Text style={styles.closingLine}>{content!.closingLine}</Text>
+            </>
+          )}
         </ScrollView>
 
         {isContentLocked && (
@@ -752,6 +772,46 @@ function makeStyles(theme: Theme) {
       ...typography.body,
       color: theme.green,
       fontWeight: '600',
+    },
+    // Placeholder state
+    placeholderContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: spacing.xxxl,
+      paddingHorizontal: spacing.xxl,
+    },
+    placeholderCircle: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.bg3,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    placeholderPortraitImage: {
+      width: 80,
+      height: 80,
+    },
+    placeholderInitial: {
+      ...typography.h2,
+      color: theme.text3,
+    },
+    placeholderTitle: {
+      ...typography.h3,
+      color: theme.text,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    placeholderSub: {
+      ...typography.bodyS,
+      color: theme.text2,
+      textAlign: 'center',
+      lineHeight: 22,
     },
     // Premium lock overlay
     lockOverlay: {

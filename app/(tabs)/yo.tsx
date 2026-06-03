@@ -13,6 +13,7 @@ import {
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors } from '../../constants/data';
@@ -23,6 +24,7 @@ type Theme = typeof colors.dark;
 const PROGRESS_KEY     = 'psylens_progress';
 const DAYS_VISITED_KEY = 'psylens_days_visited';
 const NAME_KEY         = 'psylens_user_name';
+const REMINDER_KEY     = 'psylens_reminder_enabled';
 
 const USER_EMAIL = 'usuario@email.com';
 
@@ -103,9 +105,9 @@ export default function YoScreen() {
   const [progress,    setProgress]    = useState<ProgressMap>({});
   const [daysVisited, setDaysVisited] = useState<string[]>([]);
   const [userName,    setUserName]    = useState('');
-  const [language,      setLanguage]      = useState<'Español' | 'English'>('Español');
-  const [reminderTime,  setReminderTime]  = useState('9:00');
-  const [isPremium]                       = useState(false);
+  const [language,         setLanguage]         = useState<'Español' | 'English'>('Español');
+  const [reminderEnabled,  setReminderEnabled]  = useState(false);
+  const [isPremium]                             = useState(false);
   const [refreshing,    setRefreshing]    = useState(false);
 
   useFocusEffect(
@@ -114,10 +116,12 @@ export default function YoScreen() {
         AsyncStorage.getItem(PROGRESS_KEY).catch(() => null),
         AsyncStorage.getItem(DAYS_VISITED_KEY).catch(() => null),
         AsyncStorage.getItem(NAME_KEY).catch(() => null),
-      ]).then(([rawProg, rawDays, rawName]) => {
+        AsyncStorage.getItem(REMINDER_KEY).catch(() => null),
+      ]).then(([rawProg, rawDays, rawName, rawReminder]) => {
         if (rawProg) setProgress(JSON.parse(rawProg));
         if (rawDays) setDaysVisited(JSON.parse(rawDays));
         setUserName(rawName ?? '');
+        setReminderEnabled(rawReminder === 'true');
       });
     }, []),
   );
@@ -151,12 +155,40 @@ export default function YoScreen() {
     ]);
   }
 
-  function handleReminder() {
-    Alert.alert(
-      'Recordatorio diario',
-      `Actualmente configurado a las ${reminderTime} AM.\n\nEl selector de hora estará disponible en la próxima versión.`,
-      [{ text: 'Entendido' }],
-    );
+  async function handleReminderToggle(value: boolean) {
+    if (value) {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permiso requerido',
+          'Activa las notificaciones en los ajustes de tu dispositivo para recibir recordatorios.',
+          [{ text: 'Entendido' }],
+        );
+        return;
+      }
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('psylens-reminder', {
+          name: 'Recordatorio diario',
+          importance: Notifications.AndroidImportance.DEFAULT,
+        });
+      }
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Psylence',
+          body: 'Tu momento de hoy te espera.',
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: 9,
+          minute: 0,
+        },
+      });
+    } else {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+    }
+    setReminderEnabled(value);
+    await AsyncStorage.setItem(REMINDER_KEY, String(value)).catch(() => {});
   }
 
   function handleSubscription() {
@@ -328,8 +360,22 @@ export default function YoScreen() {
         <SettingRow
           theme={theme}
           label="Recordatorio diario"
-          value={`${reminderTime} AM`}
-          onPress={handleReminder}
+          rightElement={
+            <Switch
+              value={reminderEnabled}
+              onValueChange={handleReminderToggle}
+              trackColor={{
+                false: theme.bg3,
+                true:  theme.green,
+              }}
+              thumbColor={
+                Platform.OS === 'android'
+                  ? reminderEnabled ? theme.text : theme.text3
+                  : undefined
+              }
+              ios_backgroundColor={theme.bg3}
+            />
+          }
         />
 
         <SettingRow

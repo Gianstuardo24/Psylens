@@ -104,9 +104,10 @@ function AuthorCard({
   const { theme } = useTheme();
   const ac = useMemo(() => makeAcStyles(theme), [theme]);
 
-  const portrait  = PORTRAITS[author.id] ?? null;
-  const isDual    = author.id === 'heraclito-democrito';
-  const isIntro   = author.id.startsWith('intro-');
+  const portrait     = PORTRAITS[author.id] ?? null;
+  const isDual       = author.id === 'heraclito-democrito';
+  const isIntro      = author.id.startsWith('intro-');
+  const isComingSoon = author.subtitle === 'Contenido próximamente';
 
   const inner = (
     <View
@@ -198,16 +199,19 @@ function AuthorCard({
 
       {/* Trailing badge */}
       <View style={ac.trailing}>
-        {state === 'active' && (
+        {isComingSoon ? (
+          <View style={ac.badgeSoon}>
+            <Text style={ac.badgeSoonText}>Próximo</Text>
+          </View>
+        ) : state === 'active' ? (
           <View style={ac.badgePurple}>
             <Text style={ac.badgePurpleText}>Activo</Text>
           </View>
-        )}
-        {state === 'done' && (
+        ) : state === 'done' ? (
           <View style={ac.badgeGreen}>
             <Text style={ac.badgeGreenText}>✓</Text>
           </View>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -562,6 +566,16 @@ function makeAcStyles(theme: Theme) {
       ...typography.bodyS,
       color: theme.green,
       fontWeight: '700',
+    },
+    badgeSoon: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: theme.bg3,
+    },
+    badgeSoonText: {
+      ...typography.label,
+      color: theme.text3,
     },
   });
 }
