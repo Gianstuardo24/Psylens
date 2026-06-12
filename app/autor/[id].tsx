@@ -15,7 +15,8 @@ import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import { authors, blocks, glossaryTerms } from '../../constants/data';
+import Svg, { Path } from 'react-native-svg';
+import { authors, blocks, glossaryTerms, revolutionCards } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
@@ -144,10 +145,13 @@ export default function AutorScreen() {
     }
   }, [showCelebration]);
 
-  const author      = authors.find(a => a.id === id);
-  const block       = author ? blocks.find(b => b.id === author.blockId) : null;
+  const revCard     = revolutionCards.find(r => r.id === id) ?? null;
+  const author      = revCard ? null : (authors.find(a => a.id === id) ?? null);
+  const block       = revCard
+    ? (blocks.find(b => b.id === revCard.blockId) ?? null)
+    : author ? (blocks.find(b => b.id === author.blockId) ?? null) : null;
   const authorTerms = glossaryTerms.filter(t => t.authorId === id);
-  const authorIndex = authors.findIndex(a => a.id === id);
+  const authorIndex = author ? authors.findIndex(a => a.id === id) : -1;
   const nextAuthor  = authorIndex >= 0 ? (authors[authorIndex + 1] ?? null) : null;
 
   // Block-level derived values (safe to compute before the null guard)
@@ -157,7 +161,7 @@ export default function AutorScreen() {
 
   // Record the first time this block is accessed so we can compute days taken
   useEffect(() => {
-    if (!block) return;
+    if (!block || revCard) return;
     AsyncStorage.getItem(BLOCK_STARTED_KEY).then(raw => {
       const started: Record<string, string> = raw ? JSON.parse(raw) : {};
       if (!started[block.id]) {
@@ -166,6 +170,142 @@ export default function AutorScreen() {
       }
     }).catch(() => {});
   }, [block?.id]);
+
+  const isRevComplete = revCard ? !!progress[revCard.id]?.concept : false;
+
+  async function markRevDone() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const updated: ProgressMap = {
+      ...progress,
+      [revCard!.id]: { concept: true },
+    };
+    setProgress(updated);
+    await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(updated)).catch(() => {});
+
+    const today = new Date().toISOString().slice(0, 10);
+    const [rawStreak, lastActive] = await Promise.all([
+      AsyncStorage.getItem(STREAK_KEY).catch(() => null),
+      AsyncStorage.getItem(LAST_ACTIVE_KEY).catch(() => null),
+    ]);
+    if (lastActive !== today) {
+      const prev = rawStreak ? parseInt(rawStreak, 10) : 0;
+      const newStreak = lastActive && diffDays(lastActive, today) === 1 ? prev + 1 : 1;
+      await Promise.all([
+        AsyncStorage.setItem(STREAK_KEY, String(newStreak)),
+        AsyncStorage.setItem(LAST_ACTIVE_KEY, today),
+      ]).catch(() => {});
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setShowCelebration(true);
+  }
+
+  // ─── Revolution card render ────────────────────────────────────────────────
+  if (revCard) {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={[styles.backButton, { top: insets.top + spacing.sm }]}
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+
+        <View style={[styles.header, { paddingTop: insets.top + 48 }]}>
+          <View style={styles.revIconCircle}>
+            <Svg width={44} height={44} viewBox="0 0 44 44">
+              <Path d="M22 4 L40 22 L22 40 L4 22 Z" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
+            </Svg>
+          </View>
+          <View style={styles.blockChip}>
+            <Text style={styles.blockChipText}>{block?.name ?? ''}</Text>
+          </View>
+          <Text style={styles.authorName}>{revCard.name}</Text>
+        </View>
+
+        {/* Single tab */}
+        <View style={styles.tabBar}>
+          <View style={[styles.tabItem, { flex: 1 }]}>
+            <Text style={[styles.tabLabel, styles.tabLabelActive]}>Profundidad</Text>
+            <View style={styles.tabUnderline} />
+          </View>
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
+            showsVerticalScrollIndicator={false}
+          >
+            {revCard.concept.question ? (
+              <>
+                <Text style={styles.question}>{revCard.concept.question}</Text>
+                <View style={styles.divider} />
+              </>
+            ) : null}
+            {revCard.concept.text.split('\n\n').map((para, i) => (
+              <View key={i} style={styles.paragraph}>
+                <Text style={styles.contentText}>{para}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.sm }]}>
+          {isRevComplete ? (
+            <>
+              <TouchableOpacity style={[styles.readButton, styles.readButtonDone]} activeOpacity={1}>
+                <Text style={[styles.readButtonText, styles.readButtonTextDone]}>Leído ✓</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.nextButton, { marginTop: spacing.sm }]}
+                onPress={() => router.back()}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.nextButtonText}>Comenzar sub-bloque →</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity style={styles.readButton} onPress={markRevDone} activeOpacity={0.85}>
+              <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Celebration modal */}
+        <Modal visible={showCelebration} transparent statusBarTranslucent animationType="none">
+          <View style={styles.celebOverlay}>
+            <Animated.View style={[styles.celebCard, { opacity: animOpacity, transform: [{ scale: animScale }] }]}>
+              <View style={styles.celebRevIcon}>
+                <Svg width={48} height={48} viewBox="0 0 48 48">
+                  <Path d="M24 4 L44 24 L24 44 L4 24 Z" stroke="#0f6e56" strokeWidth="2" fill="none" />
+                </Svg>
+              </View>
+              <Text style={styles.celebBadge}>Introducción completada</Text>
+              <Text style={styles.celebAuthorName}>{revCard.name}</Text>
+              <Text style={styles.celebSubtitle}>Has leído la introducción</Text>
+              <TouchableOpacity
+                style={styles.celebNextButton}
+                onPress={() => { setShowCelebration(false); router.back(); }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.celebNextText}>Comenzar sub-bloque →</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.celebDismiss}
+                onPress={() => setShowCelebration(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.celebDismissText}>Volver</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+  // ──────────────────────────────────────────────────────────────────────────
 
   if (!author || !block) {
     return (
@@ -208,7 +348,7 @@ export default function AutorScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const updated: ProgressMap = {
       ...progress,
-      [author.id]: { surface: true, concept: true, fondo: true },
+      [author!.id]: { surface: true, concept: true, fondo: true },
     };
     setProgress(updated);
     await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(updated)).catch(() => {});
@@ -241,7 +381,7 @@ export default function AutorScreen() {
     // Check if every author in the block is now complete
     const blockDone = block
       ? block.authors.every(aid =>
-          aid === author.id
+          aid === author!.id
             ? true
             : !!(updated[aid]?.surface && updated[aid]?.concept && updated[aid]?.fondo)
         )
@@ -582,6 +722,26 @@ function makeStyles(theme: Theme) {
       fontSize: 26,
       color: theme.text,
       lineHeight: 32,
+    },
+    revIconCircle: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+    },
+    celebRevIcon: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+      borderWidth: 2,
+      borderColor: '#0f6e56',
     },
     introIllustrationWrap: {
       width: 120,

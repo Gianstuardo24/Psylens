@@ -73,6 +73,12 @@ function isAuthorDone(p: LayerProgress | undefined): boolean {
   return !!(p?.surface && p?.concept && p?.fondo);
 }
 
+function isRevCardDone(subBlockId: string, progress: ProgressMap): boolean {
+  const rev = revolutionCardBySubBlock[subBlockId];
+  if (!rev) return true;
+  return !!progress[rev.id]?.concept;
+}
+
 function getBlockStatus(block: typeof blocks[0], isPremium: boolean, progress: ProgressMap): BlockStatus {
   if (block.id === 'intro') return 'active';
   if (block.id === 'b0') {
@@ -106,11 +112,15 @@ function computeAuthorState(
   groupStatus: 'active' | 'locked',
   sequential: boolean,
   progress: ProgressMap,
+  subBlockId?: string,
 ): AuthorState {
   if (isAuthorDone(progress[authorId])) return 'done';
   if (groupStatus === 'locked') return 'locked';
   if (!sequential) return 'active';
-  if (indexInGroup === 0) return 'active';
+  if (indexInGroup === 0) {
+    if (subBlockId && !isRevCardDone(subBlockId, progress)) return 'locked';
+    return 'active';
+  }
   const prevId = groupAuthorIds[indexInGroup - 1];
   return isAuthorDone(progress[prevId]) ? 'active' : 'locked';
 }
@@ -256,17 +266,18 @@ function AuthorCard({
 function SubBlockHeader({
   subBlock,
   status,
+  progress,
 }: {
   subBlock: typeof subBlocks[0];
   status: SubBlockStatus;
+  progress: ProgressMap;
 }) {
   const { theme } = useTheme();
-  const [expanded, setExpanded] = useState(false);
   const sbh = useMemo(() => makeSbhStyles(theme), [theme]);
 
-  const rev     = revolutionCardBySubBlock[subBlock.id];
-  const content  = rev ? { entrada: rev.surface.text, profundidad: rev.concept.text } : undefined;
-  const isLocked = status === 'locked';
+  const rev       = revolutionCardBySubBlock[subBlock.id];
+  const isRevDone = rev ? !!progress[rev.id]?.concept : false;
+  const isLocked  = status === 'locked';
 
   return (
     <View style={[sbh.container, isLocked && sbh.containerLocked]}>
@@ -284,27 +295,22 @@ function SubBlockHeader({
         <Text style={[sbh.name, isLocked && sbh.nameLocked]} numberOfLines={2}>
           {subBlock.name}
         </Text>
-        {!isLocked && content && (
-          <TouchableOpacity
-            onPress={() => setExpanded(e => !e)}
-            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-            style={sbh.expandBtn}
-          >
-            <Text style={sbh.expandIcon}>{expanded ? '▾' : '▸'}</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
-      {!isLocked && content && (
-        <Text style={sbh.entrada}>{content.entrada}</Text>
+      {!isLocked && rev && (
+        <Text style={sbh.entrada}>{rev.surface.text}</Text>
       )}
 
-      {expanded && !isLocked && content && (
-        <View style={sbh.profundidadWrap}>
-          <View style={sbh.divider} />
-          <Text style={sbh.profundidadLabel}>Profundidad</Text>
-          <Text style={sbh.profundidad}>{content.profundidad}</Text>
-        </View>
+      {!isLocked && rev && (
+        <TouchableOpacity
+          style={[sbh.revButton, isRevDone && sbh.revButtonDone]}
+          onPress={() => router.push(`/autor/${rev.id}`)}
+          activeOpacity={0.8}
+        >
+          <Text style={[sbh.revButtonText, isRevDone && sbh.revButtonTextDone]}>
+            {isRevDone ? '✓ Introducción completada' : 'Leer introducción →'}
+          </Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -431,12 +437,12 @@ function BlockNode({
                 .filter(Boolean) as (typeof authors[0])[];
               return (
                 <View key={sb.id}>
-                  <SubBlockHeader subBlock={sb} status={sbStatus} />
+                  <SubBlockHeader subBlock={sb} status={sbStatus} progress={progress} />
                   {sbAuthors.map((author, i) => (
                     <AuthorCard
                       key={author.id}
                       author={author}
-                      state={computeAuthorState(author.id, i, sbAuthorIds, sbStatus, true, progress)}
+                      state={computeAuthorState(author.id, i, sbAuthorIds, sbStatus, true, progress, sb.id)}
                     />
                   ))}
                 </View>
@@ -854,35 +860,32 @@ function makeSbhStyles(theme: Theme) {
     nameLocked: {
       color: theme.text3,
     },
-    expandBtn: {
-      padding: spacing.xs,
-    },
-    expandIcon: {
-      ...typography.bodyS,
-      color: theme.text2,
-    },
     entrada: {
       ...typography.bodyXS,
       color: theme.text2,
       lineHeight: 18,
-    },
-    profundidadWrap: {
-      marginTop: spacing.md,
-    },
-    divider: {
-      height: 1,
-      backgroundColor: theme.bg3,
       marginBottom: spacing.sm,
     },
-    profundidadLabel: {
-      ...typography.label,
-      color: '#0f6e56',
-      marginBottom: spacing.xs,
+    revButton: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: theme.bg3,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginTop: spacing.xs,
     },
-    profundidad: {
-      ...typography.bodyXS,
+    revButtonDone: {
+      backgroundColor: theme.greenBg,
+      borderColor: theme.green,
+    },
+    revButtonText: {
+      ...typography.label,
       color: theme.text2,
-      lineHeight: 18,
+    },
+    revButtonTextDone: {
+      color: theme.green,
     },
   });
 }
