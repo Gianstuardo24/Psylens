@@ -218,8 +218,7 @@ export function BlockCompleteModal({
             )}
           </View>
 
-          {/* "Bloque completado" */}
-          <Text style={styles.completedLabel}>Bloque completado</Text>
+          <Text style={styles.completedLabel}>Etapa completada</Text>
 
           {/* Block name in serif h1 */}
           <Text style={styles.blockName}>{block.name}</Text>
@@ -242,10 +241,9 @@ export function BlockCompleteModal({
             </View>
           </View>
 
-          {/* "Siguiente bloque" hint */}
           {nextBlock && (
             <Text style={styles.nextHint}>
-              Siguiente bloque: {nextBlock.name}
+              A continuación: {nextBlock.name}
             </Text>
           )}
 
@@ -256,9 +254,7 @@ export function BlockCompleteModal({
             activeOpacity={0.85}
           >
             <Text style={styles.primaryButtonText}>
-              {nextBlock
-                ? `Continuar al Bloque ${nextBlockNumber}`
-                : 'Ver resumen'}
+              {nextBlock ? 'Continuar' : 'Ver resumen'}
             </Text>
           </TouchableOpacity>
 

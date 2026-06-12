@@ -372,7 +372,7 @@ function BlockNode({
         style={bn.header}
         onPress={isLocked
           ? (block.id === 'b0'
-              ? () => Alert.alert('Introducción requerida', 'Completa la Introducción primero para desbloquear este bloque.')
+              ? () => Alert.alert('Introducción requerida', 'Completa la Introducción para continuar.')
               : onPaywall)
           : (isActive ? onToggle : undefined)}
         activeOpacity={0.7}
@@ -514,7 +514,7 @@ export default function CaminoScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Camino</Text>
         <Text style={styles.subtitle}>
-          {blocks.length} bloques · {totalAuthors} autores
+          {blocks.length} etapas · {totalAuthors} autores
         </Text>
       </View>
 

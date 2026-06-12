@@ -16,7 +16,7 @@ import { typography, spacing, radius } from '../../constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
-import { authors, blocks, glossaryTerms, revolutionCards } from '../../constants/data';
+import { authors, blocks, glossaryTerms, revolutionCards, subBlocks } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
@@ -151,8 +151,25 @@ export default function AutorScreen() {
     ? (blocks.find(b => b.id === revCard.blockId) ?? null)
     : author ? (blocks.find(b => b.id === author.blockId) ?? null) : null;
   const authorTerms = glossaryTerms.filter(t => t.authorId === id);
-  const authorIndex = author ? authors.findIndex(a => a.id === id) : -1;
-  const nextAuthor  = authorIndex >= 0 ? (authors[authorIndex + 1] ?? null) : null;
+  const nextAuthor = (() => {
+    if (!author) return null;
+    // Authors inside a sub-block must follow the sub-block's defined order, not the global array.
+    // Using global order caused later-indexed authors (e.g. hipocrates) to be skipped,
+    // preventing the previous sub-block from being considered complete.
+    const sb = subBlocks.find(s => s.authorIds.includes(author.id));
+    if (sb) {
+      const pos = sb.authorIds.indexOf(author.id);
+      if (pos >= 0 && pos < sb.authorIds.length - 1) {
+        return authors.find(a => a.id === sb.authorIds[pos + 1]) ?? null;
+      }
+      // Last in sub-block: don't jump to the next sub-block's author since the
+      // revolution card for that sub-block must be read first.
+      return null;
+    }
+    // No sub-block (intro authors): use global order
+    const idx = authors.findIndex(a => a.id === author.id);
+    return idx >= 0 ? (authors[idx + 1] ?? null) : null;
+  })();
 
   // Block-level derived values (safe to compute before the null guard)
   const blockIdx      = block ? blocks.findIndex(b => b.id === block.id) : -1;
