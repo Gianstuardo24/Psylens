@@ -876,7 +876,7 @@ export const revolutionCards = [
     type: 'revolution' as const,
     surface: {
       question: '',
-      text: 'Los primeros pensadores abrieron la puerta. Los que vienen ahora entraron por ella — y fueron mucho más lejos. Si la mente puede entenderse sin recurrir a los dioses, la siguiente pregunta es: ¿cómo está organizada por dentro? ¿Tiene partes? ¿Se puede elegir cómo sentirse, o las emociones simplemente ocurren?',
+      text: 'Hay preguntas que no se resuelven mirando afuera — sino mirando adentro. Si la mente puede entenderse sin recurrir a los dioses, la siguiente pregunta es: ¿cómo está organizada por dentro? ¿Tiene partes? ¿Se puede elegir cómo sentirse, o las emociones simplemente ocurren?',
       closingLine: '',
     },
     concept: {
@@ -895,7 +895,7 @@ export const revolutionCards = [
     type: 'revolution' as const,
     surface: {
       question: '',
-      text: 'Los pensadores anteriores confiaban en el pensamiento. Si razonabas bien, si observabas con cuidado, podías llegar a entender la mente humana. Esa confianza en la razón fue el motor de todo lo que viste antes. Lo que estás a punto de ver es el momento en que esa confianza empezó a fisurarse.',
+      text: 'Durante siglos, la razón fue la herramienta más confiable para entender la mente humana. Si razonabas bien, si observabas con cuidado, podías llegar a entender la mente humana. Esa confianza en la razón fue el motor de todo lo que viste antes. Lo que estás a punto de ver es el momento en que esa confianza empezó a fisurarse.',
       closingLine: '',
     },
     concept: {
@@ -914,7 +914,7 @@ export const revolutionCards = [
     type: 'revolution' as const,
     surface: {
       question: '',
-      text: 'El sub-bloque anterior terminó con una pregunta incómoda: ¿qué hay debajo de la razón? ¿Hay algo que nos mueve antes de que pensemos, antes de que decidamos, antes de que lo notemos?\n\nLos dos pensadores que cierran este bloque respondieron que sí — desde lugares completamente distintos.',
+      text: 'Hay algo en nosotros que actúa antes de que lo decidamos — antes de que lo pensemos, antes de que lo notemos. ¿Hay algo que nos mueve antes de que pensemos, antes de que decidamos, antes de que lo notemos?\n\nLos dos pensadores que cierran este bloque respondieron que sí — desde lugares completamente distintos.',
       closingLine: '',
     },
     concept: {
@@ -933,7 +933,7 @@ export const revolutionCards = [
     type: 'revolution' as const,
     surface: {
       question: '',
-      text: 'Durante el Bloque 0 recorriste más de dos mil años de pensamiento filosófico. Nadie había medido cuánto tarda la mente en reaccionar ante algo. Nadie había registrado con precisión cuánto recuerda una persona después de un día o una semana. Nadie había intentado poner un número a la intensidad de lo que sentimos. Eso estaba a punto de cambiar.',
+      text: 'Durante más de dos mil años, las preguntas sobre la mente humana vinieron de la filosofía. Nadie había medido cuánto tarda la mente en reaccionar ante algo. Nadie había registrado con precisión cuánto recuerda una persona después de un día o una semana. Nadie había intentado poner un número a la intensidad de lo que sentimos. Eso estaba a punto de cambiar.',
       closingLine: '',
     },
     concept: {
@@ -952,7 +952,7 @@ export const revolutionCards = [
     type: 'revolution' as const,
     surface: {
       question: '',
-      text: 'El primer sub-bloque dejó algo sin resolver. Wundt había demostrado que la mente podía medirse — pero para hacerlo necesitaba pedirle a las personas que describieran lo que estaban experimentando por dentro. Y nadie podía verificar si lo que describían era lo que realmente ocurría.\n\nEsa pregunta — ¿para qué sirve la mente? — cambió todo lo que vino después.',
+      text: 'Medir la mente era un avance enorme. Pero medirla requería pedirle a las personas que describieran lo que sentían por dentro — y nadie podía verificar si lo que describían era real.\n\nEsa pregunta — ¿para qué sirve la mente? — cambió todo lo que vino después.',
       closingLine: '',
     },
     concept: {
