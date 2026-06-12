@@ -153,19 +153,30 @@ export default function AutorScreen() {
   const authorTerms = glossaryTerms.filter(t => t.authorId === id);
   const nextDest: { id: string; name: string } | null = (() => {
     if (!author) return null;
-    // Sub-block authors: follow the sub-block's sequential order
     const sb = subBlocks.find(s => s.authorIds.includes(author.id));
     if (sb) {
-      const pos = sb.authorIds.indexOf(author.id);
-      if (pos >= 0 && pos < sb.authorIds.length - 1) {
-        const a = authors.find(a => a.id === sb.authorIds[pos + 1]);
+      // Only consider authors actually in the block (sub-block may list unreleased placeholders)
+      const blockAuthorSet = block ? new Set(block.authors) : null;
+      const visibleIds = blockAuthorSet
+        ? sb.authorIds.filter(id => blockAuthorSet.has(id))
+        : sb.authorIds;
+      const pos = visibleIds.indexOf(author.id);
+      if (pos >= 0 && pos < visibleIds.length - 1) {
+        const a = authors.find(a => a.id === visibleIds[pos + 1]);
         return a ? { id: a.id, name: a.name } : null;
       }
-      // Last in sub-block: return null (user goes back to Camino for the next section)
+      // Last visible author in this sub-block → revolution card of the next sub-block
+      const blockSubBlocks = subBlocks.filter(s => s.blockId === sb.blockId);
+      const sbIdx = blockSubBlocks.findIndex(s => s.id === sb.id);
+      if (sbIdx >= 0 && sbIdx < blockSubBlocks.length - 1) {
+        const nextSb = blockSubBlocks[sbIdx + 1];
+        const rev = revolutionCards.find(r => r.subBlockId === nextSb.id);
+        if (rev) return { id: rev.id, name: rev.name };
+      }
+      // Last sub-block in block: BlockCompleteModal handles the transition
       return null;
     }
-    // Intro authors (no sub-block): global order, but redirect to the sub-block's
-    // revolution card instead of jumping directly to its first author
+    // Intro authors (no sub-block): global order, redirect to the sub-block's revolution card
     const idx = authors.findIndex(a => a.id === author.id);
     if (idx < 0 || idx >= authors.length - 1) return null;
     const nextId = authors[idx + 1].id;
@@ -195,6 +206,18 @@ export default function AutorScreen() {
   }, [block?.id]);
 
   const isRevComplete = revCard ? !!progress[revCard.id]?.concept : false;
+
+  // First visible author of the revolution card's sub-block — destination after intro is read
+  const revFirstAuthorId = (() => {
+    if (!revCard) return null;
+    const sb = subBlocks.find(s => s.id === revCard.subBlockId);
+    if (!sb) return null;
+    const blockAuthorSet = block ? new Set(block.authors) : null;
+    const visibleIds = blockAuthorSet
+      ? sb.authorIds.filter(id => blockAuthorSet.has(id))
+      : sb.authorIds;
+    return visibleIds[0] ?? null;
+  })();
 
   async function markRevDone() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -283,10 +306,10 @@ export default function AutorScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.nextButton, { marginTop: spacing.sm }]}
-                onPress={() => router.back()}
+                onPress={() => revFirstAuthorId ? router.replace(`/autor/${revFirstAuthorId}`) : router.back()}
                 activeOpacity={0.85}
               >
-                <Text style={styles.nextButtonText}>Comenzar →</Text>
+                <Text style={styles.nextButtonText}>Continuar →</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -307,20 +330,17 @@ export default function AutorScreen() {
               </View>
               <Text style={styles.celebBadge}>Introducción completada</Text>
               <Text style={styles.celebAuthorName}>{revCard.name}</Text>
-              <Text style={styles.celebSubtitle}>Has leído la introducción</Text>
+              <Text style={styles.celebSubtitle}>Comenzar esta etapa</Text>
               <TouchableOpacity
                 style={styles.celebNextButton}
-                onPress={() => { setShowCelebration(false); router.back(); }}
+                onPress={() => {
+                  setShowCelebration(false);
+                  if (revFirstAuthorId) router.replace(`/autor/${revFirstAuthorId}`);
+                  else router.back();
+                }}
                 activeOpacity={0.85}
               >
-                <Text style={styles.celebNextText}>Comenzar →</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.celebDismiss}
-                onPress={() => setShowCelebration(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.celebDismissText}>Volver</Text>
+                <Text style={styles.celebNextText}>Continuar →</Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -634,18 +654,19 @@ export default function AutorScreen() {
             <Text style={styles.celebAuthorName}>{author.name}</Text>
             <Text style={styles.celebSubtitle}>{isTwoLayer ? 'Has leído las dos capas' : 'Has leído las tres capas'}</Text>
 
-            {nextDest && (
+            {nextDest ? (
               <TouchableOpacity style={styles.celebNextButton} onPress={navigateToNext} activeOpacity={0.85}>
-                <Text style={styles.celebNextText}>Siguiente: {nextDest.name} →</Text>
+                <Text style={styles.celebNextText}>Siguiente →</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.celebDismiss}
+                onPress={() => setShowCelebration(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.celebDismissText}>Volver</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity
-              style={styles.celebDismiss}
-              onPress={() => setShowCelebration(false)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.celebDismissText}>Volver</Text>
-            </TouchableOpacity>
           </Animated.View>
         </View>
       </Modal>
