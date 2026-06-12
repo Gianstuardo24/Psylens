@@ -13,7 +13,7 @@ export const blocks = [
     era: 'Antigüedad y Edad Media',
     symbol: 'eye',
     isFree: true,
-    authors: ['heraclito-democrito', 'platon', 'aristoteles', 'hipocrates', 'descartes', 'spinoza', 'kant', 'schopenhauer'],
+    authors: ['heraclito-democrito', 'platon', 'aristoteles', 'helenisticas', 'avicena', 'hipocrates', 'descartes', 'spinoza', 'kant', 'schopenhauer', 'darwin'],
   },
   {
     id: 'b1',
@@ -21,7 +21,7 @@ export const blocks = [
     era: 'Siglo XIX',
     symbol: 'atom',
     isFree: false,
-    authors: ['fechner', 'wundt', 'james'],
+    authors: ['ebbinghaus', 'fechner', 'wundt', 'james', 'thorndike'],
   },
   {
     id: 'b2',
@@ -146,6 +146,7 @@ export const authors = [
     subtitle: 'Heráclito y Demócrito',
     dates: '535–370 a.C.',
     blockId: 'b0',
+    subBlockId: 'sb-0a',
     surface: {
       question: '¿Alguna vez sentiste que no eras la misma persona que eras hace cinco años?',
       text: `Dos pensadores griegos del siglo V a.C. llegaron a conclusiones opuestas sobre la naturaleza de la realidad, y ambas siguen vivas en la psicología de hoy.\n\nHeráclito vivía en Éfeso y tenía una obsesión con el movimiento. Observó que el río parece el mismo, pero el agua cambia constantemente. De ahí su idea más radical: no puedes bañarte dos veces en el mismo río.\n\nDemócrito, en cambio, creía que la realidad está hecha de partículas indivisibles — los átomos — en movimiento perpetuo. Incluyendo la mente.`,
@@ -169,6 +170,7 @@ export const authors = [
     subtitle: 'El dualismo que llega hasta hoy',
     dates: '428–348 a.C.',
     blockId: 'b0',
+    subBlockId: 'sb-0a',
     surface: {
       question: '¿Alguna vez sentiste que tu razón quería una cosa y tu cuerpo quería otra?',
       text: `Platón nació en Atenas y creció escuchando a Sócrates. Su pregunta central era sobre el alma: qué es, de qué partes está hecha.\n\nSu respuesta fue radicalmente dualista: el alma y el cuerpo son cosas distintas. Y su mapa interno del alma tiene tres partes en conflicto permanente: la razón, el espíritu y el apetito.`,
@@ -192,6 +194,7 @@ export const authors = [
     subtitle: 'El alma inseparable del cuerpo',
     dates: '384–322 a.C.',
     blockId: 'b0',
+    subBlockId: 'sb-0b',
     surface: {
       question: '¿Alguna vez notaste que una emoción te ayudó a pensar mejor, no peor?',
       text: `Aristóteles fue alumno de Platón durante veinte años. Y luego, en silencio, lo refutó.\n\nDonde Platón veía el cuerpo como obstáculo del alma, Aristóteles vio una unidad inseparable. Para Aristóteles, las emociones no son fuerzas que la razón debe controlar — son información.`,
@@ -210,11 +213,60 @@ export const authors = [
   },
 
   {
+    id: 'helenisticas',
+    name: 'Filosofías Helenísticas',
+    subtitle: '¿Puedes elegir cómo te sientes?',
+    dates: 'S. III a.C. – s. II d.C.',
+    blockId: 'b0',
+    subBlockId: 'sb-0b',
+    surface: {
+      question: '¿Alguna vez alguien te dijo "no dejes que eso te afecte" — y aunque querías, no sabías cómo?',
+      text: `Hubo un grupo de filósofos que dedicaron su vida entera a responder exactamente esa pregunta. No desde la teoría — desde la práctica. Lo que les interesaba no era solo entender cómo funciona la mente, sino enseñar a vivir mejor con ella.\n\nLos llamamos filósofos helenísticos — "helenístico" viene de "Hellas", que era el nombre que los griegos le daban a su propio mundo — porque vivieron en el período que siguió a [Aristóteles], cuando la cultura griega se había expandido por todo el Mediterráneo y el mundo conocido era mucho más grande y más incierto que antes. Alejandro Magno había conquistado desde Grecia hasta la India, los imperios caían y se levantaban, y las personas necesitaban algo más que teorías abstractas sobre el alma. Necesitaban herramientas para vivir.\n\nTres escuelas respondieron a esa necesidad de maneras muy distintas — y las tres dejaron una huella que llega, de formas sorprendentes, hasta la psicología de hoy.`,
+      closingLine: '',
+    },
+    concept: {
+      question: '¿Y qué proponían estas tres escuelas?',
+      text: `La primera es el [estoicismo]. Sus pensadores más conocidos — Epicteto, Marco Aurelio y Séneca — partían de una idea que suena simple pero que tiene consecuencias profundas: hay cosas que dependen de ti y cosas que no. Lo que ocurre afuera — el clima, la opinión de los demás, la enfermedad, la muerte — no depende de ti. Lo que sí depende de ti es cómo lo interpretas y cómo respondes.\n\nPara los estoicos, el sufrimiento no viene directamente de los hechos sino de los juicios que hacemos sobre ellos. Si pierdes tu trabajo y concluyes "soy un fracaso", ese juicio — no el hecho — es lo que produce el malestar. Y ese juicio puede examinarse, cuestionarse, cambiarse. Epicteto, que había sido esclavo, lo decía con una claridad que venía de la experiencia: puedes quitarle a alguien la libertad, pero no puedes quitarle la forma en que elige responder a lo que le ocurre.\n\nEsa idea — que entre lo que pasa y lo que sientes hay siempre una interpretación, y que esa interpretación es donde tienes algo de control — es el fundamento filosófico de buena parte de lo que hoy llamamos psicoterapia. Una de esas formas de trabajo, la [terapia cognitiva] — que parte de la idea de que cambiar cómo pensamos puede cambiar cómo nos sentimos — la encontrarás más adelante en este recorrido. La cadena que va desde Epicteto hasta un consultorio de terapia hoy tiene más de dos mil años.\n\nLa segunda escuela es el [epicureísmo]. Epicuro propuso algo que en su época fue malinterpretado — y que todavía hoy se malinterpreta. No era una filosofía del placer desenfrenado, como a veces se cree. Era algo más preciso: que el objetivo de una buena vida es alcanzar un estado de calma y equilibrio, libre de dolor innecesario y de miedo. No la búsqueda de más y más placer, sino la eliminación del sufrimiento que no tiene razón de ser.\n\nEpicuro también fue uno de los primeros en hablar de los vínculos cercanos como fuente de bienestar. Para él, la amistad — las relaciones de confianza, sin interés — era uno de los ingredientes más importantes de una vida que valiera la pena. Esa intuición tiene respaldo en la investigación psicológica de hoy: los estudios más largos sobre bienestar humano coinciden en que la calidad de las relaciones es el predictor más consistente de una vida satisfactoria.\n\nLa tercera escuela es el [escepticismo]. Los escépticos — liderados por Pirrón de Elis — propusieron algo radicalmente distinto: que sobre la mayoría de las cosas no podemos saber con certeza, y que la paz mental viene de suspender el juicio — es decir, de no apresurarse a concluir nada, de quedarse con la pregunta abierta en lugar de forzar una respuesta que quizás no existe.\n\nVale la pena aclarar algo, porque la palabra "escéptico" hoy se usa de otra manera. Cuando alguien dice "soy escéptico" normalmente quiere decir que duda de todo, que no se cree nada fácilmente. El escepticismo de Pirrón era algo distinto — no era desconfianza activa sino una práctica de soltar la necesidad de tener certeza. No es "no me creo nada" sino "no necesito tener todas las respuestas para vivir tranquilo." Para Pirrón, la fuente de mucho sufrimiento humano era precisamente esa — el empeño en tener todo claro, en saber con seguridad cómo son las cosas, en resolver preguntas que quizás no tienen respuesta. Soltar ese empeño no era rendirse — era liberarse. Y eso, con otro nombre, es algo que las terapias de hoy trabajan activamente: la capacidad de vivir bien en medio de lo que no se sabe, sin que la incertidumbre te paralice.`,
+      closingLine: 'Tres respuestas distintas a la misma pregunta: ¿cómo vivir bien en un mundo que no puedes controlar?',
+    },
+    fondo: {
+      question: '¿Por qué estas filosofías siguen siendo relevantes hoy?',
+      text: `Porque respondieron una pregunta que la psicología no empezó a estudiar sistemáticamente hasta el siglo XX — y que todavía no ha terminado de responder: ¿qué hace que una vida sea más llevadera?\n\nEl estoicismo es quizás la más visible de las tres en la psicología contemporánea. La [terapia cognitivo-conductual] — uno de los enfoques terapéuticos más estudiados del mundo, que combina el trabajo con los pensamientos y con los comportamientos para reducir el sufrimiento psicológico — parte de la misma premisa que Epicteto formuló hace dos mil años: que el sufrimiento psicológico está mediado por los pensamientos, y que cambiar los pensamientos puede cambiar cómo nos sentimos. No es una coincidencia — los fundadores de esa terapia citaban explícitamente a los estoicos como una de sus fuentes.\n\nEl epicureísmo anticipa algo que la [psicología positiva] — el estudio científico de qué hace que las personas sean felices y lleven vidas satisfactorias — confirmó siglos después con investigación: que el placer intenso y efímero contribuye mucho menos a la satisfacción con la vida que las relaciones estables, el sentido de propósito y la ausencia de sufrimiento innecesario. Epicuro lo sabía sin tener datos. Los investigadores de hoy lo tienen con números.\n\nY el escepticismo resuena en algo que las terapias contemporáneas proponen de distintas maneras: que no tienes que resolver todas las preguntas sobre ti mismo para vivir bien. Que sostener la incertidumbre — no saber quién eres del todo, no tener todo bajo control — es una habilidad, no un problema.`,
+      closingLine: 'Tres escuelas, tres respuestas, dos mil años de distancia. Y sin embargo, cuando las lees, es difícil no reconocer algo propio en alguna de ellas.',
+    },
+  },
+
+  {
+    id: 'avicena',
+    name: 'Avicena',
+    subtitle: 'La mente y el cuerpo como un solo sistema',
+    dates: '980–1037 d.C.',
+    blockId: 'b0',
+    subBlockId: 'sb-0b',
+    surface: {
+      question: '¿Alguna vez notaste que cuando estás muy estresado tu cuerpo lo acusa — un dolor de cabeza, el estómago apretado, el sueño que no llega? ¿O que cuando te sientes bien físicamente, todo lo demás parece más manejable?',
+      text: `Esa conexión entre lo que sientes emocionalmente y lo que ocurre en tu cuerpo no es algo que la medicina moderna descubrió hace poco. Avicena la describió con detalle hace más de mil años.\n\nIbn Sina — conocido en Occidente como Avicena — nació en el año 980 en lo que hoy es la región de Irán y Asia Central. En esa época, esa parte del mundo era el centro intelectual más activo del planeta — una zona donde convivían distintas culturas, religiones y lenguas, y donde el conocimiento se traducía, se debatía y se expandía con una libertad que, en otras partes del mundo, no existía. Avicena creció leyendo a los filósofos y médicos que ya vimos en este recorrido — [Aristóteles], [Hipócrates], [Platón]. A los veintiún años ya era médico reconocido. A los treinta, había escrito obras que cambiarían la medicina para siempre.\n\nLo que lo hace relevante para este recorrido no es solo lo que sabía. Es cómo pensaba. Para Avicena, el cuerpo y la mente no eran dos cosas separadas que había que tratar por separado. Eran un sistema — y lo que ocurría en uno afectaba, inevitablemente, al otro.`,
+      closingLine: '',
+    },
+    concept: {
+      question: '¿Y cómo lo explicaba?',
+      text: `[Aristóteles] había propuesto que el cuerpo y la mente no podían entenderse por separado. Avicena fue más lejos — tomó esa intuición y la llevó a la práctica médica, no como filosofía, sino como diagnóstico: si un paciente tiene síntomas físicos, pregúntate también qué está viviendo emocionalmente.\n\nAvicena fue uno de los primeros médicos en registrar, con detalle y orden — no como observaciones sueltas, sino como parte de un estudio médico serio — que las emociones tienen efectos físicos medibles. Observó que el miedo sostenido en el tiempo debilitaba el cuerpo, que la tristeza profunda afectaba la digestión y el sueño, y que la alegría, por el contrario, tenía efectos que hoy llamaríamos terapéuticos — es decir, que ayudaban al cuerpo a recuperarse. No lo decía como metáfora — lo decía como diagnóstico médico.\n\nPara ilustrar esa conexión, usó un experimento que se ha vuelto famoso: el pulso del enamorado. Cuenta que un joven llegó a su consulta con síntomas físicos inexplicables — debilidad, pérdida de apetito, insomnio. Avicena le tomó el pulso mientras iba mencionando distintos nombres de personas y lugares. Cuando mencionó el nombre de una mujer en particular, el pulso cambió. Avicena diagnosticó que el origen del malestar físico era emocional — el joven estaba enamorado y no podía decirlo. El cuerpo estaba expresando lo que la mente no podía nombrar.\n\nEse experimento, que hoy parece casi intuitivo, era revolucionario para su época. Estaba diciendo algo que la medicina tardaría siglos en formalizar: que hay síntomas físicos cuyo origen no está en el cuerpo, sino en la experiencia emocional. Lo que hoy llamamos [psicosomático] — una palabra que combina "psico", de mente, y "somático", de cuerpo, y que describe cómo uno puede afectar al otro — tiene en Avicena uno de sus primeros registros documentados.\n\nSu obra más influyente, el Canon de Medicina, fue el libro de texto médico más utilizado en Europa y otras partes del mundo durante más de seiscientos años. En él dedicó secciones enteras a lo que hoy llamaríamos salud mental — la melancolía, la manía, las perturbaciones del sueño — tratándolas con la misma seriedad que cualquier enfermedad física.`,
+      closingLine: 'Para Avicena, no existía una línea clara entre tratar el cuerpo y tratar la mente. Eran, siempre, la misma conversación.',
+    },
+    fondo: {
+      question: '¿Por qué importa alguien que vivió hace mil años en Persia?',
+      text: `Porque hizo algo que la medicina tardó siglos en volver a hacer: tomarse en serio la conexión entre lo emocional y lo físico.\n\nDespués de Avicena, esa conexión fue ignorada durante mucho tiempo. La medicina se fue especializando, separando el cuerpo en partes, tratando síntomas físicos con herramientas físicas y dejando lo emocional en manos de la religión o la filosofía. La idea de que el estrés puede causar enfermedades físicas reales, o que trabajar con las emociones puede tener efectos sobre el cuerpo, tardó hasta el siglo XX en volver a tomar fuerza dentro de la medicina.\n\nHoy esa conexión tiene nombre — se llama [medicina psicosomática], y es un campo de investigación activo que estudia cómo el estado emocional afecta al sistema inmune, al sistema digestivo, al corazón. Cuando un médico hoy le pregunta a un paciente por su nivel de estrés antes de hacer un diagnóstico, está siguiendo una intuición que Avicena documentó con precisión hace más de mil años.\n\nHay algo más que vale mencionar. Buena parte de las ideas que siglos después permitieron que Europa volviera a estudiar la mente y el cuerpo con rigor llegaron a través de pensadores como Avicena — que las había preservado, traducido y expandido cuando, en otras partes del mundo, simplemente no estaban disponibles. Sin ese puente, el recorrido que estás haciendo en esta app habría tenido un hueco enorme en el medio.`,
+      closingLine: '',
+    },
+  },
+
+  {
     id: 'hipocrates',
     name: 'Hipócrates',
     subtitle: 'La primera desacralización',
     dates: '460–370 a.C.',
     blockId: 'b0',
+    subBlockId: 'sb-0a',
     surface: {
       question: '¿Cuándo fue la última vez que alguien te explicó por qué te sientes como te sientes en términos del cuerpo?',
       text: `Antes de Hipócrates, la enfermedad mental era cosa de los dioses. La epilepsia se llamaba "la enfermedad sagrada".\n\nHipócrates rompió con eso: la epilepsia no tiene nada de sagrada, escribió. Tiene causas en el cerebro como cualquier otra enfermedad. En el siglo V a.C. eso era una afirmación escandalosa.`,
@@ -238,6 +290,7 @@ export const authors = [
     subtitle: 'El dualismo moderno',
     dates: '1596–1650',
     blockId: 'b0',
+    subBlockId: 'sb-0c',
     surface: {
       question: '¿Alguna vez dudaste de todo lo que creías saber?',
       text: `Descartes vivió en el siglo XVII, en un período de ruptura científica total. Su respuesta fue radical: dudar de todo de forma sistemática, hasta encontrar algo indudable.\n\nY encontró el único punto de certeza absoluta: puedo dudar de todo, pero no puedo dudar de que estoy dudando. Cogito ergo sum — pienso, luego soy.`,
@@ -261,6 +314,7 @@ export const authors = [
     subtitle: 'El error de Descartes, corregido',
     dates: '1632–1677',
     blockId: 'b0',
+    subBlockId: 'sb-0c',
     surface: {
       question: '¿Alguna vez sentiste que tu cuerpo y tu mente no son dos cosas separadas sino una sola que se expresa de formas distintas?',
       text: `Descartes dejó un problema sin resolver. Si la mente y el cuerpo son sustancias completamente distintas — una sin extensión física, la otra pura materia — ¿cómo se comunican? ¿Cómo puede un pensamiento mover un brazo?\n\nSpinoza, un filósofo holandés del siglo XVII que pulía lentes para vivir, leyó a Descartes con cuidado. Y propuso algo radicalmente distinto: mente y cuerpo no son dos sustancias separadas. Son dos formas de ver la misma cosa.\n\nComo las dos caras de una moneda. No son la misma cara — pero tampoco son dos monedas distintas.`,
@@ -284,6 +338,7 @@ export const authors = [
     subtitle: 'La mente que organiza la realidad',
     dates: '1724–1804',
     blockId: 'b0',
+    subBlockId: 'sb-0c',
     surface: {
       question: '¿Alguna vez pensaste que dos personas pueden ver exactamente lo mismo y llegar a conclusiones completamente distintas?',
       text: `Kant vivió en Königsberg y nunca la abandonó. Pero desde ahí reorganizó la filosofía occidental.\n\nSu propuesta: la mente no recibe la realidad pasivamente, como una cámara fotográfica. La organiza activamente, usando estructuras previas — el espacio, el tiempo, la causalidad — que no vienen del mundo sino de la mente misma.`,
@@ -307,6 +362,7 @@ export const authors = [
     subtitle: 'El inconsciente antes de Freud',
     dates: '1788–1860',
     blockId: 'b0',
+    subBlockId: 'sb-0d',
     surface: {
       question: '¿Alguna vez hiciste algo y después no supiste bien por qué lo hiciste?',
       text: `Schopenhauer era un pesimista convicto. Tenía una idea que resultó ser de las más influyentes del siglo XIX: la mayor parte de lo que nos mueve ocurre debajo de la conciencia.\n\nLo llamó la Voluntad — una fuerza ciega, irracional, sin propósito final. La conciencia es solo la superficie: la Voluntad es el motor que nadie ve.`,
@@ -324,13 +380,61 @@ export const authors = [
     },
   },
 
+  {
+    id: 'darwin',
+    name: 'Charles Darwin',
+    subtitle: 'No somos el centro — somos el resultado',
+    dates: '1809–1882',
+    blockId: 'b0',
+    subBlockId: 'sb-0d',
+    surface: {
+      question: '¿Alguna vez te preguntaste por qué reaccionas de ciertas maneras sin poder evitarlo — por qué el miedo aparece solo, por qué buscas compañía cuando estás mal, por qué ciertas cosas te dan placer sin que hayas decidido que así fuera?',
+      text: `Durante miles de años, la respuesta fue que así nos hicieron. Que esas características venían de fuera — de los dioses, de la naturaleza, de algún plan superior. Charles Darwin fue el primero en proponer una explicación completamente distinta: que somos el resultado de un proceso largo, lento y sin dirección — y que ese proceso explica no solo cómo somos físicamente, sino también cómo pensamos, sentimos y nos comportamos.\n\nDarwin nació en 1809 en Shrewsbury, Inglaterra, en el seno de una familia acomodada con tradición científica. De joven no destacaba especialmente — sus profesores lo consideraban un estudiante mediocre. Pero tenía una curiosidad insaciable por el mundo natural. A los veintidós años se embarcó en un viaje que duraría cinco años a bordo del HMS Beagle, recorriendo América del Sur, las islas Galápagos y Australia. Lo que observó en ese viaje — la variedad de especies, las diferencias entre animales de islas cercanas, los fósiles de criaturas extintas — lo llevaría a una conclusión que tardó décadas en atreverse a publicar.\n\nSabía que lo que había descubierto cambiaría todo. Y tenía razón.`,
+      closingLine: '',
+    },
+    concept: {
+      question: '¿Y qué propuso exactamente?',
+      text: `Darwin propuso que las especies no fueron creadas de manera fija e inmutable. Cambian con el tiempo — y el mecanismo de ese cambio es lo que llamó [selección natural].\n\nLa idea funciona así. Dentro de cualquier grupo de animales hay variación — algunos son más rápidos, otros más fuertes, otros tienen un color que los hace menos visibles para los depredadores. Esas diferencias no son elegidas — simplemente ocurren. Pero algunas de esas diferencias ayudan a sobrevivir y a tener descendencia, y otras no. El que corre más rápido escapa del depredador y vive para tener hijos. El que no corre lo suficientemente rápido, no. Con el tiempo — mucho tiempo, miles y millones de generaciones — ese proceso acumula cambios hasta producir algo completamente distinto de lo que había al principio.\n\nLo que eso significaba para los seres humanos era enorme. Si somos el resultado de ese proceso, entonces nuestro cuerpo, nuestro cerebro, nuestras emociones y nuestros comportamientos no son arbitrarios ni fueron diseñados desde fuera. Son soluciones que funcionaron — respuestas que ayudaron a nuestros antepasados a sobrevivir y reproducirse en entornos muy distintos al mundo en que vivimos hoy.\n\nEl miedo, por ejemplo, no es un defecto ni una debilidad. Es una respuesta que durante millones de años ayudó a los seres humanos a detectar peligros y reaccionar rápido. La búsqueda de compañía no es una dependencia — es una necesidad que tiene sentido evolutivo, porque los seres humanos que vivían en grupo sobrevivían mejor que los que vivían solos. El placer que sientes al comer, al conectar con alguien, al lograr algo — todo eso tiene una historia que va mucho más atrás de tu propia vida. Una historia que compartimos, en distintas formas, con el resto de los animales — porque venimos del mismo proceso.`,
+      closingLine: 'Para Darwin, entendernos a nosotros mismos requería entender de dónde venimos. Y de dónde venimos es mucho más antiguo de lo que cualquiera había imaginado.',
+    },
+    fondo: {
+      question: '¿Por qué Darwin cierra este bloque?',
+      text: `Porque lo que propuso no fue solo una teoría sobre los animales — fue una nueva forma de hacer preguntas sobre la mente humana. Y esa nueva forma de preguntar es exactamente lo que abre el siguiente bloque.\n\nAntes de Darwin, la psicología — en la medida en que existía — preguntaba qué es la mente y cómo funciona. Después de Darwin, apareció una pregunta nueva: ¿para qué sirve? ¿Qué función cumple? ¿Por qué evolucionó de esta manera y no de otra? Esa pregunta transformó todo. [William James], el primer gran psicólogo americano que verás al comenzar el Bloque 1, partió directamente de ahí — propuso que la conciencia existe porque es útil, porque ayuda a los organismos a adaptarse. Sin Darwin, esa pregunta no habría tenido sentido.\n\nPero la influencia de Darwin va más lejos todavía. La idea de que tenemos impulsos, emociones y comportamientos que no elegimos conscientemente — que vienen de una historia mucho más larga que nuestra propia vida — es el suelo sobre el que [Freud] construyó buena parte de su teoría. El inconsciente de Freud no es solo la Voluntad de [Schopenhauer] con otro nombre. Es también, en parte, la herencia evolutiva de Darwin: todo lo que llevamos dentro sin haberlo decidido.\n\nY hay algo más personal en todo esto. Darwin nos quitó el centro — dejamos de ser una creación especial, separada del resto de la naturaleza. Pero al hacerlo, nos dio algo que quizás vale más: una explicación. No somos como somos por capricho ni por destino. Somos como somos porque eso funcionó — porque hubo un proceso largo que nos fue dando forma. Y entender ese proceso, aunque no lo cambie, cambia cómo nos miramos.`,
+      closingLine: 'El Bloque 0 empezó con una pregunta sin respuesta sobrenatural — la de los presocráticos, que se atrevieron a buscar en el mundo lo que antes solo se buscaba en los dioses. Termina con algo todavía más radical: la propuesta de Darwin de que somos naturaleza que se mira a sí misma y se pregunta por qué es como es.',
+    },
+  },
+
   // ── b1: Psicología científica ─────────────────────────────────────────────────
+  {
+    id: 'ebbinghaus',
+    name: 'Hermann Ebbinghaus',
+    subtitle: 'Lo que aprendes se olvida — pero no al azar',
+    dates: '1850–1909',
+    blockId: 'b1',
+    subBlockId: 'sb-1a',
+    surface: {
+      question: '¿Alguna vez estudiaste algo, lo entendiste bien, y días después sentiste que casi no quedaba nada? ¿O notaste que algunas cosas se te quedan grabadas y otras simplemente se van?',
+      text: `Eso no es un fallo tuyo. Es el funcionamiento normal de la memoria — y Hermann Ebbinghaus fue el primero en demostrarlo con datos.\n\nEbbinghaus nació en 1850 en Barmen, una ciudad industrial en lo que hoy es el oeste de Alemania. No tuvo un mentor famoso ni trabajó en el laboratorio más conocido de su época. Hizo algo más inusual: en lugar de estudiar a otras personas, se estudió a sí mismo. Durante años, memorizó listas de sílabas sin sentido — combinaciones de letras como "DAX", "BUP", "LOR", palabras inventadas que no significaban nada — y luego midió con precisión cuánto recordaba después de distintos períodos de tiempo. Un día después. Una semana después. Un mes después.\n\nLo que encontró cambió para siempre la forma de entender cómo funciona la memoria.`,
+      closingLine: '',
+    },
+    concept: {
+      question: '¿Y qué encontró exactamente?',
+      text: `Ebbinghaus descubrió que el olvido no pasa de la misma manera siempre. Para entenderlo, piensa en algo que seguramente te ha pasado: estudias algo para un examen, lo repasas, sientes que lo tienes. Pero si no vuelves a verlo, al día siguiente quizás recuerdas la mayor parte. En tres días, bastante menos. En una semana, mucho menos. En un mes, casi nada. No porque seas malo memorizando — sino porque así le pasa a todo el mundo.\n\nLo que Ebbinghaus descubrió es que ese olvido no ocurre parejo. El primer día es cuando más se va — es ahí donde se pierde la mayor parte. Después, lo que queda se va mucho más lento. Es como cuando terminas de ver una película: justo al salir recuerdas casi todo. Al día siguiente ya hay escenas que no recuerdas bien. Y a la semana siguiente solo quedan las que más te impactaron.\n\nA esa forma en que los recuerdos se van con el tiempo la llamamos la [curva del olvido].\n\nY aquí viene lo más útil que encontró: si vuelves a repasar algo después de un día — cuando ya olvidaste algo pero todavía recuerdas bastante — ese recuerdo se vuelve más resistente, es decir, dura más tiempo antes de irse. Como si ese repaso hiciera que la información fuese más duradera en tu memoria. Y si lo repasas de nuevo después de tres días, dura más todavía. Y después de una semana, más. Cada vez que repasas, el recuerdo aguanta más tiempo antes de desvanecerse.\n\nEntonces, en lugar de estudiar todo en una sola noche, lo más eficiente es repasar en momentos separados: hoy, mañana, en tres días, en una semana. No porque estudies más tiempo en total, sino porque cada repaso llega cuando el recuerdo todavía está ahí pero ya está empezando a irse — y ese es exactamente el momento en que repasar hace más efecto. El primer repaso podría ser al día siguiente. El segundo, tres días después. El tercero, una semana después. Cada vez, el intervalo puede ser más largo porque el recuerdo ya es más resistente.\n\nA ese principio lo llamamos [repetición espaciada] — repasar las cosas en momentos separados, no todas juntas de una vez. Piénsalo así: si tienes que regar una planta, no sirve echarle toda el agua de la semana en un solo día. Necesita agua en el momento justo, en la cantidad justa. La memoria funciona igual.\n\nEbbinghaus también descubrió algo que llamó el [efecto de posición serial]. Es algo que seguramente ya conoces sin saber que tiene nombre: cuando escuchas una lista de cosas, tiendes a recordar mejor las primeras y las últimas, y a olvidar más fácilmente las del medio. Si alguna vez has notado que recuerdas cómo empieza y cómo termina una canción, pero no tanto lo que hay en la mitad, estás experimentando exactamente eso.`,
+      closingLine: 'Lo que Ebbinghaus hizo fue algo que antes nadie había intentado: tratar la memoria como algo que puede medirse — como si fuera una distancia que puede calcularse o un tiempo que puede cronometrarse. Y al medirla, descubrió que tiene patrones propios que se repiten en todas las personas.',
+    },
+    fondo: {
+      question: '¿Por qué importa alguien que memorizó sílabas sin sentido hace más de cien años?',
+      text: `Porque lo que encontró sigue siendo la base de casi todo lo que hoy sabemos sobre cómo aprender de manera eficiente.\n\nLa [curva del olvido] y la [repetición espaciada] no son solo curiosidades de la historia de la psicología. Son el fundamento de sistemas de estudio que millones de personas usan hoy — desde aplicaciones que te recuerdan repasar el vocabulario de un idioma justo cuando el recuerdo está empezando a irse, hasta métodos usados en escuelas de medicina o derecho, donde hay que aprender grandes cantidades de información. La próxima vez que una app te diga "es momento de repasar esto", está aplicando lo que Ebbinghaus descubrió hace más de cien años.\n\nHay algo más que vale mencionar. Ebbinghaus trabajó solo, sin financiación importante, en una época en que la psicología experimental era todavía un campo recién nacido. La psicología era tan nueva que no había un camino claro — había que construirlo mientras se caminaba. Lo que hoy parece obvio, como diseñar un experimento para medir la memoria, en ese entonces no tenía un modelo o una referencia para poder estudiarlo. Había que inventar la forma de preguntar al mismo tiempo que se buscaba la respuesta.`,
+      closingLine: '',
+    },
+  },
   {
     id: 'fechner',
     name: 'Gustav Fechner',
     subtitle: 'El hombre que intentó medir el alma',
     dates: '1801–1887',
     blockId: 'b1',
+    subBlockId: 'sb-1a',
     surface: {
       question: '',
       text: `Hay una pregunta que parece imposible: ¿cuánto pesa una sensación? ¿Cuánto más brillante tiene que ser una luz para que la notes diferente? ¿Hay una relación matemática entre el mundo físico y lo que percibimos?\n\nGustav Fechner decidió que sí. Y en 1860 publicó los Elementos de Psicofísica — el primer intento sistemático de medir la experiencia subjetiva con métodos científicos. La [psicofísica] que fundó — el estudio de la relación entre estímulos físicos y percepciones mentales — es el puente entre la filosofía y la psicología experimental.\n\nFechner no era psicólogo. Era físico y filósofo. Pero su obsesión con medir lo que nadie había medido antes abrió una puerta que [Wilhelm Wundt] cruzará diecinueve años después para fundar el primer laboratorio de psicología del mundo.`,
@@ -343,6 +447,7 @@ export const authors = [
     subtitle: 'El hombre que convirtió la psicología en ciencia',
     dates: '1832–1920',
     blockId: 'b1',
+    subBlockId: 'sb-1a',
     surface: {
       question: '¿Alguna vez intentaste prestar atención a lo que ocurre dentro de tu mente mientras ocurre — y te diste cuenta de que el acto de observar cambia lo que observas?',
       text: `En 1879, en Leipzig, un médico y filósofo alemán abrió un laboratorio. No era el primero en pensar sobre la mente — filósofos llevaban siglos haciéndolo. Pero era el primero en proponer que la mente podía estudiarse con los mismos métodos que la física o la química: con experimentos controlados, mediciones precisas y resultados reproducibles.\n\nEse gesto — declarar que la psicología era una ciencia independiente, no una rama de la filosofía ni de la medicina — cambió todo lo que vino después. Antes de Wundt, la psicología no existía como disciplina. Después de él, ya no podía no existir.`,
@@ -365,6 +470,7 @@ export const authors = [
     subtitle: 'La conciencia no es una cosa — es lo que haces mientras vives',
     dates: '1842–1910',
     blockId: 'b1',
+    subBlockId: 'sb-1b',
     surface: {
       question: '¿Alguna vez intentaste no pensar en algo y descubriste que era imposible detener el flujo de pensamientos?',
       text: `William James sabía exactamente de qué estás hablando. En 1890 publicó los Principios de Psicología — dos volúmenes que tomaron doce años escribir y que muchos consideran el libro más importante en la historia de la disciplina. Y en esas páginas propuso algo que cambió completamente cómo entendemos la mente: la conciencia no es un estado estático que se puede examinar como un objeto. Es una [corriente] — algo que fluye sin pausas, que se mueve, que nunca se repite exactamente.\n\nIntentar estudiar la conciencia deteniéndola, como proponía [Wundt], era para James como intentar atrapar el agua del río con las manos.`,
@@ -378,6 +484,30 @@ export const authors = [
     fondo: {
       question: '¿Por qué William James sigue siendo tan vigente?',
       text: `James es el psicólogo que más difícilmente envejece. Parte de eso se debe a que nunca intentó construir un sistema cerrado — fue siempre un pensador de ideas abiertas, de conexiones inesperadas, de preguntas que importan más que las respuestas definitivas.\n\nPero hay algo más profundo. James vivió con una depresión severa durante años — lo que él llamaba su "crisis filosófica" — y esa experiencia personal tiñó toda su obra con una urgencia práctica que la psicología académica de su época no tenía. No le interesaba la psicología como ejercicio intelectual. Le interesaba como herramienta para vivir mejor.\n\nEsa orientación práctica — que la psicología debe servir para algo concreto en la vida real — es lo que conecta a James con tradiciones muy distintas. Es el antecedente del [pragmatismo] filosófico americano. Es el precursor de la [psicología positiva] que florecerá un siglo después. Y es, en cierta forma, el espíritu que anima a toda la psicología aplicada: la convicción de que entender la mente tiene que traducirse en vivir mejor.\n\nHay una frase de James que resume su proyecto entero: "El mayor descubrimiento de mi generación es que los seres humanos pueden alterar sus vidas alterando sus actitudes mentales." Para alguien que vivió en la época en que [Wundt] medía tiempos de reacción en un laboratorio, eso era una declaración radical. Para nosotros, que vivimos después de todo lo que James anticipó, suena a algo que siempre supimos.`,
+      closingLine: '',
+    },
+  },
+
+  {
+    id: 'thorndike',
+    name: 'Edward Thorndike',
+    subtitle: 'Aprendemos por consecuencias, no por intención',
+    dates: '1874–1949',
+    blockId: 'b1',
+    subBlockId: 'sb-1b',
+    surface: {
+      question: '¿Alguna vez notaste que cuando algo te sale bien tiendes a repetirlo, y cuando algo te sale mal tiendes a evitarlo — casi sin pensarlo?',
+      text: `Eso no es solo sentido común. Es uno de los principios más fundamentales de cómo aprenden todos los seres vivos — y Edward Thorndike fue el primero en demostrarlo con experimentos.\n\nThorndike nació en 1874 en Williamsburg, Massachusetts. Era hijo de un pastor protestante — es decir, un líder religioso de una comunidad cristiana — y creció en un ambiente disciplinado y ordenado. Estudió en Harvard, donde conoció a [William James], quien lo animó a seguir investigando algo que en ese momento parecía poco serio como tema científico: cómo aprenden los animales. Thorndike no solo lo tomó en serio — lo convirtió en el centro de su carrera.\n\nLo que hizo fue simple en apariencia pero brillante en su lógica: puso gatos dentro de cajas cerradas con un mecanismo que, si se activaba, abría la puerta. El gato podía escapar y obtener comida. Al principio, el gato se movía al azar dentro de la caja hasta que, por accidente, activaba el mecanismo. Con el tiempo — y con repetición — el gato empezaba a activarlo cada vez más rápido. No porque "entendiera" cómo funcionaba la caja, sino porque la respuesta que había producido un resultado positivo tendía a repetirse.\n\nThorndike llamó a eso el aprendizaje por ensayo y error. Y lo que encontró cambiaría para siempre la forma de entender cómo aprendemos.`,
+      closingLine: '',
+    },
+    concept: {
+      question: '¿Y qué propuso exactamente?',
+      text: `A partir de sus experimentos, Thorndike formuló algo que llamó la [ley del efecto]. La idea es directa: cuando una acción produce un resultado satisfactorio — algo bueno, algo que queremos — tendemos a repetirla. Cuando produce un resultado insatisfactorio — algo malo, algo que queremos evitar — tendemos a no repetirla. No hace falta pensarlo conscientemente. No hace falta entender por qué. Simplemente ocurre.\n\nPiénsalo en algo cotidiano: la primera vez que probaste un plato nuevo y te gustó, probablemente lo pediste de nuevo la próxima vez que pudiste. No tomaste una decisión elaborada — simplemente, el resultado positivo hizo que esa acción se quedara. Y si el plato no te gustó, probablemente no lo volviste a pedir. Eso es la ley del efecto en acción.\n\nLo que Thorndike estaba proponiendo era algo importante: que el aprendizaje no requiere comprensión. No necesitas entender por qué algo funciona para aprender a hacerlo. Lo que importa, según él, es la consecuencia — lo que viene después de la acción. Si la consecuencia es positiva, la acción tiende a fortalecerse. Si es negativa, tiende a debilitarse.\n\nEsa idea tenía implicaciones enormes. Si el aprendizaje depende de las consecuencias, entonces puede diseñarse. Puedes crear condiciones en las que ciertas conductas se refuercen y otras no. Puedes, en cierta medida, moldear el comportamiento — de un animal, de una persona, de un estudiante en un aula.`,
+      closingLine: 'Lo que Thorndike hizo fue abrir una puerta que la psicología todavía no ha terminado de explorar: la idea de que el comportamiento puede entenderse y modificarse estudiando sus consecuencias.',
+    },
+    fondo: {
+      question: '¿Por qué importa alguien que puso gatos en cajas?',
+      text: `Porque lo que encontró en esas cajas sigue explicando una parte enorme de cómo nos comportamos hoy.\n\nLa [ley del efecto] de Thorndike es el antecedente directo de todo lo que vendría después en el estudio del aprendizaje. Unos años más tarde, un psicólogo llamado [B.F. Skinner] tomaría esa misma idea y la desarrollaría hasta convertirla en uno de los sistemas más influyentes de la psicología del siglo XX — el [condicionamiento operante], es decir, la idea de que el comportamiento está moldeado por sus consecuencias. Sin Thorndike, no habría Skinner. Y sin Skinner, buena parte de lo que hoy sabemos sobre cómo cambiar hábitos, cómo diseñar sistemas de recompensa o cómo estructurar el aprendizaje no existiría de la misma manera.\n\nPero la influencia de Thorndike va más lejos todavía. Sus ideas sobre el aprendizaje llegaron directamente a las aulas — fue uno de los primeros en aplicar los principios del aprendizaje al diseño de la educación, y sus investigaciones influyeron en cómo se estructuran los exámenes, las recompensas en la escuela y la forma en que se enseña. La próxima vez que un profesor elogie un trabajo bien hecho para motivar a un estudiante a seguir esforzándose, está aplicando, sin saberlo, la ley del efecto de Thorndike.\n\nY hay algo más personal en todo esto. La ley del efecto no solo explica cómo aprendemos cosas nuevas — también explica por qué a veces repetimos comportamientos que no nos hacen bien. Si algo produjo un resultado satisfactorio en algún momento — aunque fuera hace mucho tiempo, aunque ya no funcione igual — la tendencia a repetirlo puede persistir. Entender eso no lo resuelve todo, pero cambia cómo te miras a ti mismo cuando te preguntas por qué haces lo que haces.`,
       closingLine: '',
     },
   },
@@ -705,6 +835,15 @@ export const authors = [
     concept: { question: '', text: 'Este contenido estará disponible pronto.', closingLine: '' },
     fondo:   { question: '', text: 'Este contenido estará disponible pronto.', closingLine: '' },
   },
+];
+
+export const subBlocks = [
+  { id: 'sb-0a', blockId: 'b0', name: '¿Qué somos si no somos dioses?',                         authorIds: ['heraclito-democrito', 'hipocrates', 'platon'] },
+  { id: 'sb-0b', blockId: 'b0', name: 'La mente tiene partes — y no siempre se ponen de acuerdo', authorIds: ['aristoteles', 'helenisticas', 'avicena'] },
+  { id: 'sb-0c', blockId: 'b0', name: 'Pensar no es suficiente para entenderse',                  authorIds: ['descartes', 'spinoza', 'kant'] },
+  { id: 'sb-0d', blockId: 'b0', name: 'Algo nos mueve antes de que lo decidamos',                 authorIds: ['schopenhauer', 'darwin'] },
+  { id: 'sb-1a', blockId: 'b1', name: 'Por primera vez, la mente entra al laboratorio',           authorIds: ['ebbinghaus', 'fechner', 'wundt'] },
+  { id: 'sb-1b', blockId: 'b1', name: 'Si no puedes verlo, no puedes estudiarlo',                 authorIds: ['james', 'thorndike', 'watson', 'skinner'] },
 ];
 
 export const glossaryTerms = [
