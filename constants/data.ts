@@ -862,7 +862,7 @@ export const revolutionCards = [
     },
     concept: {
       question: '',
-      text: 'Este sub-bloque reúne a tres pensadores que, desde ángulos muy distintos, instalaron la misma pregunta: ¿puede entenderse la mente humana sin recurrir a lo sobrenatural?\n\nEl primero preguntó si somos los mismos a lo largo del tiempo. El segundo propuso que el sufrimiento mental no es castigo divino sino enfermedad. El tercero intentó mapear las distintas fuerzas que conviven dentro de cada persona.\n\nNinguno de los tres tenía las herramientas para probar lo que proponía. Pero cada uno dejó una pregunta que los siguientes dos mil años de pensamiento no han terminado de responder.',
+      text: 'Tres pensadores, desde ángulos muy distintos, instalaron la misma pregunta: ¿puede entenderse la mente humana sin recurrir a lo sobrenatural?\n\nEl primero preguntó si somos los mismos a lo largo del tiempo. El segundo propuso que el sufrimiento mental no es castigo divino sino enfermedad. El tercero intentó mapear las distintas fuerzas que conviven dentro de cada persona.\n\nNinguno de los tres tenía las herramientas para probar lo que proponía. Pero cada uno dejó una pregunta que los siguientes dos mil años de pensamiento no han terminado de responder.',
       closingLine: '',
     },
   },
@@ -881,7 +881,7 @@ export const revolutionCards = [
     },
     concept: {
       question: '',
-      text: 'Los tres pensadores de este sub-bloque llegaron a respuestas muy distintas — y las tres siguen resonando hoy.\n\nEl primero propuso que las emociones no son interrupciones ni obstáculos: son información. El segundo dijo que cuerpo y mente no son dos cosas separadas sino una sola. El tercero llevó esa idea a la práctica médica, documentando que lo que sentimos emocionalmente tiene efectos físicos reales.\n\nLo que los tres construyeron juntos es algo que la psicología tardó siglos en recuperar: la idea de que para entender a una persona hay que mirarla completa.',
+      text: 'Los tres pensadores que vienen a continuación llegaron a respuestas muy distintas — y las tres siguen resonando hoy.\n\nEl primero propuso que las emociones no son interrupciones ni obstáculos: son información. El segundo dijo que cuerpo y mente no son dos cosas separadas sino una sola. El tercero llevó esa idea a la práctica médica, documentando que lo que sentimos emocionalmente tiene efectos físicos reales.\n\nLo que los tres construyeron juntos es algo que la psicología tardó siglos en recuperar: la idea de que para entender a una persona hay que mirarla completa.',
       closingLine: '',
     },
   },
@@ -914,12 +914,12 @@ export const revolutionCards = [
     type: 'revolution' as const,
     surface: {
       question: '',
-      text: 'Hay algo en nosotros que actúa antes de que lo decidamos — antes de que lo pensemos, antes de que lo notemos. ¿Hay algo que nos mueve antes de que pensemos, antes de que decidamos, antes de que lo notemos?\n\nLos dos pensadores que cierran este bloque respondieron que sí — desde lugares completamente distintos.',
+      text: 'Hay algo en nosotros que actúa antes de que lo decidamos — antes de que lo pensemos, antes de que lo notemos. ¿Hay algo que nos mueve antes de que pensemos, antes de que decidamos, antes de que lo notemos?\n\nLos dos pensadores que cierran este recorrido filosófico respondieron que sí — desde lugares completamente distintos.',
       closingLine: '',
     },
     concept: {
       question: '',
-      text: 'El primero propuso que debajo de todo lo que razonamos hay una fuerza que no elegimos ni controlamos: un impulso constante que nos mueve hacia el deseo y que nunca se satisface del todo. No lo llamó inconsciente. Pero Freud, décadas después, reconoció que había llegado exactamente ahí.\n\nEl segundo llegó desde un camino completamente distinto. Observando animales y fósiles durante años, propuso que nuestras emociones, nuestros instintos y nuestros comportamientos no son arbitrarios — son respuestas que funcionaron.\n\nJuntos construyen el puente más importante de todo el Bloque 0: el que va desde la filosofía hasta la ciencia.',
+      text: 'El primero propuso que debajo de todo lo que razonamos hay una fuerza que no elegimos ni controlamos: un impulso constante que nos mueve hacia el deseo y que nunca se satisface del todo. No lo llamó inconsciente. Pero Freud, décadas después, reconoció que había llegado exactamente ahí.\n\nEl segundo llegó desde un camino completamente distinto. Observando animales y fósiles durante años, propuso que nuestras emociones, nuestros instintos y nuestros comportamientos no son arbitrarios — son respuestas que funcionaron.\n\nJuntos construyen el puente más importante de este recorrido: el que va desde la filosofía hasta la ciencia.',
       closingLine: '',
     },
   },
@@ -938,7 +938,7 @@ export const revolutionCards = [
     },
     concept: {
       question: '',
-      text: 'Lo que hace especial este momento en la historia no es solo que aparecieron nuevas respuestas. Es que cambió la forma de buscarlas.\n\nHasta aquí, una idea valía por su coherencia y la autoridad de quien la propuso. A partir de aquí, una idea vale si puede ponerse a prueba. Si puede medirse, repetirse, verificarse.\n\nDarwin había propuesto que somos parte de la naturaleza. El Bloque 1 recoge esa idea y va un paso más lejos: si somos parte de la naturaleza, entonces la mente también puede estudiarse como cualquier otra cosa natural. Con observación. Con medición. Con evidencia.',
+      text: 'Lo que hace especial este momento en la historia no es solo que aparecieron nuevas respuestas. Es que cambió la forma de buscarlas.\n\nHasta aquí, una idea valía por su coherencia y la autoridad de quien la propuso. A partir de aquí, una idea vale si puede ponerse a prueba. Si puede medirse, repetirse, verificarse.\n\nDarwin había propuesto que somos parte de la naturaleza. Lo que viene a continuación recoge esa idea y va un paso más lejos: si somos parte de la naturaleza, entonces la mente también puede estudiarse como cualquier otra cosa natural. Con observación. Con medición. Con evidencia.',
       closingLine: '',
     },
   },
@@ -957,7 +957,7 @@ export const revolutionCards = [
     },
     concept: {
       question: '',
-      text: 'Lo que este sub-bloque construye, a través de cuatro pensadores, es la lógica del conductismo — la propuesta de que la psicología debe estudiar únicamente lo que puede verse y medirse desde afuera: el comportamiento.\n\nEl primero demostró que el aprendizaje ocurre por consecuencias, no por comprensión. El segundo radicalizó esa idea: propuso que todo lo que no puede observarse — los pensamientos, las emociones, la conciencia — no debería estudiarse en absoluto. El tercero construyó el sistema más completo de todos.\n\nEl conductismo dominó la psicología durante décadas. Sus ideas siguen activas hoy — en cómo se diseñan apps y sistemas de aprendizaje.',
+      text: 'Lo que viene a continuación, a través de cuatro pensadores, es la lógica del conductismo — la propuesta de que la psicología debe estudiar únicamente lo que puede verse y medirse desde afuera: el comportamiento.\n\nEl primero demostró que el aprendizaje ocurre por consecuencias, no por comprensión. El segundo radicalizó esa idea: propuso que todo lo que no puede observarse — los pensamientos, las emociones, la conciencia — no debería estudiarse en absoluto. El tercero construyó el sistema más completo de todos.\n\nEl conductismo dominó la psicología durante décadas. Sus ideas siguen activas hoy — en cómo se diseñan apps y sistemas de aprendizaje.',
       closingLine: '',
     },
   },
