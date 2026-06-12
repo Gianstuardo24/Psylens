@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
-import { authors, blocks, subBlocks } from '../../constants/data';
+import { authors, blocks, subBlocks, revolutionCards } from '../../constants/data';
 import { PaywallSheet } from '../../components/PaywallSheet';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -59,46 +59,10 @@ const PORTRAITS: Record<string, number | null> = {
   'thorndike':      null,
 };
 
-// ─── Sub-block revolution card content ────────────────────────────────────────
+// ─── Sub-block revolution card lookup ─────────────────────────────────────────
 
-const SUB_BLOCK_CONTENT: Record<string, { entrada: string; profundidad: string }> = {
-  'sb-0a': {
-    entrada:
-      'Durante miles de años, las preguntas más importantes sobre los seres humanos tenían una sola dirección: hacia afuera. Hacia los dioses, hacia lo sobrenatural. Lo que estás a punto de ver es el momento en que eso cambió — un grupo de pensadores decidió buscar las respuestas en el cuerpo, en la naturaleza, en el pensamiento mismo.',
-    profundidad:
-      'Este sub-bloque reúne a tres pensadores que, desde ángulos muy distintos, instalaron la misma pregunta: ¿puede entenderse la mente humana sin recurrir a lo sobrenatural?\n\nEl primero preguntó si somos los mismos a lo largo del tiempo. El segundo propuso que el sufrimiento mental no es castigo divino sino enfermedad. El tercero intentó mapear las distintas fuerzas que conviven dentro de cada persona.\n\nNinguno de los tres tenía las herramientas para probar lo que proponía. Pero cada uno dejó una pregunta que los siguientes dos mil años de pensamiento no han terminado de responder.',
-  },
-  'sb-0b': {
-    entrada:
-      'Los primeros pensadores abrieron la puerta. Los que vienen ahora entraron por ella — y fueron mucho más lejos. Si la mente puede entenderse sin recurrir a los dioses, la siguiente pregunta es: ¿cómo está organizada por dentro? ¿Tiene partes? ¿Se puede elegir cómo sentirse, o las emociones simplemente ocurren?',
-    profundidad:
-      'Los tres pensadores de este sub-bloque llegaron a respuestas muy distintas — y las tres siguen resonando hoy.\n\nEl primero propuso que las emociones no son interrupciones ni obstáculos: son información. El segundo dijo que cuerpo y mente no son dos cosas separadas sino una sola. El tercero llevó esa idea a la práctica médica, documentando que lo que sentimos emocionalmente tiene efectos físicos reales.\n\nLo que los tres construyeron juntos es algo que la psicología tardó siglos en recuperar: la idea de que para entender a una persona hay que mirarla completa.',
-  },
-  'sb-0c': {
-    entrada:
-      'Los pensadores anteriores confiaban en el pensamiento. Si razonabas bien, si observabas con cuidado, podías llegar a entender la mente humana. Esa confianza en la razón fue el motor de todo lo que viste antes. Lo que estás a punto de ver es el momento en que esa confianza empezó a fisurarse.',
-    profundidad:
-      'El primero decidió dudar de absolutamente todo — y lo que encontró fue una separación radical entre la mente y el cuerpo que todavía hoy estructura cómo pensamos sobre nosotros mismos.\n\nEl segundo miró esa separación y dijo que no. Que mente y cuerpo son lo mismo visto desde dos ángulos distintos. Que intentar suprimir una emoción con pura fuerza de voluntad es tan inútil como pedirle al cuerpo que deje de reaccionar.\n\nEl tercero fue más lejos todavía: propuso que hay un límite en lo que la razón puede conocer — incluido conocerse a uno mismo. Que la persona que crees ser hoy es una interpretación, no la verdad última sobre ti.',
-  },
-  'sb-0d': {
-    entrada:
-      'El sub-bloque anterior terminó con una pregunta incómoda: ¿qué hay debajo de la razón? ¿Hay algo que nos mueve antes de que pensemos, antes de que decidamos, antes de que lo notemos?\n\nLos dos pensadores que cierran este bloque respondieron que sí — desde lugares completamente distintos.',
-    profundidad:
-      'El primero propuso que debajo de todo lo que razonamos hay una fuerza que no elegimos ni controlamos: un impulso constante que nos mueve hacia el deseo y que nunca se satisface del todo. No lo llamó inconsciente. Pero Freud, décadas después, reconoció que había llegado exactamente ahí.\n\nEl segundo llegó desde un camino completamente distinto. Observando animales y fósiles durante años, propuso que nuestras emociones, nuestros instintos y nuestros comportamientos no son arbitrarios — son respuestas que funcionaron.\n\nJuntos construyen el puente más importante de todo el Bloque 0: el que va desde la filosofía hasta la ciencia.',
-  },
-  'sb-1a': {
-    entrada:
-      'Durante el Bloque 0 recorriste más de dos mil años de pensamiento filosófico. Nadie había medido cuánto tarda la mente en reaccionar ante algo. Nadie había registrado con precisión cuánto recuerda una persona después de un día o una semana. Nadie había intentado poner un número a la intensidad de lo que sentimos. Eso estaba a punto de cambiar.',
-    profundidad:
-      'Lo que hace especial este momento en la historia no es solo que aparecieron nuevas respuestas. Es que cambió la forma de buscarlas.\n\nHasta aquí, una idea valía por su coherencia y la autoridad de quien la propuso. A partir de aquí, una idea vale si puede ponerse a prueba. Si puede medirse, repetirse, verificarse.\n\nDarwin había propuesto que somos parte de la naturaleza. El Bloque 1 recoge esa idea y va un paso más lejos: si somos parte de la naturaleza, entonces la mente también puede estudiarse como cualquier otra cosa natural. Con observación. Con medición. Con evidencia.',
-  },
-  'sb-1b': {
-    entrada:
-      'El primer sub-bloque dejó algo sin resolver. Wundt había demostrado que la mente podía medirse — pero para hacerlo necesitaba pedirle a las personas que describieran lo que estaban experimentando por dentro. Y nadie podía verificar si lo que describían era lo que realmente ocurría.\n\nEsa pregunta — ¿para qué sirve la mente? — cambió todo lo que vino después.',
-    profundidad:
-      'Lo que este sub-bloque construye, a través de cuatro pensadores, es la lógica del conductismo — la propuesta de que la psicología debe estudiar únicamente lo que puede verse y medirse desde afuera: el comportamiento.\n\nEl primero demostró que el aprendizaje ocurre por consecuencias, no por comprensión. El segundo radicalizó esa idea: propuso que todo lo que no puede observarse — los pensamientos, las emociones, la conciencia — no debería estudiarse en absoluto. El tercero construyó el sistema más completo de todos.\n\nEl conductismo dominó la psicología durante décadas. Sus ideas siguen activas hoy — en cómo se diseñan apps y sistemas de aprendizaje.',
-  },
-};
+const revolutionCardBySubBlock: Record<string, typeof revolutionCards[0]> =
+  Object.fromEntries(revolutionCards.map((r) => [r.subBlockId, r]));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -300,7 +264,8 @@ function SubBlockHeader({
   const [expanded, setExpanded] = useState(false);
   const sbh = useMemo(() => makeSbhStyles(theme), [theme]);
 
-  const content  = SUB_BLOCK_CONTENT[subBlock.id];
+  const rev     = revolutionCardBySubBlock[subBlock.id];
+  const content  = rev ? { entrada: rev.surface.text, profundidad: rev.concept.text } : undefined;
   const isLocked = status === 'locked';
 
   return (
