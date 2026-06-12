@@ -12,7 +12,7 @@ import Svg, { Circle, Ellipse, Line, Path } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../../constants/colors';
+import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, blocks, subBlocks, revolutionCards } from '../../constants/data';
 import { PaywallSheet } from '../../components/PaywallSheet';
@@ -332,16 +332,22 @@ function RevolutionCard({
 function SubBlockHeader({
   subBlock,
   status,
+  blockColor,
 }: {
   subBlock: typeof subBlocks[0];
   status: SubBlockStatus;
+  blockColor: { base: string; light: string; text: string };
 }) {
   const { theme } = useTheme();
   const sbh = useMemo(() => makeSbhStyles(theme), [theme]);
   const isLocked = status === 'locked';
 
   return (
-    <View style={[sbh.container, isLocked && sbh.containerLocked]}>
+    <View style={[
+      sbh.container,
+      { borderLeftColor: isLocked ? theme.text3 : blockColor.base },
+      isLocked && sbh.containerLocked,
+    ]}>
       <View style={sbh.headerRow}>
         <View style={sbh.iconWrap}>
           <Svg width={16} height={16} viewBox="0 0 16 16">
@@ -353,7 +359,10 @@ function SubBlockHeader({
             />
           </Svg>
         </View>
-        <Text style={[sbh.name, isLocked && sbh.nameLocked]} numberOfLines={2}>
+        <Text
+          style={[sbh.name, !isLocked && { color: blockColor.text }, isLocked && sbh.nameLocked]}
+          numberOfLines={2}
+        >
           {subBlock.name}
         </Text>
       </View>
@@ -393,6 +402,7 @@ function BlockNode({
 }) {
   const { theme } = useTheme();
   const bn = useMemo(() => makeBnStyles(theme), [theme]);
+  const bc = blockColors[block.id] ?? blockColors['intro'];
 
   const status   = getBlockStatus(block, isPremium, progress);
   const isActive = status === 'active';
@@ -414,7 +424,7 @@ function BlockNode({
 
       {/* ── Block header ──────────────────────────────────── */}
       <TouchableOpacity
-        style={bn.header}
+        style={[bn.header, { backgroundColor: bc.light }]}
         onPress={isLocked
           ? (block.id === 'b0'
               ? () => Alert.alert('Introducción requerida', 'Completa la Introducción para continuar.')
@@ -439,7 +449,7 @@ function BlockNode({
         {/* Name + era + progress */}
         <View style={bn.meta}>
           <View style={bn.titleRow}>
-            <Text style={[bn.name, isLocked && bn.nameLocked]} numberOfLines={1}>
+            <Text style={[bn.name, !isLocked && { color: bc.text }, isLocked && bn.nameLocked]} numberOfLines={1}>
               {block.name}
             </Text>
             {block.isFree ? (
@@ -453,7 +463,7 @@ function BlockNode({
             )}
           </View>
 
-          <Text style={[bn.era, isLocked && bn.eraLocked]}>{block.era}</Text>
+          <Text style={[bn.era, !isLocked && { color: bc.text }, isLocked && bn.eraLocked]}>{block.era}</Text>
 
           {/* Progress bar */}
           <View style={bn.progressRow}>
@@ -486,7 +496,7 @@ function BlockNode({
                 : isRevCardDone(sb.id, progress) ? 'done' : 'active';
               return (
                 <View key={sb.id}>
-                  <SubBlockHeader subBlock={sb} status={sbStatus} />
+                  <SubBlockHeader subBlock={sb} status={sbStatus} blockColor={bc} />
                   {rev && <RevolutionCard rev={rev} state={revState} />}
                   {sbAuthors.map((author, i) => (
                     <AuthorCard

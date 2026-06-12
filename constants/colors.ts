@@ -1,3 +1,13 @@
+export const blockColors: Record<string, { base: string; light: string; text: string }> = {
+  intro: { base: '#4A7C6E', light: '#E8F2EF', text: '#2D5A4F' },
+  b0:    { base: '#C4934A', light: '#F5ECD8', text: '#8B6530' },
+  b1:    { base: '#4A6EA8', light: '#DDE6F5', text: '#2D4F82' },
+  b2:    { base: '#7B5EA8', light: '#EDE5F5', text: '#5A3D8B' },
+  b3:    { base: '#5A8A5E', light: '#E5F0E6', text: '#3A6B3E' },
+  b4:    { base: '#C47840', light: '#F5E8D8', text: '#8B5520' },
+  b5:    { base: '#A85A5A', light: '#F5E5E5', text: '#8B3A3A' },
+};
+
 export const colors = {
   dark: {
     bg:       '#0f0f0e',
