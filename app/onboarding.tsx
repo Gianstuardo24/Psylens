@@ -7,8 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
+  Easing,
   KeyboardAvoidingView,
-  Platform,
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -59,38 +59,144 @@ const STEPS: Step[] = [
 
 type IlStyles = ReturnType<typeof makeIlStyles>;
 
-function LogoIllustration({ il }: { il: IlStyles }) {
+// Screen 1: logo assembles — right circle slides from overlap to final position,
+// then the connecting line fades in.
+function LogoIllustration({ il, active }: { il: IlStyles; active: boolean }) {
+  const rightX = useRef(new Animated.Value(-100)).current;
+  const lineOp = useRef(new Animated.Value(0)).current;
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!active || hasRun.current) return;
+    hasRun.current = true;
+    Animated.sequence([
+      Animated.delay(500),
+      Animated.timing(rightX, {
+        toValue: 0,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(lineOp, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [active]);
+
   return (
     <View style={il.logoWrap}>
       <View style={il.logoRow}>
         <View style={il.logoCircle} />
-        <View style={il.logoLine} />
-        <View style={il.logoCircle} />
+        <Animated.View style={[il.logoLine, { opacity: lineOp }]} />
+        <Animated.View style={{ transform: [{ translateX: rightX }] }}>
+          <View style={il.logoCircle} />
+        </Animated.View>
       </View>
       <Text style={il.wordmark}>Psylens</Text>
     </View>
   );
 }
 
-function RingsIllustration({ il }: { il: IlStyles }) {
+// Screen 2: rings expand outward — inner first, then mid, then outer.
+// Rings are siblings (absolute) so each scales independently.
+function RingsIllustration({ il, active }: { il: IlStyles; active: boolean }) {
+  const s1 = useRef(new Animated.Value(0)).current;
+  const s2 = useRef(new Animated.Value(0)).current;
+  const s3 = useRef(new Animated.Value(0)).current;
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!active || hasRun.current) return;
+    hasRun.current = true;
+    Animated.sequence([
+      Animated.timing(s1, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(s2, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(s3, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, [active]);
+
   return (
-    <View style={il.ringOuter}>
-      <View style={il.ringMid}>
-        <View style={il.ringInner} />
-      </View>
+    <View style={il.ringWrap}>
+      <Animated.View style={[il.ringOuter, { position: 'absolute', top: 0,  left: 0,  transform: [{ scale: s3 }] }]} />
+      <Animated.View style={[il.ringMid,   { position: 'absolute', top: 32, left: 32, transform: [{ scale: s2 }] }]} />
+      <Animated.View style={[il.ringInner, { position: 'absolute', top: 64, left: 64, transform: [{ scale: s1 }] }]} />
     </View>
   );
 }
 
-function TimelineIllustration({ il }: { il: IlStyles }) {
+// Screen 3 — journey path.
+//
+// Container: 24px wide, 224px tall (absolute positioning throughout).
+// node=16px, left=4 to center in 24px container; path line left=11 (centers 2px line).
+// Stops at top=52, 104, 156, 208. Path line: top=16, max height=192 (reaches stop4).
+//
+// Step 1 (0–800ms):   single dot fades in and slides UP from y=80 to y=0.
+// Step 2 (800–1400ms): path line expands downward; 4 stop nodes appear as path reaches each.
+// Step 3 (1400–2200ms): colored dot travels from top (y=0) down to first stop (y=52).
+function TimelineIllustration({ il, active }: { il: IlStyles; active: boolean }) {
+  const startY   = useRef(new Animated.Value(80)).current;
+  const startOp  = useRef(new Animated.Value(0)).current;
+  const pathH    = useRef(new Animated.Value(0)).current;
+  const node1Op  = useRef(new Animated.Value(0)).current;
+  const node2Op  = useRef(new Animated.Value(0)).current;
+  const node3Op  = useRef(new Animated.Value(0)).current;
+  const node4Op  = useRef(new Animated.Value(0)).current;
+  const travelY  = useRef(new Animated.Value(0)).current;
+  const travelOp = useRef(new Animated.Value(0)).current;
+  const hasRun   = useRef(false);
+
+  useEffect(() => {
+    if (!active || hasRun.current) return;
+    hasRun.current = true;
+
+    Animated.parallel([
+      // Step 1 (0–800ms): dot appears and moves up
+      Animated.timing(startOp, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(startY,  { toValue: 0, duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+
+      // Step 2 (800–1400ms): path expands linearly so node delays are predictable
+      Animated.sequence([
+        Animated.delay(800),
+        Animated.timing(pathH, { toValue: 192, duration: 600, easing: Easing.linear, useNativeDriver: false }),
+      ]),
+      // Nodes appear as the expanding path reaches them (linear interpolation of 192px over 600ms)
+      Animated.sequence([Animated.delay(900),  Animated.timing(node1Op, { toValue: 1, duration: 100, useNativeDriver: true })]),
+      Animated.sequence([Animated.delay(1050), Animated.timing(node2Op, { toValue: 1, duration: 100, useNativeDriver: true })]),
+      Animated.sequence([Animated.delay(1200), Animated.timing(node3Op, { toValue: 1, duration: 100, useNativeDriver: true })]),
+      Animated.sequence([Animated.delay(1350), Animated.timing(node4Op, { toValue: 1, duration: 100, useNativeDriver: true })]),
+
+      // Step 3 (1400–2200ms): traveling dot goes from top to first stop only
+      Animated.sequence([Animated.delay(1400), Animated.timing(travelOp, { toValue: 1, duration: 150, useNativeDriver: true })]),
+      Animated.sequence([Animated.delay(1400), Animated.timing(travelY, {
+        toValue: 52,
+        duration: 800,
+        easing: Easing.inOut(Easing.cubic),
+        useNativeDriver: true,
+      })]),
+    ]).start();
+  }, [active]);
+
   return (
-    <View style={il.timelineWrap}>
-      {[0, 1, 2, 3, 4].map(i => (
-        <View key={i} style={il.timelineItem}>
-          <View style={[il.timelineNode, i === 2 && il.timelineNodeActive]} />
-          {i < 4 && <View style={il.timelineSegment} />}
-        </View>
-      ))}
+    <View style={{ width: 24, height: 224, position: 'relative' }}>
+      {/* Starting dot — fades in and slides up */}
+      <Animated.View style={[il.timelineNode, {
+        position: 'absolute', top: 0, left: 4,
+        opacity: startOp, transform: [{ translateY: startY }],
+      }]} />
+      {/* Path line — expands downward from beneath starting dot */}
+      <Animated.View style={[il.pathLine, { position: 'absolute', top: 16, left: 11, height: pathH }]} />
+      {/* Four stop nodes — appear only as path reaches them */}
+      <Animated.View style={[il.timelineNode, { position: 'absolute', top: 52,  left: 4, opacity: node1Op }]} />
+      <Animated.View style={[il.timelineNode, { position: 'absolute', top: 104, left: 4, opacity: node2Op }]} />
+      <Animated.View style={[il.timelineNode, { position: 'absolute', top: 156, left: 4, opacity: node3Op }]} />
+      <Animated.View style={[il.timelineNode, { position: 'absolute', top: 208, left: 4, opacity: node4Op }]} />
+      {/* Traveling colored dot — starts at top, moves to first stop */}
+      <Animated.View style={[il.travelDot, {
+        position: 'absolute', top: 0, left: 4,
+        opacity: travelOp, transform: [{ translateY: travelY }],
+      }]} />
     </View>
   );
 }
@@ -106,7 +212,7 @@ function StartIllustration({ il }: { il: IlStyles }) {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const { bottom: insetBottom } = useSafeAreaInsets();
   const { theme } = useTheme();
   const [currentPage, setCurrentPage] = useState(0);
@@ -115,9 +221,6 @@ export default function OnboardingScreen() {
   const il     = useMemo(() => makeIlStyles(theme), [theme]);
   const styles = useMemo(() => makeStyles(theme), [theme]);
 
-  // Shared entrance animation — applies to the text block of whichever page
-  // is visible when the scroll settles. Only one page is on screen at a time,
-  // so a single shared value works correctly.
   const fadeAnim  = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -138,7 +241,7 @@ export default function OnboardingScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
     >
       <ScrollView
         horizontal
@@ -151,60 +254,59 @@ export default function OnboardingScreen() {
         {STEPS.map((step, index) => (
           <View key={step.key} style={[styles.page, { width }]}>
 
-            {/* Illustration — static, not animated */}
             <View style={styles.illustrationArea}>
-              {index === 0 && <LogoIllustration il={il} />}
-              {index === 1 && <RingsIllustration il={il} />}
-              {index === 2 && <TimelineIllustration il={il} />}
+              {index === 0 && <LogoIllustration il={il} active={currentPage === 0} />}
+              {index === 1 && <RingsIllustration il={il} active={currentPage === 1} />}
+              {index === 2 && <TimelineIllustration il={il} active={currentPage === 2} />}
               {index === 3 && <StartIllustration il={il} />}
             </View>
 
             {step.isFinal ? (
-              /* Final step: vertical ScrollView so content stays above keyboard */
-              <ScrollView
-                style={{ flex: 1 }}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={[
-                  styles.textArea,
-                  { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
-                ]}
-              >
-                <Text style={styles.titleFinal}>{step.title}</Text>
-                <Text style={styles.description}>{step.description}</Text>
-                <Text style={styles.nameLabel}>¿Cómo te llamas?</Text>
-                <TextInput
-                  style={styles.nameInput}
-                  placeholder="Tu nombre"
-                  placeholderTextColor={theme.text3}
-                  value={name}
-                  onChangeText={setName}
-                  textAlign="center"
-                  autoCapitalize="words"
-                  returnKeyType="done"
-                />
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={async () => {
-                    try {
-                      const saves: Promise<void>[] = [
-                        AsyncStorage.setItem(ONBOARDING_KEY, 'true'),
-                      ];
-                      if (name.trim()) {
-                        saves.push(AsyncStorage.setItem(NAME_KEY, name.trim()));
-                      }
-                      await Promise.all(saves);
-                    } finally {
-                      router.replace('/(tabs)');
-                    }
-                  }}
-                  activeOpacity={0.85}
+              <View style={{ flex: 1 }}>
+                <ScrollView
+                  style={{ flex: 1 }}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={[
+                    styles.textArea,
+                    { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
+                  ]}
                 >
-                  <Text style={styles.buttonText}>Empezar</Text>
-                </TouchableOpacity>
-              </ScrollView>
+                  <Text style={styles.titleFinal}>{step.title}</Text>
+                  <Text style={styles.description}>{step.description}</Text>
+                  <Text style={styles.nameLabel}>¿Cómo te llamas?</Text>
+                  <TextInput
+                    style={styles.nameInput}
+                    placeholder="Tu nombre"
+                    placeholderTextColor={theme.text3}
+                    value={name}
+                    onChangeText={setName}
+                    textAlign="center"
+                    autoCapitalize="words"
+                    returnKeyType="done"
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={async () => {
+                      try {
+                        const saves: Promise<void>[] = [
+                          AsyncStorage.setItem(ONBOARDING_KEY, 'true'),
+                        ];
+                        if (name.trim()) {
+                          saves.push(AsyncStorage.setItem(NAME_KEY, name.trim()));
+                        }
+                        await Promise.all(saves);
+                      } finally {
+                        router.replace('/(tabs)');
+                      }
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.buttonText}>Empezar</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
             ) : (
-              /* Text block — animated on step change */
               <Animated.View
                 style={[
                   styles.textArea,
@@ -221,7 +323,6 @@ export default function OnboardingScreen() {
         ))}
       </ScrollView>
 
-      {/* Dot indicators — absolutely positioned, centered */}
       <View
         style={[styles.dotsRow, { bottom: insetBottom + spacing.xl }]}
         pointerEvents="none"
@@ -238,7 +339,7 @@ export default function OnboardingScreen() {
 
 function makeIlStyles(theme: Theme) {
   return StyleSheet.create({
-    // Step 1 — Psylens logo mark + wordmark
+    // Screen 1 — Psylens logo mark + wordmark
     logoWrap: {
       alignItems: 'center',
     },
@@ -268,15 +369,17 @@ function makeIlStyles(theme: Theme) {
       textAlign: 'center',
     },
 
-    // Step 2 — concentric rings (Superficie / Concepto / Fondo)
+    // Screen 2 — concentric rings (independent scale, siblings via absolute)
+    ringWrap: {
+      width: 200,
+      height: 200,
+    },
     ringOuter: {
       width: 200,
       height: 200,
       borderRadius: 100,
       borderWidth: 1.5,
       borderColor: theme.border,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     ringMid: {
       width: 136,
@@ -284,8 +387,6 @@ function makeIlStyles(theme: Theme) {
       borderRadius: 68,
       borderWidth: 1.5,
       borderColor: theme.text3,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     ringInner: {
       width: 72,
@@ -294,7 +395,7 @@ function makeIlStyles(theme: Theme) {
       backgroundColor: theme.green,
     },
 
-    // Step 3 — vertical reading timeline
+    // Screen 3 — vertical reading timeline
     timelineWrap: {
       alignItems: 'center',
     },
@@ -321,8 +422,23 @@ function makeIlStyles(theme: Theme) {
       height: 52,
       backgroundColor: theme.border,
     },
+    // Path line for screen 3 (expands downward; height is animated)
+    pathLine: {
+      width: 2,
+      backgroundColor: theme.border,
+    },
+    // Traveling dot and green path overlay for screen 3 animation
+    travelLine: {
+      backgroundColor: theme.green,
+    },
+    travelDot: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: theme.green,
+    },
 
-    // Step 4 — start glyph
+    // Screen 4 — start glyph
     startCircle: {
       width: 120,
       height: 120,
@@ -362,7 +478,6 @@ function makeStyles(theme: Theme) {
 
     textArea: {
       paddingHorizontal: spacing.xl,
-      // paddingBottom applied inline to incorporate safe-area inset
     },
 
     title: {
@@ -387,7 +502,6 @@ function makeStyles(theme: Theme) {
       marginBottom: spacing.xxl,
     },
 
-    // "Empezar" — full width, green background
     button: {
       width: '100%',
       backgroundColor: theme.green,
@@ -402,7 +516,6 @@ function makeStyles(theme: Theme) {
       fontWeight: '600',
     },
 
-    // Dots — centered via justifyContent
     dotsRow: {
       position: 'absolute',
       left: 0,
@@ -427,7 +540,6 @@ function makeStyles(theme: Theme) {
       backgroundColor: theme.text,
     },
 
-    // Name input on final step
     nameLabel: {
       ...typography.bodyS,
       color: theme.text2,

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { colors } from '../constants/colors';
@@ -9,30 +9,21 @@ import { useTheme } from '../hooks/useTheme';
 
 type Theme = typeof colors.dark;
 
-const LOGO_SIZE       = 90;
+const LOGO_SIZE       = 126;
 const ONBOARDING_KEY  = 'psylens_onboarding_done';
 const SPLASH_DURATION = 2500;
 
 export default function SplashScreen() {
   const { theme } = useTheme();
-  const opacity = useRef(new Animated.Value(0.5)).current;
-  const scale   = useRef(new Animated.Value(0.94)).current;
+  const scale = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(opacity, { toValue: 1.0,  duration: 1200, useNativeDriver: true }),
-          Animated.timing(scale,   { toValue: 1.0,  duration: 1200, useNativeDriver: true }),
-        ]),
-        Animated.parallel([
-          Animated.timing(opacity, { toValue: 0.5,  duration: 1200, useNativeDriver: true }),
-          Animated.timing(scale,   { toValue: 0.94, duration: 1200, useNativeDriver: true }),
-        ]),
-      ]),
-    );
-
-    anim.start();
+    Animated.timing(scale, {
+      toValue: 1.0,
+      duration: 2400,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
 
     async function navigate() {
       const flag = await AsyncStorage.getItem(ONBOARDING_KEY).catch(() => null);
@@ -40,15 +31,13 @@ export default function SplashScreen() {
       router.replace(flag !== null ? '/returning' : '/onboarding');
     }
     navigate();
-
-    return () => anim.stop();
   }, []);
 
   const styles = useMemo(() => makeStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{ opacity, transform: [{ scale }], alignItems: 'center' }}>
+      <Animated.View style={{ transform: [{ scale }], alignItems: 'center' }}>
         <Logo size={LOGO_SIZE} color={theme.text} />
         <Text style={styles.wordmark}>Psylens</Text>
         <Text style={styles.tagline}>La lente que afina tu visión del ser humano.</Text>
@@ -67,11 +56,13 @@ function makeStyles(theme: Theme) {
     },
     wordmark: {
       ...typography.h1,
+      fontSize: 38,
       color: theme.text,
       marginTop: spacing.lg,
     },
     tagline: {
       ...typography.bodyS,
+      fontSize: 18,
       color: theme.text3,
       marginTop: spacing.md,
       fontStyle: 'italic',

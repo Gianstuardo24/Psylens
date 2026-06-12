@@ -45,6 +45,7 @@ const PORTRAITS: Record<string, number | null> = {
   'descartes':    require('../../assets/portraits/descartes.png'),
   'kant':         require('../../assets/portraits/kant.png'),
   'schopenhauer': require('../../assets/portraits/schopenhauer.png'),
+  'spinoza':      require('../../assets/portraits/spinoza.png'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

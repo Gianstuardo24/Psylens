@@ -7,8 +7,8 @@ import {
   Modal,
   Animated,
   Dimensions,
-
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 import { useTheme } from '../hooks/useTheme';
@@ -16,6 +16,20 @@ import { useTheme } from '../hooks/useTheme';
 type Theme = typeof colors.dark;
 
 const { width: SW, height: SH } = Dimensions.get('window');
+
+// Seed / leaf shape — two symmetric bezier curves meeting at top and bottom points.
+function IntroBlockIcon({ size }: { size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 80 80">
+      <Path
+        d="M 40 8 C 68 20 68 60 40 72 C 12 60 12 20 40 8 Z"
+        stroke="#0f6e56"
+        strokeWidth="2"
+        fill="none"
+      />
+    </Svg>
+  );
+}
 
 const SYMBOL_MAP: Record<string, string> = {
   eye:     '◎',
@@ -197,7 +211,11 @@ export function BlockCompleteModal({
         >
           {/* Block icon 64px */}
           <View style={styles.iconCircle}>
-            <Text style={styles.iconGlyph}>{glyph}</Text>
+            {block.id === 'intro' ? (
+              <IntroBlockIcon size={60} />
+            ) : (
+              <Text style={styles.iconGlyph}>{glyph}</Text>
+            )}
           </View>
 
           {/* "Bloque completado" */}

@@ -454,6 +454,10 @@ export default function AutorScreen() {
                   <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
                 </View>
               </View>
+            ) : isIntroAuthor ? (
+              <View style={styles.celebIntroCircle}>
+                <IntroIllustration authorId={author.id} size={96} />
+              </View>
             ) : (
               <View style={styles.celebCircle}>
                 {portrait ? (
@@ -904,6 +908,17 @@ function makeStyles(theme: Theme) {
       borderRadius: 48,
       backgroundColor: theme.bg3,
       overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+      borderWidth: 2,
+      borderColor: theme.green,
+    },
+    celebIntroCircle: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: theme.bg3,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.xl,
