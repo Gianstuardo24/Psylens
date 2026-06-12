@@ -261,23 +261,84 @@ function AuthorCard({
   );
 }
 
+// ─── RevolutionCard ───────────────────────────────────────────────────────────
+
+function RevolutionCard({
+  rev,
+  state,
+}: {
+  rev: typeof revolutionCards[0];
+  state: AuthorState;
+}) {
+  const { theme } = useTheme();
+  const ac = useMemo(() => makeAcStyles(theme), [theme]);
+
+  const inner = (
+    <View
+      style={[
+        ac.card,
+        state === 'active' && ac.cardActive,
+        state === 'done'   && ac.cardDone,
+        state === 'locked' && ac.cardLocked,
+      ]}
+    >
+      <View style={ac.leftCol}>
+        <View style={[ac.portrait, { borderWidth: 1.5, borderColor: state === 'locked' ? theme.text3 : '#0f6e56' }]}>
+          <Svg width={28} height={28} viewBox="0 0 44 44">
+            <Path
+              d="M22 4 L40 22 L22 40 L4 22 Z"
+              stroke={state === 'locked' ? theme.text3 : '#0f6e56'}
+              strokeWidth="1.5"
+              fill="none"
+            />
+          </Svg>
+        </View>
+      </View>
+
+      <View style={ac.info}>
+        <Text style={[ac.name, state === 'locked' && ac.dimText]} numberOfLines={2}>
+          {rev.name}
+        </Text>
+        <Text style={[ac.subtitle, state === 'locked' && ac.dimText]}>
+          Introducción
+        </Text>
+      </View>
+
+      <View style={ac.trailing}>
+        {state === 'active' ? (
+          <View style={ac.badgePurple}>
+            <Text style={ac.badgePurpleText}>Activo</Text>
+          </View>
+        ) : state === 'done' ? (
+          <View style={ac.badgeGreen}>
+            <Text style={ac.badgeGreenText}>✓</Text>
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+
+  if (state === 'locked') return inner;
+
+  return (
+    <TouchableOpacity onPress={() => router.push(`/autor/${rev.id}`)} activeOpacity={0.8}>
+      {inner}
+    </TouchableOpacity>
+  );
+}
+
 // ─── SubBlockHeader ───────────────────────────────────────────────────────────
 
 function SubBlockHeader({
   subBlock,
   status,
-  progress,
 }: {
   subBlock: typeof subBlocks[0];
   status: SubBlockStatus;
-  progress: ProgressMap;
 }) {
   const { theme } = useTheme();
   const sbh = useMemo(() => makeSbhStyles(theme), [theme]);
-
-  const rev       = revolutionCardBySubBlock[subBlock.id];
-  const isRevDone = rev ? !!progress[rev.id]?.concept : false;
-  const isLocked  = status === 'locked';
+  const isLocked = status === 'locked';
 
   return (
     <View style={[sbh.container, isLocked && sbh.containerLocked]}>
@@ -296,22 +357,6 @@ function SubBlockHeader({
           {subBlock.name}
         </Text>
       </View>
-
-      {!isLocked && rev && (
-        <Text style={sbh.entrada}>{rev.surface.text}</Text>
-      )}
-
-      {!isLocked && rev && (
-        <TouchableOpacity
-          style={[sbh.revButton, isRevDone && sbh.revButtonDone]}
-          onPress={() => router.push(`/autor/${rev.id}`)}
-          activeOpacity={0.8}
-        >
-          <Text style={[sbh.revButtonText, isRevDone && sbh.revButtonTextDone]}>
-            {isRevDone ? '✓ Introducción completada' : 'Leer introducción →'}
-          </Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 }
@@ -435,9 +480,14 @@ function BlockNode({
               const sbAuthors   = sbAuthorIds
                 .map(id => authorById[id])
                 .filter(Boolean) as (typeof authors[0])[];
+              const rev = revolutionCardBySubBlock[sb.id];
+              const revState: AuthorState = sbStatus === 'locked'
+                ? 'locked'
+                : isRevCardDone(sb.id, progress) ? 'done' : 'active';
               return (
                 <View key={sb.id}>
-                  <SubBlockHeader subBlock={sb} status={sbStatus} progress={progress} />
+                  <SubBlockHeader subBlock={sb} status={sbStatus} />
+                  {rev && <RevolutionCard rev={rev} state={revState} />}
                   {sbAuthors.map((author, i) => (
                     <AuthorCard
                       key={author.id}
@@ -859,33 +909,6 @@ function makeSbhStyles(theme: Theme) {
     },
     nameLocked: {
       color: theme.text3,
-    },
-    entrada: {
-      ...typography.bodyXS,
-      color: theme.text2,
-      lineHeight: 18,
-      marginBottom: spacing.sm,
-    },
-    revButton: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      borderRadius: radius.full,
-      backgroundColor: theme.bg3,
-      borderWidth: 1,
-      borderColor: theme.border,
-      marginTop: spacing.xs,
-    },
-    revButtonDone: {
-      backgroundColor: theme.greenBg,
-      borderColor: theme.green,
-    },
-    revButtonText: {
-      ...typography.label,
-      color: theme.text2,
-    },
-    revButtonTextDone: {
-      color: theme.green,
     },
   });
 }

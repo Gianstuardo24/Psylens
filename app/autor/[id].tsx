@@ -151,24 +151,30 @@ export default function AutorScreen() {
     ? (blocks.find(b => b.id === revCard.blockId) ?? null)
     : author ? (blocks.find(b => b.id === author.blockId) ?? null) : null;
   const authorTerms = glossaryTerms.filter(t => t.authorId === id);
-  const nextAuthor = (() => {
+  const nextDest: { id: string; name: string } | null = (() => {
     if (!author) return null;
-    // Authors inside a sub-block must follow the sub-block's defined order, not the global array.
-    // Using global order caused later-indexed authors (e.g. hipocrates) to be skipped,
-    // preventing the previous sub-block from being considered complete.
+    // Sub-block authors: follow the sub-block's sequential order
     const sb = subBlocks.find(s => s.authorIds.includes(author.id));
     if (sb) {
       const pos = sb.authorIds.indexOf(author.id);
       if (pos >= 0 && pos < sb.authorIds.length - 1) {
-        return authors.find(a => a.id === sb.authorIds[pos + 1]) ?? null;
+        const a = authors.find(a => a.id === sb.authorIds[pos + 1]);
+        return a ? { id: a.id, name: a.name } : null;
       }
-      // Last in sub-block: don't jump to the next sub-block's author since the
-      // revolution card for that sub-block must be read first.
+      // Last in sub-block: return null (user goes back to Camino for the next section)
       return null;
     }
-    // No sub-block (intro authors): use global order
+    // Intro authors (no sub-block): global order, but redirect to the sub-block's
+    // revolution card instead of jumping directly to its first author
     const idx = authors.findIndex(a => a.id === author.id);
-    return idx >= 0 ? (authors[idx + 1] ?? null) : null;
+    if (idx < 0 || idx >= authors.length - 1) return null;
+    const nextId = authors[idx + 1].id;
+    const nextSb = subBlocks.find(s => s.authorIds.includes(nextId));
+    if (nextSb) {
+      const rev = revolutionCards.find(r => r.subBlockId === nextSb.id);
+      if (rev) return { id: rev.id, name: rev.name };
+    }
+    return { id: nextId, name: authors[idx + 1].name };
   })();
 
   // Block-level derived values (safe to compute before the null guard)
@@ -280,7 +286,7 @@ export default function AutorScreen() {
                 onPress={() => router.back()}
                 activeOpacity={0.85}
               >
-                <Text style={styles.nextButtonText}>Comenzar sub-bloque →</Text>
+                <Text style={styles.nextButtonText}>Comenzar →</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -307,7 +313,7 @@ export default function AutorScreen() {
                 onPress={() => { setShowCelebration(false); router.back(); }}
                 activeOpacity={0.85}
               >
-                <Text style={styles.celebNextText}>Comenzar sub-bloque →</Text>
+                <Text style={styles.celebNextText}>Comenzar →</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.celebDismiss}
@@ -385,12 +391,12 @@ export default function AutorScreen() {
       ]).catch(() => {});
     }
 
-    // Unlock the next author for cross-block progression
-    if (nextAuthor) {
+    // Unlock the next destination for cross-block progression
+    if (nextDest) {
       const raw      = await AsyncStorage.getItem(UNLOCK_KEY).catch(() => null);
       const unlocked: string[] = raw ? JSON.parse(raw) : [];
-      if (!unlocked.includes(nextAuthor.id)) {
-        unlocked.push(nextAuthor.id);
+      if (!unlocked.includes(nextDest.id)) {
+        unlocked.push(nextDest.id);
         await AsyncStorage.setItem(UNLOCK_KEY, JSON.stringify(unlocked)).catch(() => {});
       }
     }
@@ -423,9 +429,9 @@ export default function AutorScreen() {
   }
 
   function navigateToNext() {
-    if (!nextAuthor) return;
+    if (!nextDest) return;
     setShowCelebration(false);
-    router.replace(`/autor/${nextAuthor.id}`);
+    router.replace(`/autor/${nextDest.id}`);
   }
 
   return (
@@ -589,9 +595,9 @@ export default function AutorScreen() {
             <TouchableOpacity style={[styles.readButton, styles.readButtonDone]} activeOpacity={1}>
               <Text style={[styles.readButtonText, styles.readButtonTextDone]}>Leído ✓</Text>
             </TouchableOpacity>
-            {nextAuthor && (
+            {nextDest && (
               <TouchableOpacity style={[styles.nextButton, { marginTop: spacing.sm }]} onPress={navigateToNext} activeOpacity={0.85}>
-                <Text style={styles.nextButtonText}>Ir al siguiente autor →</Text>
+                <Text style={styles.nextButtonText}>Siguiente →</Text>
               </TouchableOpacity>
             )}
           </>
@@ -628,9 +634,9 @@ export default function AutorScreen() {
             <Text style={styles.celebAuthorName}>{author.name}</Text>
             <Text style={styles.celebSubtitle}>{isTwoLayer ? 'Has leído las dos capas' : 'Has leído las tres capas'}</Text>
 
-            {nextAuthor && (
+            {nextDest && (
               <TouchableOpacity style={styles.celebNextButton} onPress={navigateToNext} activeOpacity={0.85}>
-                <Text style={styles.celebNextText}>Siguiente autor: {nextAuthor.name} →</Text>
+                <Text style={styles.celebNextText}>Siguiente: {nextDest.name} →</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
