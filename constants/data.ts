@@ -57,6 +57,11 @@ export const blocks = [
   },
 ];
 
+export type QuizQuestion =
+  | { type: 'multiple_choice'; question: string; options: string[] }
+  | { type: 'true_false'; question: string; correct: boolean; explanation: string }
+  | { type: 'open'; question: string };
+
 export const authors = [
 
   {
@@ -162,6 +167,28 @@ export const authors = [
       text: `Heráclito y Demócrito hicieron preguntas que la psicología no pudo ignorar. La pregunta de Heráclito — ¿qué persiste en medio del cambio? — es la pregunta de la identidad personal. La de Demócrito — ¿puede la mente explicarse en términos físicos? — es la pregunta que la neurociencia aún intenta responder.`,
       closingLine: 'Las mejores preguntas son las que siguen siendo preguntas dos mil quinientos años después.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Con cuál de estas ideas te identificas más?',
+        options: [
+          'A) Todo cambia constantemente, incluyendo las personas',
+          'B) Todo tiene una explicación física, incluso lo que sentimos',
+          'C) Ambas me parecen interesantes',
+          'D) Ninguna me convence todavía',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Heráclito creía que la identidad de una persona es fija e inmutable.',
+        correct: false,
+        explanation: 'Para Heráclito todo fluye y cambia constantemente, incluyendo las personas.',
+      },
+      {
+        type: 'open',
+        question: '¿En qué has cambiado más en los últimos años?',
+      },
+    ],
   },
 
   {
@@ -186,6 +213,28 @@ export const authors = [
       text: `El legado más problemático de Platón es el dualismo cuerpo-alma. Al insistir en que son entidades separadas, dejó una herencia que la psicología todavía está tratando de superar.\n\nPero Platón también aportó algo que resiste: la idea de que la mente tiene estructura interna, que no es una unidad simple sino un sistema de fuerzas en tensión.`,
       closingLine: 'Lo que Platón propuso no fue una respuesta definitiva. Fue una manera diferente de hacer las preguntas.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cuál de estas situaciones reconoces más en ti?',
+        options: [
+          'A) Saber que debo hacer algo pero no poder evitar hacer lo contrario',
+          'B) Sentir que una parte de mí quiere algo y otra parte lo rechaza',
+          'C) Actuar por impulso y arrepentirme después',
+          'D) Todas me resultan familiares',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para Platón, el cuerpo y las emociones eran aliados naturales de la razón.',
+        correct: false,
+        explanation: 'Para Platón el cuerpo y los apetitos eran obstáculos que la razón debía controlar, no aliados.',
+      },
+      {
+        type: 'open',
+        question: '¿En qué área de tu vida sientes más tensión entre lo que quieres y lo que crees que deberías hacer?',
+      },
+    ],
   },
 
   {
@@ -210,6 +259,28 @@ export const authors = [
       text: `Aristóteles escribió el primer tratado sistemático sobre la psique — De anima — y en él estableció algo que la ciencia moderna ha confirmado: mente y cuerpo son inseparables.\n\nAntonio Damasio pasó décadas estudiando pacientes con lesiones cerebrales para demostrar que sin cuerpo no hay razón funcional. Su libro El error de Descartes es, en el fondo, una vindicación de Aristóteles.`,
       closingLine: 'La historia de la ciencia está llena de personas que vieron algo verdadero demasiado pronto.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cómo sueles relacionarte con tus emociones?',
+        options: [
+          'A) Las veo como información útil sobre lo que me pasa',
+          'B) Intento controlarlas o ignorarlas',
+          'C) Me dejo llevar por ellas sin cuestionarlas',
+          'D) Depende mucho de la emoción y el momento',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para Aristóteles, las emociones contienen información sobre cómo interpretamos lo que nos pasa.',
+        correct: true,
+        explanation: 'Cada emoción lleva dentro una lectura de la situación — no son reacciones ciegas sino formas de percibir el mundo.',
+      },
+      {
+        type: 'open',
+        question: '¿Hubo alguna vez que una emoción te dio información importante que tu razón no había notado?',
+      },
+    ],
   },
 
   {
@@ -234,6 +305,28 @@ export const authors = [
       text: `Porque respondieron una pregunta que la psicología no empezó a estudiar sistemáticamente hasta el siglo XX — y que todavía no ha terminado de responder: ¿qué hace que una vida sea más llevadera?\n\nEl estoicismo es quizás la más visible de las tres en la psicología contemporánea. La [terapia cognitivo-conductual] — uno de los enfoques terapéuticos más estudiados del mundo, que combina el trabajo con los pensamientos y con los comportamientos para reducir el sufrimiento psicológico — parte de la misma premisa que Epicteto formuló hace dos mil años: que el sufrimiento psicológico está mediado por los pensamientos, y que cambiar los pensamientos puede cambiar cómo nos sentimos. No es una coincidencia — los fundadores de esa terapia citaban explícitamente a los estoicos como una de sus fuentes.\n\nEl epicureísmo anticipa algo que la [psicología positiva] — el estudio científico de qué hace que las personas sean felices y lleven vidas satisfactorias — confirmó siglos después con investigación: que el placer intenso y efímero contribuye mucho menos a la satisfacción con la vida que las relaciones estables, el sentido de propósito y la ausencia de sufrimiento innecesario. Epicuro lo sabía sin tener datos. Los investigadores de hoy lo tienen con números.\n\nY el escepticismo resuena en algo que las terapias contemporáneas proponen de distintas maneras: que no tienes que resolver todas las preguntas sobre ti mismo para vivir bien. Que sostener la incertidumbre — no saber quién eres del todo, no tener todo bajo control — es una habilidad, no un problema.`,
       closingLine: 'Tres escuelas, tres respuestas, dos mil años de distancia. Y sin embargo, cuando las lees, es difícil no reconocer algo propio en alguna de ellas.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cuál de estas ideas te resulta más útil para tu vida?',
+        options: [
+          'A) Distinguir lo que depende de mí de lo que no',
+          'B) Buscar la calma y eliminar el sufrimiento innecesario',
+          'C) Soltar la necesidad de tener todas las respuestas',
+          'D) Las tres me parecen valiosas',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para los estoicos, el sufrimiento viene directamente de los hechos que nos ocurren.',
+        correct: false,
+        explanation: 'Para los estoicos el sufrimiento viene de cómo interpretamos los hechos, no de los hechos en sí.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algo en tu vida que te genere malestar y que en realidad no depende de ti?',
+      },
+    ],
   },
 
   {
@@ -258,6 +351,28 @@ export const authors = [
       text: `Porque hizo algo que la medicina tardó siglos en volver a hacer: tomarse en serio la conexión entre lo emocional y lo físico.\n\nDespués de Avicena, esa conexión fue ignorada durante mucho tiempo. La medicina se fue especializando, separando el cuerpo en partes, tratando síntomas físicos con herramientas físicas y dejando lo emocional en manos de la religión o la filosofía. La idea de que el estrés puede causar enfermedades físicas reales, o que trabajar con las emociones puede tener efectos sobre el cuerpo, tardó hasta el siglo XX en volver a tomar fuerza dentro de la medicina.\n\nHoy esa conexión tiene nombre — se llama [medicina psicosomática], y es un campo de investigación activo que estudia cómo el estado emocional afecta al sistema inmune, al sistema digestivo, al corazón. Cuando un médico hoy le pregunta a un paciente por su nivel de estrés antes de hacer un diagnóstico, está siguiendo una intuición que Avicena documentó con precisión hace más de mil años.\n\nHay algo más que vale mencionar. Buena parte de las ideas que siglos después permitieron que Europa volviera a estudiar la mente y el cuerpo con rigor llegaron a través de pensadores como Avicena — que las había preservado, traducido y expandido cuando, en otras partes del mundo, simplemente no estaban disponibles. Sin ese puente, el recorrido que estás haciendo en esta app habría tenido un hueco enorme en el medio.`,
       closingLine: '',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cómo describes mejor tu relación entre mente y cuerpo?',
+        options: [
+          'A) Cuando algo me preocupa, mi cuerpo lo siente',
+          'B) Cuando me siento bien físicamente, todo lo demás mejora',
+          'C) No suelo conectar lo que siento con lo que me pasa en el cuerpo',
+          'D) Las dos primeras me describen bien',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Avicena documentó que el estado emocional puede tener efectos físicos reales en el cuerpo.',
+        correct: true,
+        explanation: 'Fue uno de los primeros en hacerlo con rigor médico, como en el experimento del pulso del enamorado.',
+      },
+      {
+        type: 'open',
+        question: '¿Recuerdas algún momento en que tu cuerpo expresó algo que tu mente no había podido nombrar todavía?',
+      },
+    ],
   },
 
   {
@@ -282,6 +397,28 @@ export const authors = [
       text: `El aporte más duradero de Hipócrates fue el principio: el sufrimiento mental tiene causas naturales observables. Puede observarse, clasificarse y tratarse.\n\nEse principio parece obvio hoy. En el siglo V a.C. era una ruptura radical con todo lo anterior.`,
       closingLine: 'La respuesta a esa pregunta no llegará por siglos. Pero la pregunta ya estaba aquí.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Alguna vez notaste que lo que sientes emocionalmente afecta cómo te sientes físicamente?',
+        options: [
+          'A) Sí, cuando estoy estresado mi cuerpo lo acusa',
+          'B) Sí, cuando estoy bien emocionalmente me siento más con energía',
+          'C) No lo había relacionado hasta ahora',
+          'D) Ambas A y B me resuenan',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Hipócrates propuso que el sufrimiento mental tiene causas físicas observables.',
+        correct: true,
+        explanation: 'Fue el primero en decir que la enfermedad mental no es castigo divino sino algo que puede estudiarse y tratarse.',
+      },
+      {
+        type: 'open',
+        question: '¿Cuándo fue la última vez que tu cuerpo te dio una señal de que algo no estaba bien emocionalmente?',
+      },
+    ],
   },
 
   {
@@ -306,6 +443,28 @@ export const authors = [
       text: `El cogito estableció la mente como punto de partida del conocimiento. Esa prioridad de lo mental tiene una línea directa hacia el cognitivismo del siglo XX.\n\nPero Descartes también heredó a la psicología su problema más persistente. El error de Descartes, como lo llamó Damasio, no fue pensar — fue creer que pensar podía existir separado de sentir.`,
       closingLine: 'Lo que Descartes construyó fue tan sólido que tardamos trescientos años en encontrarle la grieta.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cuándo dudas de algo, qué sueles hacer?',
+        options: [
+          'A) Busco evidencia hasta estar seguro',
+          'B) Confío en mi intuición',
+          'C) Pregunto a alguien de confianza',
+          'D) Me quedo con la incertidumbre si no hay respuesta clara',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para Descartes, el cuerpo y la mente son la misma sustancia vista desde distintos ángulos.',
+        correct: false,
+        explanation: 'Descartes propuso exactamente lo contrario — que son dos sustancias completamente distintas e independientes.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algo que dabas por cierto y que en algún momento cuestionaste? ¿Qué pasó después?',
+      },
+    ],
   },
 
   {
@@ -330,6 +489,28 @@ export const authors = [
       text: `Spinoza escribió en el siglo XVII, pero su pensamiento apunta directamente al siglo XXI.\n\nAntonio Damasio — el neurocientífico que aparecerá al final de este recorrido — tituló uno de sus libros más importantes En busca de Spinoza. No es una metáfora. Damasio encontró en Spinoza el marco filosófico que la neurociencia necesitaba: uno que no separa la razón de la emoción, ni la mente del cuerpo.\n\nSpinoza también propuso algo que resuena en la psicología contemporánea: que las emociones no son obstáculos para el pensamiento sino información sobre nuestra relación con el mundo. El miedo, la alegría, la tristeza — todas son formas en que el cuerpo registra cómo le va en su entorno. No hay que suprimirlas. Hay que entenderlas.\n\nAristóteles había dicho algo similar. Spinoza lo articuló con una precisión que el siglo XVII no supo reconocer.`,
       closingLine: 'A veces las ideas más importantes llegan demasiado pronto. Spinoza esperó trescientos años. Valió la pena.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cómo sueles manejar las emociones difíciles?',
+        options: [
+          'A) Intento entender de dónde vienen antes de reaccionar',
+          'B) Las suprimo y sigo adelante',
+          'C) Las expreso de inmediato',
+          'D) Depende mucho de la situación',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para Spinoza, suprimir una emoción con fuerza de voluntad es la mejor forma de transformarla.',
+        correct: false,
+        explanation: 'Para Spinoza la única forma real de transformar una emoción es entenderla, no suprimirla.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay alguna emoción que intentas ignorar pero que sigue apareciendo? ¿Qué crees que te está diciendo?',
+      },
+    ],
   },
 
   {
@@ -354,6 +535,28 @@ export const authors = [
       text: `La idea de que la mente organiza activamente la experiencia es el supuesto básico de toda la psicología cognitiva. Piaget la convirtió en teoría del desarrollo. Beck la convirtió en terapia cognitiva.\n\nSchopenhauer tomó el noúmeno kantiano y lo transformó en algo radicalmente distinto: lo inaccesible es la fuerza irracional que nos mueve desde adentro. Ese giro prepara el terreno para Freud.`,
       closingLine: 'Kant nunca escribió sobre psicología. Pero sin él, la psicología moderna no tiene fundamentos.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cómo te relacionas con el autoconocimiento?',
+        options: [
+          'A) Creo que puedo llegar a conocerme completamente si me esfuerzo',
+          'B) Siento que siempre hay algo de mí que se me escapa',
+          'C) No suelo pensar mucho en eso',
+          'D) Me parece un proceso sin fin, y eso me parece bien',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para Kant, siempre hay un límite en lo que podemos conocer de la realidad, incluyendo conocernos a nosotros mismos.',
+        correct: true,
+        explanation: 'Solo conocemos los fenómenos — las cosas tal como aparecen a nuestra mente — nunca la realidad en sí misma.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algo de ti mismo que sientes que todavía no terminas de entender?',
+      },
+    ],
   },
 
   {
@@ -378,6 +581,28 @@ export const authors = [
       text: `Schopenhauer ocupa un lugar singular: es el filósofo que puso el inconsciente en el centro mucho antes de que existiera la psicología como ciencia.\n\nSu influencia directa sobre Freud es documentada. Nietzsche, que leyó a Schopenhauer apasionadamente, tomó la Voluntad y la transformó en voluntad de poder.\n\nHay también un hilo hacia Oriente que Schopenhauer reconoció: el budismo y la idea del deseo como fuente de sufrimiento. Esa conexión llega hasta el mindfulness y las terapias de tercera generación.`,
       closingLine: 'Esa idea — que el motor está escondido — sigue siendo la más incómoda y la más productiva de la psicología.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Reconoces en ti algún impulso que aparece sin que lo hayas decidido?',
+        options: [
+          'A) Sí, el deseo de compañía cuando estoy solo',
+          'B) Sí, reacciones emocionales que llegan antes que el pensamiento',
+          'C) Sí, hábitos que repito aunque quiera cambiarlos',
+          'D) Varios de los anteriores me resuenan',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para Schopenhauer, la razón es la fuerza más poderosa que nos mueve.',
+        correct: false,
+        explanation: 'Para Schopenhauer la Voluntad — un impulso irracional e inconsciente — es lo que realmente nos mueve. La razón solo racionaliza después.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algo que repites en tu vida aunque una parte de ti sabe que no te conviene? ¿Qué crees que lo mueve?',
+      },
+    ],
   },
 
   {
@@ -402,6 +627,28 @@ export const authors = [
       text: `Porque lo que propuso no fue solo una teoría sobre los animales — fue una nueva forma de hacer preguntas sobre la mente humana. Y esa nueva forma de preguntar es exactamente lo que abre el siguiente bloque.\n\nAntes de Darwin, la psicología — en la medida en que existía — preguntaba qué es la mente y cómo funciona. Después de Darwin, apareció una pregunta nueva: ¿para qué sirve? ¿Qué función cumple? ¿Por qué evolucionó de esta manera y no de otra? Esa pregunta transformó todo. [William James], el primer gran psicólogo americano que verás al comenzar el Bloque 1, partió directamente de ahí — propuso que la conciencia existe porque es útil, porque ayuda a los organismos a adaptarse. Sin Darwin, esa pregunta no habría tenido sentido.\n\nPero la influencia de Darwin va más lejos todavía. La idea de que tenemos impulsos, emociones y comportamientos que no elegimos conscientemente — que vienen de una historia mucho más larga que nuestra propia vida — es el suelo sobre el que [Freud] construyó buena parte de su teoría. El inconsciente de Freud no es solo la Voluntad de [Schopenhauer] con otro nombre. Es también, en parte, la herencia evolutiva de Darwin: todo lo que llevamos dentro sin haberlo decidido.\n\nY hay algo más personal en todo esto. Darwin nos quitó el centro — dejamos de ser una creación especial, separada del resto de la naturaleza. Pero al hacerlo, nos dio algo que quizás vale más: una explicación. No somos como somos por capricho ni por destino. Somos como somos porque eso funcionó — porque hubo un proceso largo que nos fue dando forma. Y entender ese proceso, aunque no lo cambie, cambia cómo nos miramos.`,
       closingLine: 'El Bloque 0 empezó con una pregunta sin respuesta sobrenatural — la de los presocráticos, que se atrevieron a buscar en el mundo lo que antes solo se buscaba en los dioses. Termina con algo todavía más radical: la propuesta de Darwin de que somos naturaleza que se mira a sí misma y se pregunta por qué es como es.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cuál de estas ideas cambia algo en cómo te ves a ti mismo?',
+        options: [
+          'A) Que mis emociones tienen una historia evolutiva larga',
+          'B) Que mis reacciones no son caprichosas sino que tuvieron una función',
+          'C) Que comparto más con otros animales de lo que creía',
+          'D) Todas me hacen pensar diferente',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Darwin propuso que nuestras emociones tienen raíces compartidas con otros animales.',
+        correct: true,
+        explanation: 'Las emociones son respuestas evolutivas que compartimos con otras especies porque funcionaron para sobrevivir.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay alguna reacción tuya que ahora entiendes mejor sabiendo que tiene una historia evolutiva?',
+      },
+    ],
   },
 
   // ── b1: Psicología científica ─────────────────────────────────────────────────
@@ -427,6 +674,28 @@ export const authors = [
       text: `Porque lo que encontró sigue siendo la base de casi todo lo que hoy sabemos sobre cómo aprender de manera eficiente.\n\nLa [curva del olvido] y la [repetición espaciada] no son solo curiosidades de la historia de la psicología. Son el fundamento de sistemas de estudio que millones de personas usan hoy — desde aplicaciones que te recuerdan repasar el vocabulario de un idioma justo cuando el recuerdo está empezando a irse, hasta métodos usados en escuelas de medicina o derecho, donde hay que aprender grandes cantidades de información. La próxima vez que una app te diga "es momento de repasar esto", está aplicando lo que Ebbinghaus descubrió hace más de cien años.\n\nHay algo más que vale mencionar. Ebbinghaus trabajó solo, sin financiación importante, en una época en que la psicología experimental era todavía un campo recién nacido. La psicología era tan nueva que no había un camino claro — había que construirlo mientras se caminaba. Lo que hoy parece obvio, como diseñar un experimento para medir la memoria, en ese entonces no tenía un modelo o una referencia para poder estudiarlo. Había que inventar la forma de preguntar al mismo tiempo que se buscaba la respuesta.`,
       closingLine: '',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cómo sueles estudiar o aprender algo nuevo?',
+        options: [
+          'A) Todo de una vez y espero que se quede',
+          'B) En sesiones cortas y distribuidas',
+          'C) Repaso varias veces justo antes de necesitarlo',
+          'D) Nunca había pensado en cómo lo hago',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Ebbinghaus descubrió que olvidamos de forma constante y pareja con el tiempo.',
+        correct: false,
+        explanation: 'El olvido ocurre muy rápido al principio y luego se vuelve más lento — eso es la curva del olvido.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algo que aprendiste hace tiempo y que te sorprende haber olvidado? ¿O algo que recuerdas con mucha claridad sin saber por qué?',
+      },
+    ],
   },
   {
     id: 'fechner',
@@ -440,6 +709,28 @@ export const authors = [
       text: `Hay una pregunta que parece imposible: ¿cuánto pesa una sensación? ¿Cuánto más brillante tiene que ser una luz para que la notes diferente? ¿Hay una relación matemática entre el mundo físico y lo que percibimos?\n\nGustav Fechner decidió que sí. Y en 1860 publicó los Elementos de Psicofísica — el primer intento sistemático de medir la experiencia subjetiva con métodos científicos. La [psicofísica] que fundó — el estudio de la relación entre estímulos físicos y percepciones mentales — es el puente entre la filosofía y la psicología experimental.\n\nFechner no era psicólogo. Era físico y filósofo. Pero su obsesión con medir lo que nadie había medido antes abrió una puerta que [Wilhelm Wundt] cruzará diecinueve años después para fundar el primer laboratorio de psicología del mundo.`,
       closingLine: 'La historia de la psicología científica empieza aquí: con alguien que se preguntó si lo que sentimos puede pesarse.',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cuándo prestas más atención a algo?',
+        options: [
+          'A) Cuando hay un cambio brusco en el ambiente',
+          'B) Cuando algo contrasta con lo que esperaba',
+          'C) Cuando algo me llama la atención sin saber por qué',
+          'D) Me resulta difícil saberlo conscientemente',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Fechner demostró que lo que notamos depende de cuánto ya había, no solo del cambio en sí.',
+        correct: true,
+        explanation: 'Un vaso de agua añadido a un bidón no se nota, pero el mismo vaso en una botella casi vacía cambia todo.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algo cotidiano que dejaste de notar con el tiempo porque te acostumbraste?',
+      },
+    ],
   },
   {
     id: 'wundt',
@@ -463,6 +754,28 @@ export const authors = [
       text: `El legado de Wundt no está en sus teorías específicas — el estructuralismo no sobrevivió más allá de su generación — sino en el gesto fundacional: demostrar que la mente puede ser objeto de investigación sistemática.\n\nAntes de Wundt, hablar de psicología científica era casi una contradicción. Después de él, se convirtió en la única psicología legítima. Eso tiene consecuencias que todavía vivimos: la exigencia de que los tratamientos psicológicos tengan evidencia empírica, que los modelos de la mente sean falsificables, que las afirmaciones sobre el comportamiento humano puedan ponerse a prueba. Todo eso viene de Leipzig, 1879.\n\nPero Wundt también plantó la semilla de su propia superación. Al insistir en que la psicología estudiara solo la experiencia consciente, dejó fuera exactamente lo que [Sigmund Freud] — que era contemporáneo suyo — estaba empezando a explorar: todo lo que ocurre por debajo de la conciencia. Y al fragmentar la experiencia en elementos aislados, ignoró lo que [William James] — su gran rival intelectual — defendería apasionadamente: que la conciencia es un flujo continuo que no puede entenderse descomponiéndola en partes.\n\nLas limitaciones de Wundt fueron el mapa de lo que vendría después. Eso es exactamente lo que hacen los fundadores.`,
       closingLine: '',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Qué tan consciente eres de lo que ocurre dentro de ti mientras lo vives?',
+        options: [
+          'A) Bastante — suelo notar mis emociones y pensamientos en el momento',
+          'B) Poco — generalmente lo proceso después',
+          'C) Depende mucho del momento y la situación',
+          'D) Es algo que me gustaría desarrollar más',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Wundt creía que la experiencia consciente podía descomponerse en elementos básicos.',
+        correct: true,
+        explanation: 'Esa era su propuesta central — que la conciencia está formada por elementos simples que se combinan, como los ingredientes de un plato.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay alguna experiencia tuya que, al intentar describirla con palabras, sientes que las palabras no alcanzan?',
+      },
+    ],
   },
   {
     id: 'james',
@@ -486,6 +799,28 @@ export const authors = [
       text: `James es el psicólogo que más difícilmente envejece. Parte de eso se debe a que nunca intentó construir un sistema cerrado — fue siempre un pensador de ideas abiertas, de conexiones inesperadas, de preguntas que importan más que las respuestas definitivas.\n\nPero hay algo más profundo. James vivió con una depresión severa durante años — lo que él llamaba su "crisis filosófica" — y esa experiencia personal tiñó toda su obra con una urgencia práctica que la psicología académica de su época no tenía. No le interesaba la psicología como ejercicio intelectual. Le interesaba como herramienta para vivir mejor.\n\nEsa orientación práctica — que la psicología debe servir para algo concreto en la vida real — es lo que conecta a James con tradiciones muy distintas. Es el antecedente del [pragmatismo] filosófico americano. Es el precursor de la [psicología positiva] que florecerá un siglo después. Y es, en cierta forma, el espíritu que anima a toda la psicología aplicada: la convicción de que entender la mente tiene que traducirse en vivir mejor.\n\nHay una frase de James que resume su proyecto entero: "El mayor descubrimiento de mi generación es que los seres humanos pueden alterar sus vidas alterando sus actitudes mentales." Para alguien que vivió en la época en que [Wundt] medía tiempos de reacción en un laboratorio, eso era una declaración radical. Para nosotros, que vivimos después de todo lo que James anticipó, suena a algo que siempre supimos.`,
       closingLine: '',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Cómo describes mejor tu experiencia mental en un día normal?',
+        options: [
+          'A) Como un flujo continuo donde todo se mezcla',
+          'B) Como momentos separados y distintos',
+          'C) Como algo difícil de observar mientras ocurre',
+          'D) No suelo pensarlo, pero la primera opción me resuena',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para William James, la conciencia es un estado fijo que puede analizarse en partes separadas.',
+        correct: false,
+        explanation: 'James propuso lo contrario — que la conciencia es un flujo continuo que no puede detenerse para analizarse sin perder lo más importante.',
+      },
+      {
+        type: 'open',
+        question: '¿Alguna vez intentaste "vaciarte la cabeza" completamente? ¿Qué pasó?',
+      },
+    ],
   },
 
   {
@@ -510,6 +845,28 @@ export const authors = [
       text: `Porque lo que encontró en esas cajas sigue explicando una parte enorme de cómo nos comportamos hoy.\n\nLa [ley del efecto] de Thorndike es el antecedente directo de todo lo que vendría después en el estudio del aprendizaje. Unos años más tarde, un psicólogo llamado [B.F. Skinner] tomaría esa misma idea y la desarrollaría hasta convertirla en uno de los sistemas más influyentes de la psicología del siglo XX — el [condicionamiento operante], es decir, la idea de que el comportamiento está moldeado por sus consecuencias. Sin Thorndike, no habría Skinner. Y sin Skinner, buena parte de lo que hoy sabemos sobre cómo cambiar hábitos, cómo diseñar sistemas de recompensa o cómo estructurar el aprendizaje no existiría de la misma manera.\n\nPero la influencia de Thorndike va más lejos todavía. Sus ideas sobre el aprendizaje llegaron directamente a las aulas — fue uno de los primeros en aplicar los principios del aprendizaje al diseño de la educación, y sus investigaciones influyeron en cómo se estructuran los exámenes, las recompensas en la escuela y la forma en que se enseña. La próxima vez que un profesor elogie un trabajo bien hecho para motivar a un estudiante a seguir esforzándose, está aplicando, sin saberlo, la ley del efecto de Thorndike.\n\nY hay algo más personal en todo esto. La ley del efecto no solo explica cómo aprendemos cosas nuevas — también explica por qué a veces repetimos comportamientos que no nos hacen bien. Si algo produjo un resultado satisfactorio en algún momento — aunque fuera hace mucho tiempo, aunque ya no funcione igual — la tendencia a repetirlo puede persistir. Entender eso no lo resuelve todo, pero cambia cómo te miras a ti mismo cuando te preguntas por qué haces lo que haces.`,
       closingLine: '',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Reconoces en ti algún comportamiento que repites porque en algún momento te dio un buen resultado?',
+        options: [
+          'A) Sí, claramente',
+          'B) Puede ser, aunque no siempre lo noto en el momento',
+          'C) Probablemente, pero no lo había pensado así',
+          'D) No estoy seguro',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Según Thorndike, aprendemos principalmente por comprensión consciente de lo que hacemos.',
+        correct: false,
+        explanation: 'Thorndike mostró que el aprendizaje ocurre por consecuencias — lo que produce un buen resultado tiende a repetirse, sin necesitar comprensión consciente.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algún hábito tuyo que ahora entiendes mejor sabiendo que aprendiste por las consecuencias que tuvo?',
+      },
+    ],
   },
 
   // ── b2: Psicoanálisis ─────────────────────────────────────────────────────────
@@ -646,6 +1003,28 @@ export const authors = [
       text: `El conductismo de Watson fue, simultáneamente, el mayor avance metodológico y la mayor reducción conceptual que la psicología había experimentado hasta ese momento.\n\nLo que ganó: rigor. La psicología conductista produjo hallazgos replicables, medibles, aplicables. Las técnicas que emergieron del condicionamiento — la desensibilización sistemática, la economía de fichas, la modificación de conducta — funcionan. Tienen evidencia. Salvan vidas. Eso no es trivial.\n\nLo que perdió: la persona. En la psicología de Watson, no hay nadie adentro. Hay un organismo que responde a estímulos. No hay intenciones, no hay significados, no hay historia personal, no hay sufrimiento que busque sentido. Solo conducta observable y sus causas ambientales.\n\nEsa reducción tuvo consecuencias clínicas dolorosas. Décadas de psicología conductista pura trataron a personas como sistemas de condicionamiento que podían reprogramarse sin necesidad de entender su experiencia subjetiva. Funcionaba en algunos casos. En otros, dejaba intacto exactamente lo que causaba el sufrimiento.\n\nLa reacción no tardó en llegar. [Carl Rogers], en los años cincuenta, propondría que el corazón de la terapia no es la técnica sino la relación — que lo que sana a una persona no es el condicionamiento correcto sino ser visto, escuchado y comprendido por otro ser humano. Y [Aaron Beck], desde dentro de la tradición científica que Watson había fundado, demostraría que los pensamientos — exactamente lo que Watson había descartado como inobservable — son el factor más poderoso en la génesis y el tratamiento de la depresión.\n\nWatson tenía razón en que la conducta importa. Se equivocó en pensar que era lo único que importaba.`,
       closingLine: '',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Crees que el comportamiento de las personas se puede entender sin conocer lo que sienten por dentro?',
+        options: [
+          'A) No, lo interno es fundamental para entender a alguien',
+          'B) A veces sí — las acciones dicen mucho más que las palabras',
+          'C) Depende de la situación',
+          'D) Es una pregunta que me genera dudas',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Watson demostró que los miedos pueden aprenderse a través de la experiencia.',
+        correct: true,
+        explanation: 'El experimento del pequeño Albert mostró que un miedo puede condicionarse — y por lo tanto también puede desaprenderse.',
+      },
+      {
+        type: 'open',
+        question: '¿Tienes algún miedo o reacción automática que crees que aprendiste en algún momento de tu vida?',
+      },
+    ],
   },
   {
     id: 'skinner',
@@ -668,6 +1047,28 @@ export const authors = [
       text: `Las aplicaciones del condicionamiento operante son algunas de las más sólidas y útiles de toda la psicología. La [modificación de conducta] basada en principios skinnerianos funciona para enseñar habilidades a niños con autismo, para tratar adicciones, para estructurar programas de rehabilitación. Eso no es menor.\n\nPero el conductismo skinneriano tiene un problema filosófico que nunca resolvió: trata a los seres humanos como si fueran palomas con más neuronas. Y en el proceso deja fuera exactamente lo que hace que el sufrimiento humano sea humano — el significado, la historia personal, la manera en que cada persona interpreta lo que le ocurre.\n\nEse fue el punto de partida de [Aaron Beck]. Trabajando con pacientes deprimidos en los años sesenta, Beck notó que el condicionamiento no explicaba por qué dos personas con historias de refuerzos similares desarrollaban niveles de depresión completamente distintos. La diferencia estaba en cómo cada una interpretaba lo que le ocurría. En sus pensamientos. En exactamente lo que Watson y Skinner habían descartado como inobservable e irrelevante.\n\nHay también un legado de Skinner que raramente se nombra: su visión de la educación. Skinner creía que la enseñanza tradicional era fundamentalmente inhumana — castigaba los errores en lugar de reforzar los aciertos, avanzaba al ritmo del grupo en lugar del individuo, ignoraba los principios del aprendizaje que la investigación había establecido. Sus propuestas de [instrucción programada] — aprender en pasos pequeños con retroalimentación inmediata — son el antecedente directo de plataformas como Duolingo o Khan Academy.\n\nSkinner tenía razón en que las consecuencias moldean la conducta. Se equivocó en pensar que eso era suficiente para explicar al ser humano.`,
       closingLine: '',
     },
+    quiz: [
+      {
+        type: 'multiple_choice',
+        question: '¿Qué te resulta más efectivo para cambiar un hábito?',
+        options: [
+          'A) Recompensarme cuando lo hago bien',
+          'B) Castigarme o restringirme cuando fallo',
+          'C) Entender por qué lo hago',
+          'D) Una combinación de entender y recompensar',
+        ],
+      },
+      {
+        type: 'true_false',
+        question: 'Para Skinner, la sensación de elegir libremente lo que hacemos refleja nuestra verdadera autonomía.',
+        correct: false,
+        explanation: 'Para Skinner lo que llamamos elección libre es en gran medida el resultado de un historial de refuerzos y castigos que nos fue dando forma.',
+      },
+      {
+        type: 'open',
+        question: '¿Hay algún comportamiento tuyo que ahora entiendes mejor como el resultado de consecuencias pasadas?',
+      },
+    ],
   },
   {
     id: 'rogers',

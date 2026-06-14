@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Modal,
   Animated,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -16,7 +17,7 @@ import { typography, spacing, radius } from '../../constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
-import { authors, blocks, glossaryTerms, revolutionCards, subBlocks } from '../../constants/data';
+import { authors, blocks, glossaryTerms, revolutionCards, subBlocks, QuizQuestion } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
@@ -24,6 +25,22 @@ import { IntroIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
 
 type Theme = typeof colors.dark;
+
+const GLOBAL_SEQUENCE: string[] = (() => {
+  const introBlock = blocks.find(b => b.id === 'intro');
+  const seq: string[] = introBlock ? [...introBlock.authors] : [];
+  for (const sb of subBlocks) {
+    const rev = revolutionCards.find(r => r.subBlockId === sb.id);
+    if (rev) seq.push(rev.id);
+    const blk = blocks.find(b => b.id === sb.blockId);
+    const blockAuthorSet = blk ? new Set(blk.authors) : null;
+    const visibleIds = blockAuthorSet
+      ? sb.authorIds.filter(aid => blockAuthorSet.has(aid))
+      : sb.authorIds;
+    seq.push(...visibleIds);
+  }
+  return seq;
+})();
 
 const PROGRESS_KEY       = 'psylens_progress';
 const UNLOCK_KEY         = 'psylens_unlocked';
@@ -57,7 +74,7 @@ const PORTRAITS: Record<string, number | null> = {
   'schopenhauer':  require('../../assets/portraits/schopenhauer.png'),
 };
 
-type TabKey = 'surface' | 'concept' | 'fondo';
+type TabKey = 'surface' | 'concept' | 'fondo' | 'reflexion';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'surface', label: 'Superficie' },
@@ -119,8 +136,22 @@ export default function AutorScreen() {
   const [showPaywall,       setShowPaywall]       = useState(false);
   const [pendingAuthorId,   setPendingAuthorId]   = useState<string | null>(null);
 
-  const animScale   = useRef(new Animated.Value(0.85)).current;
-  const animOpacity = useRef(new Animated.Value(0)).current;
+  const animScale      = useRef(new Animated.Value(0.85)).current;
+  const animOpacity    = useRef(new Animated.Value(0)).current;
+  const quizTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [showQuiz,       setShowQuiz]       = useState(false);
+  const [quizStep,       setQuizStep]       = useState(0);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [tfAnswered,     setTfAnswered]     = useState(false);
+  const [tfWasCorrect,   setTfWasCorrect]   = useState(false);
+  const [openAnswer,     setOpenAnswer]     = useState('');
+  const pendingBlockDone = useRef(false);
+  const pendingBlockDays = useRef(1);
+
+  const [savedJournalEntry, setSavedJournalEntry] = useState<{
+    authorId: string; authorName: string; question: string; answer: string; date: string;
+  } | null>(null);
 
   const styles = useMemo(() => makeStyles(theme), [theme]);
 
@@ -133,6 +164,18 @@ export default function AutorScreen() {
       setIsPremium(rawPremium === 'true');
     });
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (quizTimeoutRef.current) clearTimeout(quizTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.getItem(`psylens_journal_${id}`)
+      .then(raw => setSavedJournalEntry(raw ? JSON.parse(raw) : null))
+      .catch(() => {});
+  }, [id]);
 
   useEffect(() => {
     if (showCelebration) {
@@ -153,39 +196,13 @@ export default function AutorScreen() {
   const authorTerms = glossaryTerms.filter(t => t.authorId === id);
   const nextDest: { id: string; name: string } | null = (() => {
     if (!author) return null;
-    const sb = subBlocks.find(s => s.authorIds.includes(author.id));
-    if (sb) {
-      // Only consider authors actually in the block (sub-block may list unreleased placeholders)
-      const blockAuthorSet = block ? new Set(block.authors) : null;
-      const visibleIds = blockAuthorSet
-        ? sb.authorIds.filter(id => blockAuthorSet.has(id))
-        : sb.authorIds;
-      const pos = visibleIds.indexOf(author.id);
-      if (pos >= 0 && pos < visibleIds.length - 1) {
-        const a = authors.find(a => a.id === visibleIds[pos + 1]);
-        return a ? { id: a.id, name: a.name } : null;
-      }
-      // Last visible author in this sub-block → revolution card of the next sub-block
-      const blockSubBlocks = subBlocks.filter(s => s.blockId === sb.blockId);
-      const sbIdx = blockSubBlocks.findIndex(s => s.id === sb.id);
-      if (sbIdx >= 0 && sbIdx < blockSubBlocks.length - 1) {
-        const nextSb = blockSubBlocks[sbIdx + 1];
-        const rev = revolutionCards.find(r => r.subBlockId === nextSb.id);
-        if (rev) return { id: rev.id, name: rev.name };
-      }
-      // Last sub-block in block: BlockCompleteModal handles the transition
-      return null;
-    }
-    // Intro authors (no sub-block): global order, redirect to the sub-block's revolution card
-    const idx = authors.findIndex(a => a.id === author.id);
-    if (idx < 0 || idx >= authors.length - 1) return null;
-    const nextId = authors[idx + 1].id;
-    const nextSb = subBlocks.find(s => s.authorIds.includes(nextId));
-    if (nextSb) {
-      const rev = revolutionCards.find(r => r.subBlockId === nextSb.id);
-      if (rev) return { id: rev.id, name: rev.name };
-    }
-    return { id: nextId, name: authors[idx + 1].name };
+    const pos = GLOBAL_SEQUENCE.indexOf(author.id);
+    if (pos < 0 || pos >= GLOBAL_SEQUENCE.length - 1) return null;
+    const nextId = GLOBAL_SEQUENCE[pos + 1];
+    const nextRev = revolutionCards.find(r => r.id === nextId);
+    if (nextRev) return { id: nextId, name: nextRev.name };
+    const nextAuth = authors.find(a => a.id === nextId);
+    return nextAuth ? { id: nextId, name: nextAuth.name } : null;
   })();
 
   // Block-level derived values (safe to compute before the null guard)
@@ -207,16 +224,11 @@ export default function AutorScreen() {
 
   const isRevComplete = revCard ? !!progress[revCard.id]?.concept : false;
 
-  // First visible author of the revolution card's sub-block — destination after intro is read
   const revFirstAuthorId = (() => {
     if (!revCard) return null;
-    const sb = subBlocks.find(s => s.id === revCard.subBlockId);
-    if (!sb) return null;
-    const blockAuthorSet = block ? new Set(block.authors) : null;
-    const visibleIds = blockAuthorSet
-      ? sb.authorIds.filter(id => blockAuthorSet.has(id))
-      : sb.authorIds;
-    return visibleIds[0] ?? null;
+    const pos = GLOBAL_SEQUENCE.indexOf(revCard.id);
+    if (pos < 0 || pos >= GLOBAL_SEQUENCE.length - 1) return null;
+    return GLOBAL_SEQUENCE[pos + 1];
   })();
 
   async function markRevDone() {
@@ -374,8 +386,14 @@ export default function AutorScreen() {
   const isTwoLayer     = author.layerType === 'two';
   const activeTabs     = isTwoLayer
     ? [{ key: 'surface' as TabKey, label: 'Entrada' }, { key: 'concept' as TabKey, label: 'Profundidad' }]
-    : TABS;
+    : isAuthorComplete && hasQuiz
+      ? [...TABS, { key: 'reflexion' as TabKey, label: 'Reflexión' }]
+      : TABS;
   const isLastTab      = isTwoLayer ? activeTab === 'concept' : activeTab === 'fondo';
+
+  const authorQuiz: QuizQuestion[] | undefined = (author as any)?.quiz;
+  const hasQuiz  = !isIntroAuthor && Array.isArray(authorQuiz) && authorQuiz.length > 0;
+  const currentQ = authorQuiz?.[quizStep] ?? null;
 
   const isAuthorComplete = !!(
     progress[author.id]?.surface &&
@@ -430,15 +448,23 @@ export default function AutorScreen() {
         )
       : false;
 
+    let days = 1;
     if (blockDone) {
       const raw = await AsyncStorage.getItem(BLOCK_STARTED_KEY).catch(() => null);
       const started: Record<string, string> = raw ? JSON.parse(raw) : {};
       const startStr = started[block!.id];
-      const days = startStr
+      days = startStr
         ? Math.max(1, Math.ceil(
             (Date.now() - new Date(startStr + 'T00:00:00').getTime()) / 86_400_000
           ))
         : 1;
+    }
+
+    if (hasQuiz) {
+      pendingBlockDone.current = blockDone;
+      pendingBlockDays.current = days;
+      setShowQuiz(true);
+    } else if (blockDone) {
       setBlockCompleteDays(days);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowBlockComplete(true);
@@ -452,6 +478,54 @@ export default function AutorScreen() {
     if (!nextDest) return;
     setShowCelebration(false);
     router.replace(`/autor/${nextDest.id}`);
+  }
+
+  function advanceQuiz() {
+    const total = authorQuiz?.length ?? 0;
+    if (quizStep < total - 1) {
+      setQuizStep(s => s + 1);
+      setSelectedOption(null);
+      setTfAnswered(false);
+      setTfWasCorrect(false);
+    } else {
+      finishQuiz();
+    }
+  }
+
+  function handleTFAnswer(answer: boolean) {
+    if (!currentQ || currentQ.type !== 'true_false') return;
+    setTfWasCorrect(answer === currentQ.correct);
+    setTfAnswered(true);
+  }
+
+  async function finishQuiz() {
+    const openQ = authorQuiz?.find(q => q.type === 'open');
+    if (openQ && openAnswer.trim().length >= 20) {
+      await AsyncStorage.setItem(
+        `psylens_journal_${author!.id}`,
+        JSON.stringify({
+          authorId:   author!.id,
+          authorName: author!.name,
+          question:   openQ.question,
+          answer:     openAnswer.trim(),
+          date:       new Date().toISOString().slice(0, 10),
+        })
+      ).catch(() => {});
+    }
+    setShowQuiz(false);
+    setQuizStep(0);
+    setSelectedOption(null);
+    setTfAnswered(false);
+    setTfWasCorrect(false);
+    setOpenAnswer('');
+    if (pendingBlockDone.current) {
+      setBlockCompleteDays(pendingBlockDays.current);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowBlockComplete(true);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setShowCelebration(true);
+    }
   }
 
   return (
@@ -523,7 +597,41 @@ export default function AutorScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
           showsVerticalScrollIndicator={false}
         >
-          {isPlaceholder ? (
+          {activeTab === 'reflexion' ? (
+            <View>
+              {authorQuiz!.map((q, i) => (
+                <View
+                  key={i}
+                  style={[styles.reflexionBlock, i === authorQuiz!.length - 1 && { borderBottomWidth: 0 }]}
+                >
+                  <Text style={styles.reflexionQLabel}>Pregunta {i + 1}</Text>
+                  <Text style={styles.reflexionQText}>{q.question}</Text>
+                  {q.type === 'multiple_choice' && q.options.map((opt, j) => (
+                    <View key={j} style={styles.reflexionOption}>
+                      <Text style={styles.reflexionOptionText}>{opt}</Text>
+                    </View>
+                  ))}
+                  {q.type === 'true_false' && (
+                    <View style={styles.reflexionTFRow}>
+                      <View style={styles.reflexionTFChip}>
+                        <Text style={styles.reflexionTFText}>Verdadero</Text>
+                      </View>
+                      <View style={styles.reflexionTFChip}>
+                        <Text style={styles.reflexionTFText}>Falso</Text>
+                      </View>
+                    </View>
+                  )}
+                  {q.type === 'open' && (
+                    <View style={styles.reflexionAnswerBox}>
+                      <Text style={styles.reflexionAnswerText}>
+                        {savedJournalEntry?.answer ?? '—'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          ) : isPlaceholder ? (
             <View style={styles.placeholderContainer}>
               <View style={styles.placeholderCircle}>
                 {portrait ? (
@@ -671,6 +779,87 @@ export default function AutorScreen() {
         </View>
       </Modal>
 
+      {/* Quiz modal */}
+      <Modal visible={showQuiz} transparent statusBarTranslucent animationType="fade">
+        <View style={styles.quizOverlay}>
+          <View style={styles.quizCard}>
+            <Text style={styles.quizProgress}>Pregunta {quizStep + 1} de {authorQuiz?.length ?? 3}</Text>
+
+            {currentQ?.type === 'multiple_choice' && (
+              <>
+                <Text style={styles.quizQuestion}>{currentQ.question}</Text>
+                {currentQ.options.map((opt, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={[styles.quizOption, selectedOption === i && styles.quizOptionSelected]}
+                    onPress={() => {
+                      if (selectedOption !== null) return;
+                      setSelectedOption(i);
+                      quizTimeoutRef.current = setTimeout(() => advanceQuiz(), 500);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.quizOptionText, selectedOption === i && styles.quizOptionTextSelected]}>
+                      {opt}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            {currentQ?.type === 'true_false' && (
+              <>
+                <Text style={styles.quizQuestion}>{currentQ.question}</Text>
+                {!tfAnswered ? (
+                  <View style={styles.quizTFRow}>
+                    <TouchableOpacity style={styles.quizTFBtn} onPress={() => handleTFAnswer(true)} activeOpacity={0.8}>
+                      <Text style={styles.quizTFText}>Verdadero</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.quizTFBtn} onPress={() => handleTFAnswer(false)} activeOpacity={0.8}>
+                      <Text style={styles.quizTFText}>Falso</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <>
+                    <View style={[styles.quizFeedback, tfWasCorrect ? styles.quizFeedbackCorrect : styles.quizFeedbackWrong]}>
+                      <Text style={styles.quizFeedbackLabel}>{tfWasCorrect ? '✓ Correcto' : '✗ Incorrecto'}</Text>
+                      <Text style={styles.quizFeedbackText}>{currentQ.explanation}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.quizContinue} onPress={advanceQuiz} activeOpacity={0.85}>
+                      <Text style={styles.quizContinueText}>Continuar →</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </>
+            )}
+
+            {currentQ?.type === 'open' && (
+              <>
+                <Text style={styles.quizQuestion}>{currentQ.question}</Text>
+                <TextInput
+                  style={styles.quizOpenInput}
+                  multiline
+                  value={openAnswer}
+                  onChangeText={setOpenAnswer}
+                  placeholder="Escribe tu reflexión..."
+                  placeholderTextColor={theme.text3}
+                  textAlignVertical="top"
+                />
+                <TouchableOpacity
+                  style={[styles.quizContinue, openAnswer.trim().length < 20 && styles.quizContinueDisabled]}
+                  onPress={() => { if (openAnswer.trim().length >= 20) advanceQuiz(); }}
+                  activeOpacity={openAnswer.trim().length >= 20 ? 0.85 : 1}
+                >
+                  <Text style={[styles.quizContinueText, openAnswer.trim().length < 20 && { color: theme.text3 }]}>
+                    Continuar →
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
       {/* Reusable term bottom sheet */}
       <BottomSheet
         visible={selectedTermId !== null}
@@ -708,21 +897,24 @@ export default function AutorScreen() {
               setShowBlockComplete(false);
               return;
             }
-            const firstAuthorId = nextBlock.authors[0];
-            const authorExists = !!firstAuthorId && authors.some(a => a.id === firstAuthorId);
-            if (!authorExists) {
+            const firstEntryId = GLOBAL_SEQUENCE.find(entryId => {
+              const rev = revolutionCards.find(r => r.id === entryId && r.blockId === nextBlock.id);
+              if (rev) return true;
+              return nextBlock.authors.includes(entryId);
+            }) ?? null;
+            if (!firstEntryId) {
               setShowBlockComplete(false);
               router.replace('/(tabs)/camino');
               return;
             }
             if (!nextBlock.isFree && !isPremium) {
               setShowBlockComplete(false);
-              setPendingAuthorId(firstAuthorId);
+              setPendingAuthorId(firstEntryId);
               setShowPaywall(true);
               return;
             }
             setShowBlockComplete(false);
-            router.replace(`/autor/${firstAuthorId}`);
+            router.replace(`/autor/${firstEntryId}`);
           }}
           onViewSummary={() => {
             setShowBlockComplete(false);
@@ -1181,6 +1373,192 @@ function makeStyles(theme: Theme) {
     celebDismissText: {
       ...typography.bodyS,
       color: theme.text3,
+    },
+    // Quiz modal
+    quizOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(15,15,14,0.95)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    quizCard: {
+      width: '100%',
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: spacing.xxl,
+    },
+    quizProgress: {
+      ...typography.label,
+      color: theme.text3,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.lg,
+    },
+    quizQuestion: {
+      ...typography.h4,
+      color: theme.text,
+      marginBottom: spacing.xl,
+      lineHeight: 28,
+    },
+    quizOption: {
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    quizOptionSelected: {
+      backgroundColor: theme.greenBg,
+      borderColor: theme.green,
+    },
+    quizOptionText: {
+      ...typography.bodyS,
+      color: theme.text2,
+    },
+    quizOptionTextSelected: {
+      color: theme.green,
+      fontWeight: '600',
+    },
+    quizTFRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    quizTFBtn: {
+      flex: 1,
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    quizTFText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    quizFeedback: {
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    quizFeedbackCorrect: {
+      backgroundColor: theme.greenBg,
+      borderWidth: 1,
+      borderColor: theme.green,
+    },
+    quizFeedbackWrong: {
+      backgroundColor: theme.bg3,
+      borderWidth: 1,
+      borderColor: theme.coral,
+    },
+    quizFeedbackLabel: {
+      ...typography.label,
+      fontWeight: '700',
+      color: theme.text,
+      marginBottom: spacing.sm,
+    },
+    quizFeedbackText: {
+      ...typography.bodyS,
+      color: theme.text2,
+      lineHeight: 20,
+    },
+    quizContinue: {
+      backgroundColor: theme.green,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      marginTop: spacing.sm,
+    },
+    quizContinueDisabled: {
+      backgroundColor: theme.bg3,
+      borderColor: theme.border,
+      borderWidth: 1,
+    },
+    quizContinueText: {
+      ...typography.body,
+      color: '#ffffff',
+      fontWeight: '600',
+    },
+    quizOpenInput: {
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      ...typography.bodyS,
+      color: theme.text,
+      borderWidth: 1,
+      borderColor: theme.border,
+      minHeight: 120,
+      marginBottom: spacing.lg,
+      lineHeight: 22,
+    },
+    // Reflexión tab (read-only review)
+    reflexionBlock: {
+      marginBottom: spacing.xl,
+      paddingBottom: spacing.xl,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    reflexionQLabel: {
+      ...typography.label,
+      color: theme.text3,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.sm,
+    },
+    reflexionQText: {
+      ...typography.body,
+      color: theme.text,
+      marginBottom: spacing.lg,
+      lineHeight: 26,
+    },
+    reflexionOption: {
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    reflexionOptionText: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
+    reflexionTFRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    reflexionTFChip: {
+      flex: 1,
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    reflexionTFText: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
+    reflexionAnswerBox: {
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+      minHeight: 80,
+    },
+    reflexionAnswerText: {
+      ...typography.bodyS,
+      color: theme.text2,
+      lineHeight: 22,
     },
   });
 }

@@ -19,6 +19,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 import { useTheme } from '../hooks/useTheme';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 type Theme = typeof colors.dark;
 
@@ -34,23 +37,23 @@ type Step = {
 const STEPS: Step[] = [
   {
     key: 'mentor',
-    title: 'Un recorrido por la mente humana.',
-    description: 'Descubre a los pensadores que definieron nuestra comprensión de la psicología, de Platón a Freud.',
+    title: '¿Por qué eres como eres?',
+    description: 'No es una pregunta nueva. Lleva siglos siendo la más difícil — y la más importante.',
   },
   {
     key: 'layers',
-    title: 'Tres profundidades.',
-    description: 'Cada autor tiene tres capas: Superficie, Concepto y Fondo. Avanza cuando estés listo.',
+    title: 'Hay quienes intentaron responderla.',
+    description: 'Filósofos, médicos, científicos. Cada uno\nvio algo que los demás no habían visto.\nEste es su recorrido.',
   },
   {
     key: 'path',
-    title: 'Un recorrido con memoria.',
-    description: 'Psylens recuerda dónde lo dejaste. Tu progreso es tuyo.',
+    title: 'Y el tuyo también.',
+    description: 'Conocerlos no es solo aprender historia. Sus ideas sobre la mente humana se vuelven una lente para entenderte mejor a ti mismo.',
   },
   {
     key: 'start',
     title: '¿Listo para empezar?',
-    description: 'Tu primer autor te espera. El recorrido comienza aquí.',
+    description: 'Tu primer autor te espera.\nEl recorrido comienza aquí.',
     isFinal: true,
   },
 ];
@@ -209,6 +212,76 @@ function StartIllustration({ il }: { il: IlStyles }) {
   );
 }
 
+function QuestionIllustration({ active }: { active: boolean }) {
+  const rotation = useRef(new Animated.Value(0)).current;
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+    const t = (toValue: number, duration: number) =>
+      Animated.timing(rotation, { toValue, duration, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    Animated.sequence([
+      t(-8, 120), t(8, 120), t(-5, 100), t(5, 100), t(-2, 80), t(0, 80),
+    ]).start();
+  }, []);
+
+  const rotate = rotation.interpolate({ inputRange: [-8, 8], outputRange: ['-8deg', '8deg'] });
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+      <Animated.View style={{ transform: [{ rotate }] }}>
+        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: '#1a1a1a', lineHeight: 140 }}>¿</Text>
+      </Animated.View>
+      <Animated.View style={{ transform: [{ rotate }] }}>
+        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: '#1a1a1a', lineHeight: 140 }}>?</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+function CirclesIllustration({ active }: { active: boolean }) {
+  const S = 150, T = 145;
+
+  const cx1 = useRef(new Animated.Value(S)).current;
+  const cy1 = useRef(new Animated.Value(T)).current;
+  const r1  = useRef(new Animated.Value(0)).current;
+  const cx2 = useRef(new Animated.Value(S)).current;
+  const cy2 = useRef(new Animated.Value(T)).current;
+  const r2  = useRef(new Animated.Value(0)).current;
+  const cx3 = useRef(new Animated.Value(S)).current;
+  const cy3 = useRef(new Animated.Value(T)).current;
+  const r3  = useRef(new Animated.Value(0)).current;
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!active || hasRun.current) return;
+    hasRun.current = true;
+    const cfg = { duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: false } as const;
+    Animated.parallel([
+      Animated.timing(cx1, { toValue: 150, ...cfg }),
+      Animated.timing(cy1, { toValue: 107, ...cfg }),
+      Animated.timing(r1,  { toValue: 63,  ...cfg }),
+      Animated.timing(cx2, { toValue: 115, ...cfg }),
+      Animated.timing(cy2, { toValue: 175, ...cfg }),
+      Animated.timing(r2,  { toValue: 63,  ...cfg }),
+      Animated.timing(cx3, { toValue: 185, ...cfg }),
+      Animated.timing(cy3, { toValue: 175, ...cfg }),
+      Animated.timing(r3,  { toValue: 63,  ...cfg }),
+    ]).start();
+  }, [active]);
+
+  return (
+    <View style={{ alignItems: 'center', width: '100%' }}>
+      <Svg width="200" height="180" viewBox="0 0 300 240">
+        <AnimatedCircle cx={cx1} cy={cy1} r={r1} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+        <AnimatedCircle cx={cx2} cy={cy2} r={r2} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+        <AnimatedCircle cx={cx3} cy={cy3} r={r3} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+      </Svg>
+    </View>
+  );
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
@@ -239,10 +312,7 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior="padding"
-    >
+    <View style={styles.container}>
       <ScrollView
         horizontal
         pagingEnabled
@@ -254,22 +324,26 @@ export default function OnboardingScreen() {
         {STEPS.map((step, index) => (
           <View key={step.key} style={[styles.page, { width }]}>
 
-            <View style={styles.illustrationArea}>
-              {index === 0 && <LogoIllustration il={il} active={currentPage === 0} />}
-              {index === 1 && <RingsIllustration il={il} active={currentPage === 1} />}
-              {index === 2 && <TimelineIllustration il={il} active={currentPage === 2} />}
-              {index === 3 && <StartIllustration il={il} />}
-            </View>
+            {!step.isFinal && (
+              <View style={styles.illustrationArea}>
+                {index === 0 && <QuestionIllustration active={currentPage === 0} />}
+                {index === 1 && <CirclesIllustration active={currentPage === 1} />}
+                {index === 2 && <LogoIllustration il={il} active={currentPage === 2} />}
+              </View>
+            )}
 
             {step.isFinal ? (
               <View style={{ flex: 1 }}>
+                <View style={{ marginTop: 110, height: 220, marginBottom: -20, alignItems: 'center' }}>
+                  <StartIllustration il={il} />
+                </View>
                 <ScrollView
                   style={{ flex: 1 }}
                   keyboardShouldPersistTaps="handled"
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={[
                     styles.textArea,
-                    { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
+                    { paddingBottom: insetBottom + spacing.lg, paddingTop: 0 },
                   ]}
                 >
                   <Text style={styles.titleFinal}>{step.title}</Text>
@@ -285,6 +359,8 @@ export default function OnboardingScreen() {
                     autoCapitalize="words"
                     returnKeyType="done"
                   />
+                </ScrollView>
+                <View style={{ position: 'absolute', bottom: 50, left: 36, right: 36, zIndex: 10 }}>
                   <TouchableOpacity
                     style={styles.button}
                     onPress={async () => {
@@ -304,13 +380,13 @@ export default function OnboardingScreen() {
                   >
                     <Text style={styles.buttonText}>Empezar</Text>
                   </TouchableOpacity>
-                </ScrollView>
+                </View>
               </View>
             ) : (
               <Animated.View
                 style={[
                   styles.textArea,
-                  { paddingBottom: insetBottom + spacing.xxxl + spacing.xxl },
+                  { paddingBottom: insetBottom + spacing.lg },
                   { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
                 ]}
               >
@@ -331,7 +407,7 @@ export default function OnboardingScreen() {
           <View key={i} style={[styles.dot, i === currentPage && styles.dotActive]} />
         ))}
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -348,15 +424,15 @@ function makeIlStyles(theme: Theme) {
       alignItems: 'center',
     },
     logoCircle: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      borderWidth: 2,
+      width: 71,
+      height: 71,
+      borderRadius: 36,
+      borderWidth: 7,
       borderColor: theme.text,
     },
     logoLine: {
-      width: 36,
-      height: 2,
+      width: 40,
+      height: 7,
       backgroundColor: theme.text,
     },
     wordmark: {
@@ -468,16 +544,21 @@ function makeStyles(theme: Theme) {
 
     page: {
       flex: 1,
+      justifyContent: 'center',
+      paddingTop: 60,
+      paddingBottom: 40,
     },
 
     illustrationArea: {
-      flex: 1,
+      height: 320,
       alignItems: 'center',
       justifyContent: 'center',
     },
 
     textArea: {
-      paddingHorizontal: spacing.xl,
+      paddingHorizontal: 40,
+      minHeight: 200,
+      justifyContent: 'flex-start',
     },
 
     title: {

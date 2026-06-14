@@ -13,9 +13,9 @@ import Svg, { Circle, Ellipse, Line } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors } from '../../constants/colors';
+import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
-import { authors, blocks, glossaryTerms } from '../../constants/data';
+import { authors, blocks, glossaryTerms, subBlocks } from '../../constants/data';
 import { useTheme } from '../../hooks/useTheme';
 
 type Theme = typeof colors.dark;
@@ -234,6 +234,12 @@ export default function DashboardScreen() {
   const blockPct          = Math.round((completedInBlock / activeBlock.authors.length) * 100);
   const isActiveComplete  = isComplete(progress, activeAuthor.id);
 
+  const activeSubBlock      = subBlocks.find(sb => sb.authorIds.includes(activeAuthor.id)) ?? null;
+  const subBlockVisibleIds  = activeSubBlock
+    ? activeSubBlock.authorIds.filter(id => activeBlock.authors.includes(id))
+    : [];
+  const completedInSubBlock = subBlockVisibleIds.filter(id => isComplete(progress, id)).length;
+
   // Streak chips
   const last7 = getLast7Days();
 
@@ -283,6 +289,48 @@ export default function DashboardScreen() {
             );
           })}
         </View>
+      </View>
+
+      {/* ── PROGRESO ────────────────────────────────────────────────────────── */}
+      <View style={styles.progressSection}>
+        {/* Bloque actual */}
+        <View>
+          <View style={styles.progressLabelRow}>
+            <Text style={styles.progressLabel}>{activeBlock.name}</Text>
+            <Text style={[styles.progressLabel, { color: blockColors[activeBlock.id]?.text ?? theme.text3 }]}>
+              {completedInBlock} de {activeBlock.authors.length}
+            </Text>
+          </View>
+          <View style={[styles.progressTrack, { height: 6, borderRadius: 3 }]}>
+            <View style={[styles.progressFill, {
+              height: 6,
+              borderRadius: 3,
+              width: `${activeBlock.authors.length > 0 ? Math.round((completedInBlock / activeBlock.authors.length) * 100) : 0}%`,
+              backgroundColor: blockColors[activeBlock.id]?.base ?? theme.green,
+            }]} />
+          </View>
+        </View>
+
+        {/* Etapa actual (sub-block) */}
+        {activeSubBlock && subBlockVisibleIds.length > 0 && (
+          <View>
+            <View style={styles.progressLabelRow}>
+              <Text style={styles.progressLabel}>{activeSubBlock.name}</Text>
+              <Text style={[styles.progressLabel, { color: blockColors[activeBlock.id]?.text ?? theme.text3 }]}>
+                {completedInSubBlock} de {subBlockVisibleIds.length}
+              </Text>
+            </View>
+            <View style={[styles.progressTrack, { height: 6, borderRadius: 3 }]}>
+              <View style={[styles.progressFill, {
+                height: 6,
+                borderRadius: 3,
+                width: `${Math.round((completedInSubBlock / subBlockVisibleIds.length) * 100)}%`,
+                backgroundColor: blockColors[activeBlock.id]?.base ?? theme.green,
+                opacity: 0.6,
+              }]} />
+            </View>
+          </View>
+        )}
       </View>
 
       {/* ── CONTINUAR ──────────────────────────────────────────────────────── */}
@@ -646,6 +694,29 @@ function makeStyles(theme: Theme) {
     nextDates: {
       ...typography.bodyS,
       color: theme.text3,
+    },
+
+    // Progress bars
+    progressSection: {
+      paddingVertical: 12,
+      gap: 16,
+      marginBottom: spacing.xxl,
+    },
+    progressLabelRow: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      marginBottom: 4,
+    },
+    progressLabel: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
+    progressTrack: {
+      backgroundColor: theme.bg3,
+      overflow: 'hidden' as const,
+    },
+    progressFill: {
+      // height, borderRadius, width, backgroundColor set inline per bar
     },
   });
 }

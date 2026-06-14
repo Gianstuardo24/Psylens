@@ -130,12 +130,16 @@ function computeAuthorState(
 function AuthorCard({
   author,
   state,
+  blockBaseColor,
 }: {
   author: typeof authors[0];
   state: AuthorState;
+  blockBaseColor?: string;
 }) {
   const { theme } = useTheme();
   const ac = useMemo(() => makeAcStyles(theme), [theme]);
+  const cardBorderColor     = blockBaseColor ? blockBaseColor + '33' : undefined;
+  const portraitBorderColor = blockBaseColor ? blockBaseColor + '80' : undefined;
 
   const portrait     = PORTRAITS[author.id] ?? null;
   const isDual       = author.id === 'heraclito-democrito';
@@ -146,6 +150,7 @@ function AuthorCard({
     <View
       style={[
         ac.card,
+        cardBorderColor ? { borderColor: cardBorderColor } : null,
         state === 'active'  && ac.cardActive,
         state === 'done'    && ac.cardDone,
         state === 'locked'  && ac.cardLocked,
@@ -171,7 +176,7 @@ function AuthorCard({
             </View>
           </View>
         ) : isIntro ? (
-          <View style={[ac.portrait, { borderWidth: 2, borderColor: '#0f6e56' }]}>
+          <View style={[ac.portrait, { borderWidth: 2, borderColor: portraitBorderColor ?? '#0f6e56' }]}>
             {author.id === 'intro-1' && (
               <Svg width={38} height={38} viewBox="0 0 120 120">
                 <Ellipse cx="60" cy="60" rx="50" ry="28" stroke="#0f6e56" strokeWidth="2" fill="none" />
@@ -237,8 +242,8 @@ function AuthorCard({
             <Text style={ac.badgeSoonText}>Próximo</Text>
           </View>
         ) : state === 'active' ? (
-          <View style={ac.badgePurple}>
-            <Text style={ac.badgePurpleText}>Activo</Text>
+          <View style={[ac.badgePurple, blockBaseColor ? { backgroundColor: blockBaseColor + '33' } : null]}>
+            <Text style={[ac.badgePurpleText, blockBaseColor ? { color: blockBaseColor } : null]}>Activo</Text>
           </View>
         ) : state === 'done' ? (
           <View style={ac.badgeGreen}>
@@ -266,9 +271,13 @@ function AuthorCard({
 function RevolutionCard({
   rev,
   state,
+  subBlockName,
+  blockBaseColor,
 }: {
   rev: typeof revolutionCards[0];
   state: AuthorState;
+  subBlockName: string;
+  blockBaseColor: string;
 }) {
   const { theme } = useTheme();
   const ac = useMemo(() => makeAcStyles(theme), [theme]);
@@ -283,11 +292,11 @@ function RevolutionCard({
       ]}
     >
       <View style={ac.leftCol}>
-        <View style={[ac.portrait, { borderWidth: 1.5, borderColor: state === 'locked' ? theme.text3 : '#0f6e56' }]}>
-          <Svg width={28} height={28} viewBox="0 0 44 44">
+        <View style={[ac.portrait, { borderWidth: 1.5, borderColor: state === 'locked' ? theme.text3 : blockBaseColor + '80' }]}>
+          <Svg width={22} height={22} viewBox="0 0 44 44">
             <Path
               d="M22 4 L40 22 L22 40 L4 22 Z"
-              stroke={state === 'locked' ? theme.text3 : '#0f6e56'}
+              stroke={state === 'locked' ? theme.text3 : blockBaseColor}
               strokeWidth="1.5"
               fill="none"
             />
@@ -296,8 +305,8 @@ function RevolutionCard({
       </View>
 
       <View style={ac.info}>
-        <Text style={[ac.name, state === 'locked' && ac.dimText]} numberOfLines={2}>
-          {rev.name}
+        <Text style={[ac.name, state === 'locked' && ac.dimText]} numberOfLines={1}>
+          {subBlockName}
         </Text>
         <Text style={[ac.subtitle, state === 'locked' && ac.dimText]}>
           Introducción
@@ -306,8 +315,8 @@ function RevolutionCard({
 
       <View style={ac.trailing}>
         {state === 'active' ? (
-          <View style={ac.badgePurple}>
-            <Text style={ac.badgePurpleText}>Activo</Text>
+          <View style={[ac.badgePurple, { backgroundColor: blockBaseColor + '33' }]}>
+            <Text style={[ac.badgePurpleText, { color: blockBaseColor }]}>Activo</Text>
           </View>
         ) : state === 'done' ? (
           <View style={ac.badgeGreen}>
@@ -482,7 +491,7 @@ function BlockNode({
 
       {/* ── Authors list (expanded) ───────────────────────── */}
       {isActive && isExpanded && (
-        <View style={bn.authorsList}>
+        <View style={[bn.authorsList, { backgroundColor: bc.light }]}>
           {blockSubBlocks.length > 0 ? (
             blockSubBlocks.map(sb => {
               const sbStatus    = getSubBlockStatus(sb.id, block, status, progress);
@@ -497,12 +506,13 @@ function BlockNode({
               return (
                 <View key={sb.id}>
                   <SubBlockHeader subBlock={sb} status={sbStatus} blockColor={bc} />
-                  {rev && <RevolutionCard rev={rev} state={revState} />}
+                  {rev && <RevolutionCard rev={rev} state={revState} subBlockName={sb.name} blockBaseColor={bc.base} />}
                   {sbAuthors.map((author, i) => (
                     <AuthorCard
                       key={author.id}
                       author={author}
                       state={computeAuthorState(author.id, i, sbAuthorIds, sbStatus, true, progress, sb.id)}
+                      blockBaseColor={bc.base}
                     />
                   ))}
                 </View>
@@ -518,6 +528,7 @@ function BlockNode({
                   block.id === 'intro',
                   progress,
                 )}
+                blockBaseColor={bc.base}
               />
             ))
           )}
@@ -629,7 +640,6 @@ function makeAcStyles(theme: Theme) {
     },
     cardDone: {
       borderWidth: 1,
-      borderColor: theme.green,
     },
     cardLocked: {
       opacity: 0.45,

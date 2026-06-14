@@ -25,6 +25,15 @@ const PROGRESS_KEY     = 'psylens_progress';
 const DAYS_VISITED_KEY = 'psylens_days_visited';
 const NAME_KEY         = 'psylens_user_name';
 const REMINDER_KEY     = 'psylens_reminder_enabled';
+const JOURNAL_PREFIX   = 'psylens_journal_';
+
+type JournalEntry = {
+  authorId:   string;
+  authorName: string;
+  question:   string;
+  answer:     string;
+  date:       string;
+};
 
 const USER_EMAIL = 'usuario@email.com';
 
@@ -109,6 +118,7 @@ export default function YoScreen() {
   const [reminderEnabled,  setReminderEnabled]  = useState(false);
   const [isPremium]                             = useState(false);
   const [refreshing,    setRefreshing]    = useState(false);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -122,6 +132,17 @@ export default function YoScreen() {
         if (rawDays) setDaysVisited(JSON.parse(rawDays));
         setUserName(rawName ?? '');
         setReminderEnabled(rawReminder === 'true');
+      });
+
+      AsyncStorage.getAllKeys().catch(() => [] as readonly string[]).then(async keys => {
+        const journalKeys = [...keys].filter(k => k.startsWith(JOURNAL_PREFIX));
+        if (!journalKeys.length) return;
+        const pairs = await AsyncStorage.multiGet(journalKeys).catch(() => [] as [string, string | null][]);
+        const entries = pairs
+          .map(([, val]) => (val ? JSON.parse(val) as JournalEntry : null))
+          .filter((e): e is JournalEntry => e !== null)
+          .sort((a, b) => b.date.localeCompare(a.date));
+        setJournalEntries(entries);
       });
     }, []),
   );
@@ -265,6 +286,11 @@ export default function YoScreen() {
               'psylens_unlocked',
               'psylens_days_visited',
             ]).catch(() => {});
+            const allKeys = await AsyncStorage.getAllKeys();
+            const journalKeys = allKeys.filter(k => k.startsWith('psylens_journal_'));
+            if (journalKeys.length > 0) {
+              await AsyncStorage.multiRemove(journalKeys);
+            }
             router.replace('/splash');
           },
         },
@@ -323,6 +349,30 @@ export default function YoScreen() {
           <Text style={styles.statValue}>{layersRead}</Text>
           <Text style={styles.statLabel}>{'capas\nleídas'}</Text>
         </View>
+      </View>
+
+      {/* ── Mi diario ──────────────────────────────────── */}
+      <Text style={styles.sectionLabel}>Mi diario</Text>
+      <View style={styles.card}>
+        {journalEntries.length === 0 ? (
+          <View style={styles.journalEmpty}>
+            <Text style={styles.journalEmptyText}>Tus reflexiones aparecerán aquí</Text>
+          </View>
+        ) : (
+          journalEntries.map((entry, i) => (
+            <View
+              key={entry.authorId}
+              style={[styles.journalEntry, i < journalEntries.length - 1 && styles.journalEntryBorder]}
+            >
+              <View style={styles.journalEntryHeader}>
+                <Text style={styles.journalAuthor}>{entry.authorName}</Text>
+                <Text style={styles.journalDate}>{entry.date}</Text>
+              </View>
+              <Text style={styles.journalQuestion}>{entry.question}</Text>
+              <Text style={styles.journalAnswer}>{entry.answer}</Text>
+            </View>
+          ))
+        )}
       </View>
 
       {/* ── Settings ───────────────────────────────────── */}
@@ -553,6 +603,54 @@ function makeStyles(theme: Theme) {
       borderColor: theme.border,
       overflow: 'hidden',
       marginBottom: spacing.lg,
+    },
+
+    // ── Journal
+    journalEmpty: {
+      paddingVertical: spacing.xxl,
+      paddingHorizontal: spacing.xl,
+      alignItems: 'center',
+    },
+    journalEmptyText: {
+      ...typography.bodyS,
+      color: theme.text3,
+      textAlign: 'center',
+    },
+    journalEntry: {
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xl,
+    },
+    journalEntryBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    journalEntryHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      marginBottom: spacing.xs,
+    },
+    journalAuthor: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+    },
+    journalDate: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
+    journalQuestion: {
+      ...typography.bodyS,
+      color: theme.text2,
+      fontStyle: 'italic',
+      marginBottom: spacing.sm,
+      lineHeight: 20,
+    },
+    journalAnswer: {
+      ...typography.bodyS,
+      color: theme.text,
+      lineHeight: 22,
     },
 
     // ── Version note

@@ -15,15 +15,26 @@ const SPLASH_DURATION = 2500;
 
 export default function SplashScreen() {
   const { theme } = useTheme();
-  const scale = useRef(new Animated.Value(0.6)).current;
+  const scaleAnim = useRef(new Animated.Value(0.88)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(scale, {
-      toValue: 1.0,
-      duration: 2400,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 1800,
+        delay: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 1200,
+        delay: 200,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     async function navigate() {
       const flag = await AsyncStorage.getItem(ONBOARDING_KEY).catch(() => null);
@@ -37,7 +48,7 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{ transform: [{ scale }], alignItems: 'center' }}>
+      <Animated.View style={{ opacity: opacityAnim, transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
         <Logo size={LOGO_SIZE} color={theme.text} />
         <Text style={styles.wordmark}>Psylens</Text>
         <Text style={styles.tagline}>La lente que afina tu visión del ser humano.</Text>
