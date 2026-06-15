@@ -65,7 +65,7 @@ type IlStyles = ReturnType<typeof makeIlStyles>;
 // Screen 1: logo assembles — right circle slides from overlap to final position,
 // then the connecting line fades in.
 function LogoIllustration({ il, active }: { il: IlStyles; active: boolean }) {
-  const rightX = useRef(new Animated.Value(-100)).current;
+  const rightX = useRef(new Animated.Value(-111)).current;
   const lineOp = useRef(new Animated.Value(0)).current;
   const hasRun = useRef(false);
 
@@ -213,6 +213,8 @@ function StartIllustration({ il }: { il: IlStyles }) {
 }
 
 function QuestionIllustration({ active }: { active: boolean }) {
+  const { isDark } = useTheme();
+  const questionColor = isDark ? '#F5F0E8' : '#1a1a1a';
   const rotation = useRef(new Animated.Value(0)).current;
   const hasRun = useRef(false);
 
@@ -222,6 +224,7 @@ function QuestionIllustration({ active }: { active: boolean }) {
     const t = (toValue: number, duration: number) =>
       Animated.timing(rotation, { toValue, duration, easing: Easing.out(Easing.quad), useNativeDriver: true });
     Animated.sequence([
+      Animated.delay(600),
       t(-8, 120), t(8, 120), t(-5, 100), t(5, 100), t(-2, 80), t(0, 80),
     ]).start();
   }, []);
@@ -231,17 +234,17 @@ function QuestionIllustration({ active }: { active: boolean }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
       <Animated.View style={{ transform: [{ rotate }] }}>
-        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: '#1a1a1a', lineHeight: 140 }}>¿</Text>
+        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: questionColor, lineHeight: 140 }}>¿</Text>
       </Animated.View>
       <Animated.View style={{ transform: [{ rotate }] }}>
-        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: '#1a1a1a', lineHeight: 140 }}>?</Text>
+        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: questionColor, lineHeight: 140 }}>?</Text>
       </Animated.View>
     </View>
   );
 }
 
 function CirclesIllustration({ active }: { active: boolean }) {
-  const S = 150, T = 145;
+  const S = 150, T = 152;
 
   const cx1 = useRef(new Animated.Value(S)).current;
   const cy1 = useRef(new Animated.Value(T)).current;
@@ -252,32 +255,39 @@ function CirclesIllustration({ active }: { active: boolean }) {
   const cx3 = useRef(new Animated.Value(S)).current;
   const cy3 = useRef(new Animated.Value(T)).current;
   const r3  = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
   const hasRun = useRef(false);
 
   useEffect(() => {
     if (!active || hasRun.current) return;
     hasRun.current = true;
     const cfg = { duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: false } as const;
-    Animated.parallel([
-      Animated.timing(cx1, { toValue: 150, ...cfg }),
-      Animated.timing(cy1, { toValue: 107, ...cfg }),
-      Animated.timing(r1,  { toValue: 63,  ...cfg }),
-      Animated.timing(cx2, { toValue: 115, ...cfg }),
-      Animated.timing(cy2, { toValue: 175, ...cfg }),
-      Animated.timing(r2,  { toValue: 63,  ...cfg }),
-      Animated.timing(cx3, { toValue: 185, ...cfg }),
-      Animated.timing(cy3, { toValue: 175, ...cfg }),
-      Animated.timing(r3,  { toValue: 63,  ...cfg }),
+    Animated.sequence([
+      Animated.delay(600),
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: false }),
+        Animated.timing(cx1, { toValue: 150, ...cfg }),
+        Animated.timing(cy1, { toValue: 107, ...cfg }),
+        Animated.timing(r1,  { toValue: 63,  ...cfg }),
+        Animated.timing(cx2, { toValue: 115, ...cfg }),
+        Animated.timing(cy2, { toValue: 175, ...cfg }),
+        Animated.timing(r2,  { toValue: 63,  ...cfg }),
+        Animated.timing(cx3, { toValue: 185, ...cfg }),
+        Animated.timing(cy3, { toValue: 175, ...cfg }),
+        Animated.timing(r3,  { toValue: 63,  ...cfg }),
+      ]),
     ]).start();
   }, [active]);
 
   return (
     <View style={{ alignItems: 'center', width: '100%' }}>
-      <Svg width="200" height="180" viewBox="0 0 300 240">
-        <AnimatedCircle cx={cx1} cy={cy1} r={r1} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
-        <AnimatedCircle cx={cx2} cy={cy2} r={r2} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
-        <AnimatedCircle cx={cx3} cy={cy3} r={r3} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
-      </Svg>
+      <Animated.View style={{ opacity }}>
+        <Svg width="200" height="180" viewBox="0 0 300 240">
+          <AnimatedCircle cx={cx1} cy={cy1} r={r1} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+          <AnimatedCircle cx={cx2} cy={cy2} r={r2} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+          <AnimatedCircle cx={cx3} cy={cy3} r={r3} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+        </Svg>
+      </Animated.View>
     </View>
   );
 }

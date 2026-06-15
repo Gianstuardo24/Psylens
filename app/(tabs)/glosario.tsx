@@ -21,9 +21,19 @@ import { useTheme } from '../../hooks/useTheme';
 
 type Theme = typeof colors.dark;
 
-const PROGRESS_KEY = 'psylens_progress';
+const PROGRESS_KEY   = 'psylens_progress';
+const JOURNAL_PREFIX = 'psylens_journal_';
+
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
+
+type JournalEntry = {
+  authorId:   string;
+  authorName: string;
+  question:   string;
+  answer:     string;
+  date:       string;
+};
 
 function isComplete(prog: ProgressMap, authorId: string): boolean {
   const p = prog[authorId];
@@ -254,16 +264,29 @@ export default function GlosarioScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
 
-  const [progress,     setProgress]     = useState<ProgressMap>({});
-  const [query,        setQuery]        = useState('');
-  const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
-  const [sheetVisible, setSheetVisible] = useState(false);
+  const [activeTab,      setActiveTab]      = useState<'glosario' | 'diario'>('glosario');
+  const [progress,       setProgress]       = useState<ProgressMap>({});
+  const [query,          setQuery]          = useState('');
+  const [selectedTerm,   setSelectedTerm]   = useState<Term | null>(null);
+  const [sheetVisible,   setSheetVisible]   = useState(false);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       AsyncStorage.getItem(PROGRESS_KEY)
         .then(raw => { if (raw) setProgress(JSON.parse(raw)); })
         .catch(() => {});
+
+      AsyncStorage.getAllKeys().catch(() => [] as readonly string[]).then(async keys => {
+        const journalKeys = [...keys].filter(k => k.startsWith(JOURNAL_PREFIX));
+        if (!journalKeys.length) { setJournalEntries([]); return; }
+        const pairs = await AsyncStorage.multiGet(journalKeys).catch(() => [] as [string, string | null][]);
+        const entries = pairs
+          .map(([, val]) => (val ? JSON.parse(val) as JournalEntry : null))
+          .filter((e): e is JournalEntry => e !== null)
+          .sort((a, b) => b.date.localeCompare(a.date));
+        setJournalEntries(entries);
+      });
     }, []),
   );
 
@@ -303,65 +326,109 @@ export default function GlosarioScreen() {
         <Text style={styles.subtitle}>{unlocked.length} {unlocked.length === 1 ? 'término' : 'términos'} desbloqueados</Text>
       </View>
 
-      {/* ── Search bar ─────────────────────────────────── */}
-      <View style={styles.searchWrap}>
-        <View style={styles.searchBox}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar…"
-            placeholderTextColor={theme.text3}
-            value={query}
-            onChangeText={setQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-            clearButtonMode="never"
-          />
-          {query.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setQuery('')}
-              hitSlop={12}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.clearBtn}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+      {/* ── Tab bar ────────────────────────────────────── */}
+      <View style={styles.tabBar}>
+        {(['glosario', 'diario'] as const).map(tab => (
+          <TouchableOpacity
+            key={tab}
+            style={styles.tabItem}
+            onPress={() => setActiveTab(tab)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabLabel, activeTab === tab && styles.tabLabelActive]}>
+              {tab === 'glosario' ? 'Glosario' : 'Diario'}
+            </Text>
+            {activeTab === tab && <View style={styles.tabUnderline} />}
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* ── List / Empty ───────────────────────────────── */}
-      {groups.length === 0 ? (
-        <EmptyState query={query} />
-      ) : (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {groups.map((group) => (
-            <View key={group.authorId} style={styles.section}>
-
-              {/* Section header */}
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionLabel}>
-                  {group.authorName.toUpperCase()}
-                </Text>
-                <View style={styles.sectionRule} />
-              </View>
-
-              {/* Terms */}
-              {group.terms.map((term) => (
-                <TermRow
-                  key={term.id}
-                  term={term}
-                  onPress={() => openSheet(term)}
-                />
-              ))}
-
+      {/* ── Glosario tab ─────────────────────────────────── */}
+      {activeTab === 'glosario' && (
+        <>
+          <View style={styles.searchWrap}>
+            <View style={styles.searchBox}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Buscar…"
+                placeholderTextColor={theme.text3}
+                value={query}
+                onChangeText={setQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
+                clearButtonMode="never"
+              />
+              {query.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setQuery('')}
+                  hitSlop={12}
+                  activeOpacity={0.6}
+                >
+                  <Text style={styles.clearBtn}>✕</Text>
+                </TouchableOpacity>
+              )}
             </View>
-          ))}
-        </ScrollView>
+          </View>
+
+          {groups.length === 0 ? (
+            <EmptyState query={query} />
+          ) : (
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {groups.map((group) => (
+                <View key={group.authorId} style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionLabel}>
+                      {group.authorName.toUpperCase()}
+                    </Text>
+                    <View style={styles.sectionRule} />
+                  </View>
+                  {group.terms.map((term) => (
+                    <TermRow
+                      key={term.id}
+                      term={term}
+                      onPress={() => openSheet(term)}
+                    />
+                  ))}
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </>
+      )}
+
+      {/* ── Diario tab ───────────────────────────────────── */}
+      {activeTab === 'diario' && (
+        journalEntries.length === 0 ? (
+          <View style={styles.diaryEmpty}>
+            <Text style={styles.diaryEmptyText}>Tus reflexiones aparecerán aquí</Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.diaryScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {journalEntries.map((entry, i) => (
+              <View
+                key={entry.authorId}
+                style={[styles.journalEntry, i < journalEntries.length - 1 && styles.journalEntryBorder]}
+              >
+                <View style={styles.journalEntryHeader}>
+                  <Text style={styles.journalAuthor}>{entry.authorName}</Text>
+                  <Text style={styles.journalDate}>{entry.date}</Text>
+                </View>
+                <Text style={styles.journalQuestion}>{entry.question}</Text>
+                <Text style={styles.journalAnswer}>{entry.answer}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        )
       )}
 
       {/* ── BottomSheet ────────────────────────────────── */}
@@ -596,6 +663,87 @@ function makeStyles(theme: Theme) {
     scrollContent: {
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.xxxl,
+    },
+
+    // Tab bar
+    tabBar: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    tabItem: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+    },
+    tabLabel: {
+      ...typography.body,
+      color: theme.text3,
+      fontWeight: '500',
+    },
+    tabLabelActive: {
+      color: theme.green,
+    },
+    tabUnderline: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 2,
+      backgroundColor: theme.green,
+    },
+
+    // Diario tab
+    diaryEmpty: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.xxl,
+    },
+    diaryEmptyText: {
+      ...typography.bodyS,
+      color: theme.text3,
+      textAlign: 'center',
+    },
+    diaryScrollContent: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xxxl,
+    },
+    journalEntry: {
+      paddingVertical: spacing.lg,
+    },
+    journalEntryBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    journalEntryHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      marginBottom: spacing.xs,
+    },
+    journalAuthor: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+    },
+    journalDate: {
+      ...typography.bodyXS,
+      color: theme.text3,
+    },
+    journalQuestion: {
+      ...typography.bodyS,
+      color: theme.text2,
+      fontStyle: 'italic',
+      marginBottom: spacing.sm,
+      lineHeight: 20,
+    },
+    journalAnswer: {
+      ...typography.bodyS,
+      color: theme.text,
+      lineHeight: 22,
     },
 
     // Author section

@@ -9,32 +9,30 @@ import { useTheme } from '../hooks/useTheme';
 
 type Theme = typeof colors.dark;
 
-const LOGO_SIZE       = 126;
+const LOGO_SIZE       = 151;
 const ONBOARDING_KEY  = 'psylens_onboarding_done';
 const SPLASH_DURATION = 2500;
 
 export default function SplashScreen() {
   const { theme } = useTheme();
-  const scaleAnim = useRef(new Animated.Value(0.88)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const loadingAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 1800,
-        delay: 200,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 1200,
-        delay: 200,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(loadingAnim, {
+      toValue: 1,
+      duration: 2300,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+
+    Animated.timing(opacityAnim, {
+      toValue: 1,
+      duration: 1200,
+      delay: 200,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
 
     async function navigate() {
       const flag = await AsyncStorage.getItem(ONBOARDING_KEY).catch(() => null);
@@ -48,11 +46,24 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{ opacity: opacityAnim, transform: [{ scale: scaleAnim }], alignItems: 'center' }}>
-        <Logo size={LOGO_SIZE} color={theme.text} />
+      <Animated.View style={{ opacity: opacityAnim, alignItems: 'center', paddingHorizontal: 32 }}>
+        <Logo size={LOGO_SIZE} color={theme.text} strokeWidth={5.5} />
         <Text style={styles.wordmark}>Psylens</Text>
         <Text style={styles.tagline}>La lente que afina tu visión del ser humano.</Text>
       </Animated.View>
+      <View style={styles.loadingTrack}>
+        <Animated.View
+          style={[
+            styles.loadingBar,
+            {
+              width: loadingAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+            },
+          ]}
+        />
+      </View>
     </View>
   );
 }
@@ -73,10 +84,22 @@ function makeStyles(theme: Theme) {
     },
     tagline: {
       ...typography.bodyS,
-      fontSize: 18,
+      fontSize: 16,
       color: theme.text3,
       marginTop: spacing.md,
       fontStyle: 'italic',
+    },
+    loadingTrack: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 2,
+      backgroundColor: 'transparent',
+    },
+    loadingBar: {
+      height: 2,
+      backgroundColor: '#0F6E56',
     },
   });
 }

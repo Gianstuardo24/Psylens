@@ -21,15 +21,10 @@ function EyeIllustration({ size = DEFAULT_SIZE }: { size?: number }) {
 
 function LensIllustration({ size = DEFAULT_SIZE }: { size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 120 120">
-      <Circle
-        cx="36" cy="60" r="28"
-        stroke={GREEN} strokeWidth="2" fill="none"
-      />
-      <Circle
-        cx="84" cy="60" r="28"
-        stroke={GREEN} strokeWidth="2" fill="none"
-      />
+    <Svg width={size} height={size} viewBox="0 0 22 14">
+      <Circle cx="5" cy="7" r="4" stroke={GREEN} strokeWidth="1.8" fill="none" />
+      <Circle cx="17" cy="7" r="4" stroke={GREEN} strokeWidth="1.8" fill="none" />
+      <Line x1="9" y1="7" x2="13" y2="7" stroke={GREEN} strokeWidth="1.8" />
     </Svg>
   );
 }

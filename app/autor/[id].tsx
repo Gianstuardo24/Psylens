@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { colors } from '../../constants/colors';
+import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -125,7 +125,7 @@ function HighlightedText({
 export default function AutorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>('surface');
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
   const [progress,          setProgress]          = useState<ProgressMap>({});
@@ -377,6 +377,7 @@ export default function AutorScreen() {
     );
   }
 
+  const tabBg          = isDark ? (blockColors[author.blockId]?.base ?? theme.green) + '1F' : theme.bg;
   const content        = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
   const PLACEHOLDER_TEXT = 'Este contenido estará disponible pronto.';
   const isPlaceholder  = !content?.text || content.text === PLACEHOLDER_TEXT;
@@ -571,7 +572,7 @@ export default function AutorScreen() {
       </View>
 
       {/* Tab bar */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: tabBg }]}>
         {activeTabs.map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -747,7 +748,7 @@ export default function AutorScreen() {
               </View>
             ) : isIntroAuthor ? (
               <View style={styles.celebIntroCircle}>
-                <IntroIllustration authorId={author.id} size={96} />
+                <IntroIllustration authorId={author.id} size={80} />
               </View>
             ) : (
               <View style={styles.celebCircle}>
@@ -1320,6 +1321,7 @@ function makeStyles(theme: Theme) {
       marginBottom: spacing.xl,
       borderWidth: 2,
       borderColor: theme.green,
+      overflow: 'hidden',
     },
     celebPortrait: {
       width: 96,

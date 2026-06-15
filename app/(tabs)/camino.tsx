@@ -409,9 +409,11 @@ function BlockNode({
   unlocked: string[];
   isPremium: boolean;
 }) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const bn = useMemo(() => makeBnStyles(theme), [theme]);
   const bc = blockColors[block.id] ?? blockColors['intro'];
+  const headerBg = isDark ? bc.base + '26' : bc.light;
+  const listBg   = isDark ? theme.bg2      : bc.light;
 
   const status   = getBlockStatus(block, isPremium, progress);
   const isActive = status === 'active';
@@ -433,7 +435,7 @@ function BlockNode({
 
       {/* ── Block header ──────────────────────────────────── */}
       <TouchableOpacity
-        style={[bn.header, { backgroundColor: bc.light }]}
+        style={[bn.header, { backgroundColor: headerBg }]}
         onPress={isLocked
           ? (block.id === 'b0'
               ? () => Alert.alert('Introducción requerida', 'Completa la Introducción para continuar.')
@@ -491,7 +493,7 @@ function BlockNode({
 
       {/* ── Authors list (expanded) ───────────────────────── */}
       {isActive && isExpanded && (
-        <View style={[bn.authorsList, { backgroundColor: bc.light }]}>
+        <View style={[bn.authorsList, { backgroundColor: listBg }]}>
           {blockSubBlocks.length > 0 ? (
             blockSubBlocks.map(sb => {
               const sbStatus    = getSubBlockStatus(sb.id, block, status, progress);
@@ -785,8 +787,8 @@ function makeBnStyles(theme: Theme) {
     },
 
     icon: {
-      width: 44,
-      height: 44,
+      width: 48,
+      height: 48,
       borderRadius: radius.md,
       backgroundColor: theme.bg3,
       alignItems: 'center',

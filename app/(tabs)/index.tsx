@@ -8,14 +8,19 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Dimensions,
 } from 'react-native';
-import Svg, { Circle, Ellipse, Line } from 'react-native-svg';
+
+const SCREEN_WIDTH    = Dimensions.get('window').width;
+const CARD_WIDTH      = SCREEN_WIDTH - 32;
+const TITLE_MAX_WIDTH = CARD_WIDTH * 0.58;
+import Svg, { Circle, Ellipse, Line, Path } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
-import { authors, blocks, glossaryTerms, subBlocks } from '../../constants/data';
+import { authors, blocks, glossaryTerms, subBlocks, revolutionCards } from '../../constants/data';
 import { useTheme } from '../../hooks/useTheme';
 
 type Theme = typeof colors.dark;
@@ -34,6 +39,66 @@ type ProgressMap   = Record<string, LayerProgress>;
 function isComplete(prog: ProgressMap, authorId: string): boolean {
   const p = prog[authorId];
   return !!(p?.surface && p?.concept && p?.fondo);
+}
+
+// Combined entry sequence matching Camino screen order
+type CEntry =
+  | { type: 'author';     data: typeof authors[0] }
+  | { type: 'revolution'; data: typeof revolutionCards[0] };
+
+const _authorById    = Object.fromEntries(authors.map(a => [a.id, a]));
+const _revBySubBlock = Object.fromEntries(revolutionCards.map(r => [r.subBlockId, r]));
+
+function buildAllEntries(): CEntry[] {
+  const result: CEntry[] = [];
+  for (const block of blocks) {
+    const blockAuthorSet  = new Set(block.authors);
+    const blockSubBlocks  = subBlocks.filter(sb => sb.blockId === block.id);
+    if (blockSubBlocks.length > 0) {
+      for (const sb of blockSubBlocks) {
+        const rev = _revBySubBlock[sb.id];
+        if (rev) result.push({ type: 'revolution', data: rev });
+        for (const id of sb.authorIds) {
+          if (blockAuthorSet.has(id) && _authorById[id]) {
+            result.push({ type: 'author', data: _authorById[id] });
+          }
+        }
+      }
+    } else {
+      for (const id of block.authors) {
+        if (_authorById[id]) result.push({ type: 'author', data: _authorById[id] });
+      }
+    }
+  }
+  return result;
+}
+
+const ALL_ENTRIES: CEntry[] = buildAllEntries();
+
+function isEntryDone(e: CEntry, prog: ProgressMap): boolean {
+  return e.type === 'author'
+    ? isComplete(prog, e.data.id)
+    : !!prog[e.data.id]?.concept;
+}
+
+function formatTitle(id: string, name: string): string {
+  const titles: Record<string, string> = {
+    'intro-1': 'El origen de\nla pregunta',
+    'intro-2': 'Qué es y qué no\nes la psicología',
+    'intro-3': 'Por qué este\ncamino tiene\neste orden',
+    'intro-4': 'Así funciona\ncada capa',
+    'rev-0a': '¿Qué somos si\nno somos dioses?',
+    'rev-0b': 'La mente tiene\npartes — y no siempre\nse ponen de acuerdo',
+    'rev-0c': 'Pensar no es\nsuficiente para\nentenderse',
+    'rev-0d': 'Algo nos mueve\nantes de que\nlo decidamos',
+    'rev-1a': 'Por primera vez,\nla mente entra\nal laboratorio',
+    'rev-1b': 'Si no puedes\nverlo, no puedes\nestudiarlo',
+    'schopenhauer': 'Arthur\nSchopenhauer',
+    'helenisticas': 'Las filosofías\nhelenísticas',
+    'heraclito-democrito': 'Los presocráticos',
+    'ebbinghaus': 'Hermann\nEbbinghaus',
+  };
+  return titles[id] ?? name;
 }
 
 function getGreeting(): string {
@@ -59,12 +124,17 @@ function formattedDate(): string {
   });
 }
 
-function getLast7Days(): { iso: string; label: string }[] {
+function getCurrentWeekDays(): { iso: string; label: string }[] {
   const DOW = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
+  const today = new Date();
+  const dow = today.getDay(); // 0=Sun, 1=Mon … 6=Sat
+  const offsetToMonday = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + offsetToMonday);
   const result = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
     result.push({ iso: d.toISOString().slice(0, 10), label: DOW[d.getDay()] });
   }
   return result;
@@ -212,17 +282,22 @@ export default function DashboardScreen() {
 
   // ── Derived data ─────────────────────────────────────────────────────────────
 
-  // Active = first incomplete author; fall back to last if all done
-  const activeIdx    = authors.findIndex(a => !isComplete(progress, a.id));
-  const activeAuthor = activeIdx >= 0 ? authors[activeIdx] : authors[authors.length - 1];
-  const activeBlock  = blocks.find(b => b.id === activeAuthor.blockId)!;
-  const activeProg   = progress[activeAuthor.id] ?? {};
-  const doneLayers   = LAYERS.filter(l => activeProg[l.key]).length;
-  const currentLayer = Math.min(doneLayers + 1, 3);
+  // Active = first incomplete entry (author or rev card); fall back to last
+  const activeEntryIdx = ALL_ENTRIES.findIndex(e => !isEntryDone(e, progress));
+  const activeEntry    = activeEntryIdx >= 0 ? ALL_ENTRIES[activeEntryIdx] : ALL_ENTRIES[ALL_ENTRIES.length - 1];
+  const activeRevCard  = activeEntry.type === 'revolution' ? activeEntry.data : null;
+  const activeAuthor   = activeEntry.type === 'author'     ? activeEntry.data : null;
 
-  // Next = the author right after the active one
-  const nextAuthor = activeIdx >= 0 && activeIdx < authors.length - 1
-    ? authors[activeIdx + 1] : null;
+  const activeBlock  = blocks.find(b => b.id === activeEntry.data.blockId)!;
+  const activeProg   = activeAuthor ? (progress[activeAuthor.id] ?? {}) : {};
+  const isTwoLayer   = activeAuthor?.layerType === 'two';
+  const doneLayers   = LAYERS.filter(l => activeProg[l.key]).length;
+  const currentLayer = Math.min(doneLayers + 1, isTwoLayer ? 2 : 3);
+
+  // Next = entry right after active; only show "Próximo" if it's an author
+  const nextEntry  = activeEntryIdx >= 0 && activeEntryIdx < ALL_ENTRIES.length - 1
+    ? ALL_ENTRIES[activeEntryIdx + 1] : null;
+  const nextAuthor = nextEntry?.type === 'author' ? nextEntry.data : null;
   const nextBlock  = nextAuthor ? blocks.find(b => b.id === nextAuthor.blockId) ?? null : null;
 
   // Stats
@@ -232,16 +307,20 @@ export default function DashboardScreen() {
 
   const completedInBlock  = activeBlock.authors.filter(id => isComplete(progress, id)).length;
   const blockPct          = Math.round((completedInBlock / activeBlock.authors.length) * 100);
-  const isActiveComplete  = isComplete(progress, activeAuthor.id);
+  const isActiveComplete  = activeRevCard
+    ? !!progress[activeRevCard.id]?.concept
+    : isComplete(progress, activeAuthor!.id);
 
-  const activeSubBlock      = subBlocks.find(sb => sb.authorIds.includes(activeAuthor.id)) ?? null;
+  const activeSubBlock = activeRevCard
+    ? (subBlocks.find(sb => sb.id === activeRevCard.subBlockId) ?? null)
+    : (activeAuthor ? (subBlocks.find(sb => sb.authorIds.includes(activeAuthor.id)) ?? null) : null);
   const subBlockVisibleIds  = activeSubBlock
     ? activeSubBlock.authorIds.filter(id => activeBlock.authors.includes(id))
     : [];
   const completedInSubBlock = subBlockVisibleIds.filter(id => isComplete(progress, id)).length;
 
   // Streak chips
-  const last7 = getLast7Days();
+  const last7 = getCurrentWeekDays();
 
   const styles = useMemo(() => makeStyles(theme), [theme]);
 
@@ -338,36 +417,70 @@ export default function DashboardScreen() {
         <Text style={styles.sectionLabel}>Continuar</Text>
         <TouchableOpacity
           style={styles.continueCard}
-          onPress={() => router.push(`/autor/${activeAuthor.id}`)}
+          onPress={() => router.push(`/autor/${activeEntry.data.id}`)}
           activeOpacity={0.85}
         >
           <View style={styles.continuePortrait}>
-            <PortraitCircle authorId={activeAuthor.id} size={112} />
+            {activeRevCard ? (
+              <View style={{
+                width: 80, height: 80, borderRadius: 40,
+                borderWidth: 2, borderColor: blockColors[activeBlock.id]?.base ?? theme.green,
+                backgroundColor: theme.bg3,
+                alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Svg width={40} height={40} viewBox="0 0 44 44">
+                  <Path
+                    d="M22 4 L40 22 L22 40 L4 22 Z"
+                    stroke={blockColors[activeBlock.id]?.base ?? theme.green}
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+                </Svg>
+              </View>
+            ) : (
+              <PortraitCircle authorId={activeAuthor!.id} size={112} />
+            )}
           </View>
 
           <View style={styles.blockChip}>
             <Text style={styles.blockChipText}>{activeBlock.name}</Text>
           </View>
 
-          <Text style={styles.continueAuthorName}>{activeAuthor.name}</Text>
-          <Text style={styles.continueDates}>{activeAuthor.dates}</Text>
-
-          <View style={styles.layerRow}>
-            {LAYERS.map(({ key, label }) => {
-              const done = !!(activeProg[key]);
-              return (
-                <View key={key} style={[styles.layerChip, done && styles.layerChipDone]}>
-                  <Text style={[styles.layerChipText, done && styles.layerChipTextDone]}>
-                    {done ? `${label} ✓` : label}
-                  </Text>
-                </View>
-              );
-            })}
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.continueAuthorName, { maxWidth: '60%', flexWrap: 'wrap' }]}>
+              {formatTitle(activeEntry.data.id, activeRevCard ? activeRevCard.name : activeAuthor!.name)}
+            </Text>
+            {(activeRevCard ? activeRevCard.dates : activeAuthor!.dates)?.trim() ? (
+              <Text style={styles.continueDates}>
+                {activeRevCard ? activeRevCard.dates : activeAuthor!.dates}
+              </Text>
+            ) : null}
           </View>
 
-          <Text style={styles.layerCount}>
-            Capa {currentLayer} de {activeAuthor.id === 'intro-4' ? 3 : activeAuthor.id.startsWith('intro-') ? 2 : 3}
-          </Text>
+          <>
+            <View style={styles.layerRow}>
+              {((activeRevCard || isTwoLayer)
+                ? [{ key: 'surface' as const, label: 'Entrada' }, { key: 'concept' as const, label: 'Profundidad' }]
+                : LAYERS
+              ).map(({ key, label }) => {
+                const prog = activeRevCard ? (progress[activeRevCard.id] ?? {}) : activeProg;
+                const done = !!(prog[key]);
+                return (
+                  <View key={key} style={[styles.layerChip, done && styles.layerChipDone]}>
+                    <Text style={[styles.layerChipText, done && styles.layerChipTextDone]}>
+                      {done ? `${label} ✓` : label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            {!activeRevCard && (
+              <Text style={styles.layerCount}>
+                Capa {currentLayer} de {isTwoLayer ? 2 : 3}
+              </Text>
+            )}
+          </>
 
           <View style={styles.readButton}>
             <Text style={styles.readButtonText}>Seguir leyendo →</Text>
@@ -426,7 +539,7 @@ export default function DashboardScreen() {
             style={[styles.nextCard, { flexDirection: 'row', alignItems: 'center' }, !isActiveComplete && { opacity: 0.5 }]}
             onPress={isActiveComplete
               ? () => router.push(`/autor/${nextAuthor.id}`)
-              : () => Alert.alert('Autor bloqueado', `Completa a ${activeAuthor.name} primero para continuar`)
+              : () => Alert.alert('Autor bloqueado', `Completa ${activeRevCard ? 'la introducción' : activeAuthor?.name} primero para continuar`)
             }
             activeOpacity={0.85}
           >
@@ -519,14 +632,14 @@ function makeStyles(theme: Theme) {
       justifyContent: 'center',
     },
     streakChipDone: {
-      backgroundColor: theme.greenBg,
+      backgroundColor: theme.green,
     },
     streakLabel: {
       ...typography.label,
       color: theme.text3,
     },
     streakLabelDone: {
-      color: theme.green,
+      color: '#ffffff',
     },
 
     // Continuar card
@@ -535,7 +648,8 @@ function makeStyles(theme: Theme) {
       borderRadius: radius.xl,
       borderWidth: 1,
       borderColor: theme.border,
-      padding: spacing.lg,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: 16,
     },
     continuePortrait: {
       position: 'absolute',
@@ -562,7 +676,6 @@ function makeStyles(theme: Theme) {
       fontWeight: '700',
       fontFamily: 'PlayfairDisplay_700Bold',
       color: theme.text,
-      paddingRight: 130,
       marginBottom: spacing.xs,
     },
     continueDates: {
@@ -573,6 +686,7 @@ function makeStyles(theme: Theme) {
     layerRow: {
       flexDirection: 'row',
       gap: spacing.xs,
+      marginTop: 10,
       marginBottom: spacing.sm,
     },
     layerChip: {
