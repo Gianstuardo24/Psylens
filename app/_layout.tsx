@@ -16,7 +16,7 @@ SplashScreen.preventAutoHideAsync();
 // When the app is deep-linked directly to a screen, 'splash' sits behind it
 // so the Android back button doesn't exit the app unexpectedly.
 export const unstable_settings = {
-  initialRouteName: 'splash',
+  initialRouteName: '(tabs)',
 };
 
 function ThemedStack() {
@@ -27,6 +27,7 @@ function ThemedStack() {
       <Stack
         screenOptions={{
           headerShown: false,
+          gestureEnabled: false,
           contentStyle: { backgroundColor: theme.bg },
         }}
       >
@@ -48,7 +49,7 @@ function ThemedStack() {
         {/* Author detail — pushed from camino or dashboard, slides in from right */}
         <Stack.Screen
           name="autor/[id]"
-          options={{ animation: 'slide_from_right' }}
+          options={{ animation: 'slide_from_right', gestureEnabled: false }}
         />
       </Stack>
     </>

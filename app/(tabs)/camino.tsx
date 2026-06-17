@@ -413,7 +413,7 @@ function BlockNode({
   const bn = useMemo(() => makeBnStyles(theme), [theme]);
   const bc = blockColors[block.id] ?? blockColors['intro'];
   const headerBg = isDark ? bc.base + '26' : bc.light;
-  const listBg   = isDark ? theme.bg2      : bc.light;
+  const listBg   = isDark ? bc.base + '26' : bc.light;
 
   const status   = getBlockStatus(block, isPremium, progress);
   const isActive = status === 'active';
@@ -651,6 +651,7 @@ function makeAcStyles(theme: Theme) {
       width: 100,
       alignItems: 'center',
       justifyContent: 'center',
+      paddingLeft: 12,
     },
     leftColDual: {
       width: 120,

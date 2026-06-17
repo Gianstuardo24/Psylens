@@ -88,6 +88,10 @@ interface Term {
   authorId: string;
 }
 
+function stripAccents(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
 function HighlightedText({
   text,
   terms,
@@ -102,20 +106,44 @@ function HighlightedText({
   if (!terms.length) {
     return <Text style={styles.contentText}>{text}</Text>;
   }
-  const escaped = terms.map(t => t.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const pattern = new RegExp(`(${escaped.join('|')})`, 'gi');
-  const parts = text.split(pattern);
+
+  // Build the regex from accent-stripped term strings so that e.g. "noumeno"
+  // matches "nóumeno" and vice-versa. The 'g' flag is enough because
+  // stripAccents already lowercases everything.
+  const escaped = terms.map(t =>
+    stripAccents(t.term).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  );
+  const pattern = new RegExp(`(${escaped.join('|')})`, 'g');
+  const strippedText = stripAccents(text);
+
+  // NFC input → NFD-then-strip preserves 1:1 index correspondence with the
+  // original string, so we can slice `text` (with its accents) using the
+  // indices found in `strippedText`.
+  type Segment = { start: number; end: number; termId?: string };
+  const segments: Segment[] = [];
+  let cursor = 0;
+  let m: RegExpExecArray | null;
+
+  while ((m = pattern.exec(strippedText)) !== null) {
+    const strippedMatch = m[0];
+    const term = terms.find(t => stripAccents(t.term) === strippedMatch);
+    if (!term) continue;
+    if (m.index > cursor) segments.push({ start: cursor, end: m.index });
+    segments.push({ start: m.index, end: m.index + m[0].length, termId: term.id });
+    cursor = m.index + m[0].length;
+  }
+  if (cursor < text.length) segments.push({ start: cursor, end: text.length });
+
   return (
     <Text style={styles.contentText}>
-      {parts.map((part, i) => {
-        if (!part) return null;
-        const match = terms.find(t => t.term.toLowerCase() === part.toLowerCase());
-        return match ? (
-          <Text key={i} style={styles.termLink} onPress={() => onTermPress(match.id)}>
-            {part}
+      {segments.map((seg, i) => {
+        const slice = text.slice(seg.start, seg.end);
+        return seg.termId ? (
+          <Text key={i} style={styles.termLink} onPress={() => onTermPress(seg.termId!)}>
+            {slice}
           </Text>
         ) : (
-          part
+          slice
         );
       })}
     </Text>
@@ -146,8 +174,6 @@ export default function AutorScreen() {
   const [tfAnswered,     setTfAnswered]     = useState(false);
   const [tfWasCorrect,   setTfWasCorrect]   = useState(false);
   const [openAnswer,     setOpenAnswer]     = useState('');
-  const pendingBlockDone = useRef(false);
-  const pendingBlockDays = useRef(1);
 
   const [savedJournalEntry, setSavedJournalEntry] = useState<{
     authorId: string; authorName: string; question: string; answer: string; date: string;
@@ -172,9 +198,15 @@ export default function AutorScreen() {
   }, []);
 
   useEffect(() => {
-    AsyncStorage.getItem(`psylens_journal_${id}`)
-      .then(raw => setSavedJournalEntry(raw ? JSON.parse(raw) : null))
-      .catch(() => {});
+    Promise.all([
+      AsyncStorage.getItem(`psylens_journal_${id}`).catch(() => null),
+      AsyncStorage.getItem(`psylens_quiz_step_${id}`).catch(() => null),
+      AsyncStorage.getItem(`psylens_quiz_open_${id}`).catch(() => null),
+    ]).then(([rawJournal, rawStep, rawOpen]) => {
+      setSavedJournalEntry(rawJournal ? JSON.parse(rawJournal) : null);
+      if (rawStep !== null) setQuizStep(parseInt(rawStep, 10));
+      if (rawOpen) setOpenAnswer(rawOpen);
+    });
   }, [id]);
 
   useEffect(() => {
@@ -406,7 +438,7 @@ export default function AutorScreen() {
   const isContentLocked =
     !block.isFree && !isPremium && (activeTab === 'concept' || activeTab === 'fondo');
 
-  async function markAllDone() {
+  async function completeAuthor() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const updated: ProgressMap = {
       ...progress,
@@ -415,7 +447,6 @@ export default function AutorScreen() {
     setProgress(updated);
     await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(updated)).catch(() => {});
 
-    // Update streak — only increments once per calendar day
     const today = new Date().toISOString().slice(0, 10);
     const [rawStreak, lastActive] = await Promise.all([
       AsyncStorage.getItem(STREAK_KEY).catch(() => null),
@@ -430,7 +461,6 @@ export default function AutorScreen() {
       ]).catch(() => {});
     }
 
-    // Unlock the next destination for cross-block progression
     if (nextDest) {
       const raw      = await AsyncStorage.getItem(UNLOCK_KEY).catch(() => null);
       const unlocked: string[] = raw ? JSON.parse(raw) : [];
@@ -440,7 +470,6 @@ export default function AutorScreen() {
       }
     }
 
-    // Check if every author in the block is now complete
     const blockDone = block
       ? block.authors.every(aid =>
           aid === author!.id
@@ -461,11 +490,7 @@ export default function AutorScreen() {
         : 1;
     }
 
-    if (hasQuiz) {
-      pendingBlockDone.current = blockDone;
-      pendingBlockDays.current = days;
-      setShowQuiz(true);
-    } else if (blockDone) {
+    if (blockDone) {
       setBlockCompleteDays(days);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowBlockComplete(true);
@@ -473,6 +498,18 @@ export default function AutorScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       setShowCelebration(true);
     }
+  }
+
+  async function markAllDone() {
+    await completeAuthor();
+  }
+
+  async function dismissQuiz() {
+    await AsyncStorage.setItem(`psylens_quiz_step_${author!.id}`, String(quizStep)).catch(() => {});
+    if (openAnswer.trim()) {
+      await AsyncStorage.setItem(`psylens_quiz_open_${author!.id}`, openAnswer).catch(() => {});
+    }
+    setShowQuiz(false);
   }
 
   function navigateToNext() {
@@ -513,20 +550,17 @@ export default function AutorScreen() {
         })
       ).catch(() => {});
     }
+    await Promise.all([
+      AsyncStorage.removeItem(`psylens_quiz_step_${author!.id}`),
+      AsyncStorage.removeItem(`psylens_quiz_open_${author!.id}`),
+    ]).catch(() => {});
     setShowQuiz(false);
     setQuizStep(0);
     setSelectedOption(null);
     setTfAnswered(false);
     setTfWasCorrect(false);
     setOpenAnswer('');
-    if (pendingBlockDone.current) {
-      setBlockCompleteDays(pendingBlockDays.current);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setShowBlockComplete(true);
-    } else {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setShowCelebration(true);
-    }
+    await completeAuthor();
   }
 
   return (
@@ -716,9 +750,15 @@ export default function AutorScreen() {
             <Text style={styles.deeperButtonText}>Ir más profundo →</Text>
           </TouchableOpacity>
         ) : isLastTab && !isAuthorComplete ? (
-          <TouchableOpacity style={styles.readButton} onPress={markAllDone} activeOpacity={0.85}>
-            <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
-          </TouchableOpacity>
+          hasQuiz && !savedJournalEntry ? (
+            <TouchableOpacity style={styles.readButton} onPress={() => setShowQuiz(true)} activeOpacity={0.85}>
+              <Text style={styles.readButtonText}>Completar reflexión →</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.readButton} onPress={markAllDone} activeOpacity={0.85}>
+              <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
+            </TouchableOpacity>
+          )
         ) : (
           <>
             <TouchableOpacity style={[styles.readButton, styles.readButtonDone]} activeOpacity={1}>
@@ -782,8 +822,8 @@ export default function AutorScreen() {
 
       {/* Quiz modal */}
       <Modal visible={showQuiz} transparent statusBarTranslucent animationType="fade">
-        <View style={styles.quizOverlay}>
-          <View style={styles.quizCard}>
+        <TouchableOpacity style={styles.quizOverlay} activeOpacity={1} onPress={dismissQuiz}>
+          <TouchableOpacity activeOpacity={1} style={styles.quizCard} onPress={() => {}}>
             <Text style={styles.quizProgress}>Pregunta {quizStep + 1} de {authorQuiz?.length ?? 3}</Text>
 
             {currentQ?.type === 'multiple_choice' && (
@@ -857,8 +897,8 @@ export default function AutorScreen() {
                 </TouchableOpacity>
               </>
             )}
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* Reusable term bottom sheet */}

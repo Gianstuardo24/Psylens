@@ -632,6 +632,7 @@ function makeStyles(theme: Theme) {
     searchWrap: {
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.lg,
+      marginTop: spacing.lg,
     },
     searchBox: {
       flexDirection: 'row',
