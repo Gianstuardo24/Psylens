@@ -21,7 +21,8 @@ import { typography, spacing, radius } from '../constants/typography';
 import { useTheme } from '../hooks/useTheme';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedCircle  = Animated.createAnimatedComponent(Circle);
+const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
 
 type Theme = typeof colors.dark;
 
@@ -65,35 +66,39 @@ type IlStyles = ReturnType<typeof makeIlStyles>;
 // Screen 1: logo assembles — right circle slides from overlap to final position,
 // then the connecting line fades in.
 function LogoIllustration({ il, active }: { il: IlStyles; active: boolean }) {
-  const rightX = useRef(new Animated.Value(-111)).current;
-  const lineOp = useRef(new Animated.Value(0)).current;
-  const hasRun = useRef(false);
+  const rightX   = useRef(new Animated.Value(-111)).current;
+  const lineOp   = useRef(new Animated.Value(0)).current;
+  const leftOp   = useRef(new Animated.Value(0)).current;
+  const rightOp  = useRef(new Animated.Value(0)).current;
+  const hasRun   = useRef(false);
 
   useEffect(() => {
     if (!active || hasRun.current) return;
     hasRun.current = true;
     Animated.sequence([
-      Animated.delay(500),
-      Animated.timing(rightX, {
-        toValue: 0,
-        duration: 600,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(lineOp, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
+      Animated.delay(400),
+      Animated.timing(leftOp, { toValue: 1, duration: 600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.parallel([
+        Animated.timing(rightOp, { toValue: 1, duration: 1, useNativeDriver: true }),
+        Animated.timing(rightX, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(lineOp, { toValue: 1, duration: 300, useNativeDriver: true }),
     ]).start();
   }, [active]);
 
   return (
     <View style={il.logoWrap}>
       <View style={il.logoRow}>
-        <View style={il.logoCircle} />
+        <Animated.View style={{ opacity: leftOp }}>
+          <View style={il.logoCircle} />
+        </Animated.View>
         <Animated.View style={[il.logoLine, { opacity: lineOp }]} />
-        <Animated.View style={{ transform: [{ translateX: rightX }] }}>
+        <Animated.View style={{ opacity: rightOp, transform: [{ translateX: rightX }] }}>
           <View style={il.logoCircle} />
         </Animated.View>
       </View>
@@ -234,10 +239,10 @@ function QuestionIllustration({ active }: { active: boolean }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
       <Animated.View style={{ transform: [{ rotate }] }}>
-        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: questionColor, lineHeight: 140 }}>¿</Text>
+        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 135, color: questionColor, lineHeight: 140 }}>¿</Text>
       </Animated.View>
       <Animated.View style={{ transform: [{ rotate }] }}>
-        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 120, color: questionColor, lineHeight: 140 }}>?</Text>
+        <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 135, color: questionColor, lineHeight: 140 }}>?</Text>
       </Animated.View>
     </View>
   );
@@ -248,45 +253,58 @@ function CirclesIllustration({ active }: { active: boolean }) {
 
   const cx1 = useRef(new Animated.Value(S)).current;
   const cy1 = useRef(new Animated.Value(T)).current;
-  const r1  = useRef(new Animated.Value(0)).current;
+  const r1  = useRef(new Animated.Value(2)).current;
   const cx2 = useRef(new Animated.Value(S)).current;
   const cy2 = useRef(new Animated.Value(T)).current;
-  const r2  = useRef(new Animated.Value(0)).current;
+  const r2  = useRef(new Animated.Value(2)).current;
   const cx3 = useRef(new Animated.Value(S)).current;
   const cy3 = useRef(new Animated.Value(T)).current;
-  const r3  = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const hasRun = useRef(false);
+  const r3       = useRef(new Animated.Value(2)).current;
+  const opacity1 = useRef(new Animated.Value(0)).current;
+  const opacity2 = useRef(new Animated.Value(0)).current;
+  const opacity3   = useRef(new Animated.Value(0)).current;
+  const psiOpacity = useRef(new Animated.Value(0)).current;
+  const hasRun     = useRef(false);
 
   useEffect(() => {
     if (!active || hasRun.current) return;
     hasRun.current = true;
-    const cfg = { duration: 800, easing: Easing.out(Easing.cubic), useNativeDriver: false } as const;
+    const cfg = { duration: 400, easing: Easing.out(Easing.cubic), useNativeDriver: false } as const;
     Animated.sequence([
-      Animated.delay(600),
-      Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: false }),
-        Animated.timing(cx1, { toValue: 150, ...cfg }),
-        Animated.timing(cy1, { toValue: 107, ...cfg }),
-        Animated.timing(r1,  { toValue: 63,  ...cfg }),
-        Animated.timing(cx2, { toValue: 115, ...cfg }),
-        Animated.timing(cy2, { toValue: 175, ...cfg }),
-        Animated.timing(r2,  { toValue: 63,  ...cfg }),
-        Animated.timing(cx3, { toValue: 185, ...cfg }),
-        Animated.timing(cy3, { toValue: 175, ...cfg }),
-        Animated.timing(r3,  { toValue: 63,  ...cfg }),
+      Animated.delay(400),
+      Animated.stagger(600, [
+        Animated.parallel([
+          Animated.timing(opacity1, { toValue: 1, duration: 1, useNativeDriver: false }),
+          Animated.timing(cx1, { toValue: 150, ...cfg }),
+          Animated.timing(cy1, { toValue: 104, ...cfg }),
+          Animated.timing(r1,  { toValue: 83,  ...cfg }),
+        ]),
+        Animated.parallel([
+          Animated.timing(opacity2, { toValue: 1, duration: 1, useNativeDriver: false }),
+          Animated.timing(cx2, { toValue: 112, ...cfg }),
+          Animated.timing(cy2, { toValue: 178, ...cfg }),
+          Animated.timing(r2,  { toValue: 83,  ...cfg }),
+        ]),
+        Animated.parallel([
+          Animated.timing(opacity3, { toValue: 1, duration: 1, useNativeDriver: false }),
+          Animated.timing(cx3, { toValue: 188, ...cfg }),
+          Animated.timing(cy3, { toValue: 178, ...cfg }),
+          Animated.timing(r3,  { toValue: 83,  ...cfg }),
+        ]),
       ]),
+      Animated.timing(psiOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
     ]).start();
   }, [active]);
 
   return (
-    <View style={{ alignItems: 'center', width: '100%' }}>
-      <Animated.View style={{ opacity }}>
-        <Svg width="200" height="180" viewBox="0 0 300 240">
-          <AnimatedCircle cx={cx1} cy={cy1} r={r1} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
-          <AnimatedCircle cx={cx2} cy={cy2} r={r2} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
-          <AnimatedCircle cx={cx3} cy={cy3} r={r3} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
-        </Svg>
+    <View style={{ alignItems: 'center', width: '100%', position: 'relative' }}>
+      <Svg width="220" height="190" viewBox="0 0 320 280">
+        <AnimatedCircle cx={cx1} cy={cy1} r={r1} opacity={opacity1} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+        <AnimatedCircle cx={cx2} cy={cy2} r={r2} opacity={opacity2} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+        <AnimatedCircle cx={cx3} cy={cy3} r={r3} opacity={opacity3} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
+      </Svg>
+      <Animated.View style={{ position: 'absolute', top: 88, left: 0, right: 0, alignItems: 'center', marginLeft: -13, opacity: psiOpacity }}>
+        <Text style={{ fontFamily: 'Georgia', fontWeight: 'bold', fontSize: 34, color: '#1a1a1a' }}>Ψ</Text>
       </Animated.View>
     </View>
   );
@@ -303,18 +321,6 @@ export default function OnboardingScreen() {
 
   const il     = useMemo(() => makeIlStyles(theme), [theme]);
   const styles = useMemo(() => makeStyles(theme), [theme]);
-
-  const fadeAnim  = useRef(new Animated.Value(1)).current;
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    slideAnim.setValue(12);
-    Animated.parallel([
-      Animated.timing(fadeAnim,  { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
-    ]).start();
-  }, [currentPage]);
 
   function handleMomentumScrollEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
     const page = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -393,16 +399,15 @@ export default function OnboardingScreen() {
                 </View>
               </View>
             ) : (
-              <Animated.View
+              <View
                 style={[
                   styles.textArea,
                   { paddingBottom: insetBottom + spacing.lg },
-                  { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
                 ]}
               >
                 <Text style={styles.title}>{step.title}</Text>
                 <Text style={styles.description}>{step.description}</Text>
-              </Animated.View>
+              </View>
             )}
 
           </View>
