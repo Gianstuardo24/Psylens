@@ -584,11 +584,21 @@ export default function CaminoScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Camino</Text>
-        <Text style={styles.subtitle}>
-          {blocks.length} etapas · {totalAuthors} autores
-        </Text>
+      <View style={styles.headerRow}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Camino</Text>
+          <Text style={styles.subtitle}>
+            {blocks.length} etapas · {totalAuthors} autores
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.glossaryButton}
+          onPress={() => router.push('/glosario')}
+          activeOpacity={0.7}
+          hitSlop={8}
+        >
+          <Text style={styles.glossaryButtonText}>Aa</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Block list */}
@@ -952,8 +962,14 @@ function makeStyles(theme: Theme) {
       paddingHorizontal: spacing.xl,
       paddingBottom: spacing.xxxl,
     },
-    header: {
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
       marginBottom: spacing.xxl,
+    },
+    header: {
+      flex: 1,
     },
     title: {
       ...typography.h2,
@@ -963,6 +979,21 @@ function makeStyles(theme: Theme) {
       ...typography.bodyS,
       color: theme.text3,
       marginTop: spacing.xs,
+    },
+    glossaryButton: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: theme.border,
+      backgroundColor: theme.bg2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    glossaryButtonText: {
+      ...typography.body,
+      fontWeight: '700',
+      color: theme.text,
     },
   });
 }

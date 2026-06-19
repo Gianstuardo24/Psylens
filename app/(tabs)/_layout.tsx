@@ -8,10 +8,10 @@ type IonName = React.ComponentProps<typeof Ionicons>['name'];
 
 // Resolved icon pair per tab
 const ICONS: Record<string, { active: IonName; inactive: IonName }> = {
-  index:    { active: 'home',    inactive: 'home-outline' },
-  camino:   { active: 'map',     inactive: 'map-outline' },
-  glosario: { active: 'book',    inactive: 'book-outline' },
-  yo:       { active: 'person',  inactive: 'person-outline' },
+  index:   { active: 'home',    inactive: 'home-outline' },
+  camino:  { active: 'map',     inactive: 'map-outline' },
+  diario:  { active: 'book',    inactive: 'book-outline' },
+  yo:      { active: 'person',  inactive: 'person-outline' },
 };
 
 const ICON_SIZE = 24;
@@ -61,8 +61,8 @@ export default function TabLayout() {
         listeners={{ tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) }}
       />
       <Tabs.Screen
-        name="glosario"
-        options={{ title: 'Glosario', tabBarIcon: makeIcon('glosario') }}
+        name="diario"
+        options={{ title: 'Diario', tabBarIcon: makeIcon('diario') }}
         listeners={{ tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) }}
       />
       <Tabs.Screen

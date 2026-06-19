@@ -51,6 +51,12 @@ function ThemedStack() {
           name="autor/[id]"
           options={{ animation: 'slide_from_right', gestureEnabled: false }}
         />
+
+        {/* Glosario — pushed from Camino's "Aa" button, slides in from right */}
+        <Stack.Screen
+          name="glosario"
+          options={{ animation: 'slide_from_right', gestureEnabled: true }}
+        />
       </Stack>
     </>
   );

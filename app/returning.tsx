@@ -377,7 +377,7 @@ export default function ReturningScreen() {
         {justSaved && (
           <TouchableOpacity
             style={styles.viewDiaryButton}
-            onPress={() => router.push('/(tabs)/glosario?tab=diario')}
+            onPress={() => router.push('/(tabs)/diario?tab=diario')}
             activeOpacity={0.7}
           >
             <Text style={styles.viewDiaryButtonText}>Ver mi diario</Text>
