@@ -1490,3 +1490,67 @@ export const conceptThreads = [
   { from: 'descartes',           to: 'kant',         text: 'El cogito de Descartes es el punto de partida que Kant intentó superar con su giro copernicano.' },
   { from: 'kant',                to: 'schopenhauer', text: 'Schopenhauer tomó el noúmeno kantiano y lo convirtió en la Voluntad — una fuerza irracional que gobierna desde debajo de la conciencia.' },
 ];
+
+// ── Returning-user screens (app/returning.tsx) ───────────────────────────────
+// Ver docs/psylens_returning_screens.md para la lógica de selección diaria.
+export const returningContent = {
+  streakPhrases: [
+    { days: 2,  text: 'Llevas 2 días seguidos. El hábito está empezando.' },
+    { days: 3,  text: 'Tres días consecutivos. Ya hay un patrón.' },
+    { days: 5,  text: 'Cinco días seguidos. Eso no es suerte — es intención.' },
+    { days: 7,  text: 'Una semana completa. El recorrido ya es parte de tu rutina.' },
+    { days: 10, text: 'Diez días. Ya no es un intento — es un hábito.' },
+    { days: 14, text: 'Dos semanas seguidas. Muy pocos llegan hasta aquí.' },
+    { days: 21, text: 'Veintiún días. La ciencia dice que aquí es donde los hábitos se consolidan.' },
+    { days: 30, text: 'Un mes completo. Eso dice algo sobre ti.' },
+  ],
+
+  authorPhrases: {
+    'heraclito-democrito': 'Para Heráclito, no hubo un día en que dejaste de ser esa persona y empezaste a ser esta — fue pasando solo, despacio, sin que nadie lo notara.',
+    'hipocrates':          'Hipócrates entendía la diferencia: no es lo mismo decirle a alguien "esto te pasa porque eres así" que decirle "esto te pasa y podemos intentar entender por qué."',
+    'platon':               'Si alguna vez sentiste que "sabes lo que debes hacer" pero "no puedes evitar" hacer otra cosa, ya experimentaste lo que Platón describía en su idea del alma dividida.',
+    'aristoteles':          'Para Aristóteles, cada emoción lleva dentro una interpretación del mundo. ¿Qué te está diciendo la que sientes ahora mismo?',
+    'helenisticas':         'Para los escépticos como Pirrón, no se trataba de "no creer en nada" sino de no necesitar tener todas las respuestas para vivir tranquilo.',
+    'avicena':              'Avicena observó algo que la medicina tardaría siglos en aceptar: el cuerpo a veces expresa lo que la mente no puede nombrar.',
+    'descartes':            '¿Alguna vez descartaste algo que sentías con un "es solo psicológico"? Esa idea viene de Descartes — y la psicología todavía no ha terminado de cuestionarla.',
+    'spinoza':              'Para Spinoza, la única forma de transformar una emoción no era suprimirla, sino entenderla — ver de dónde viene, qué la produce.',
+    'kant':                 'Para Kant, la persona que crees ser hoy es una interpretación, no la verdad última sobre ti.',
+    'schopenhauer':         'Schopenhauer lo describía así: consigues lo que quieres y aparece un nuevo deseo. El alivio dura poco. Y luego vuelve el impulso.',
+    'darwin':               'Para Darwin, no somos como somos por capricho ni por destino. Somos como somos porque eso funcionó.',
+    'ebbinghaus':           'Ebbinghaus lo dejó claro: olvidar no es un fallo tuyo. Es el funcionamiento normal de la memoria.',
+    'fechner':              '¿Hay algo que antes notabas con claridad y que ahora ya no percibes — porque te acostumbraste a que estuviera ahí? Esa es la pregunta que Fechner pasó años intentando responder.',
+    'wundt':                '¿Qué está pasando dentro de ti mientras lees esto? Wundt fue el primero en creer que esa pregunta tenía respuesta.',
+    'james':                'James lo resumía así: a veces puedes actuar antes de sentirte listo.',
+    'thorndike':            'Para Thorndike, entender por qué repetimos ciertos hábitos no resuelve todo, pero cambia cómo te miras a ti mismo.',
+    'watson':               'Para Watson, entender a una persona no requería preguntarle qué sentía. Requería observar qué hacía.',
+    'skinner':              'Skinner lo planteaba así: tus hábitos, lo que evitas, cómo reaccionas — todo es el resultado de un historial de consecuencias que has vivido.',
+  } as Record<string, string>,
+
+  reflectionQuestions: {
+    'heraclito-democrito': '¿En qué has cambiado más en los últimos años?',
+    'hipocrates':          '¿Cuándo fue la última vez que tu cuerpo te dio una señal de que algo no estaba bien emocionalmente?',
+    'platon':               '¿En qué área de tu vida sientes más tensión entre lo que quieres y lo que crees que deberías hacer?',
+    'aristoteles':          '¿Hubo alguna vez que una emoción te dio información importante que tu razón no había notado?',
+    'helenisticas':         '¿Hay algo en tu vida que te genere malestar y que en realidad no depende de ti?',
+    'avicena':              '¿Recuerdas algún momento en que tu cuerpo expresó algo que tu mente no había podido nombrar todavía?',
+    'descartes':            '¿Hay algo que dabas por cierto y que en algún momento cuestionaste? ¿Qué pasó después?',
+    'spinoza':              '¿Hay alguna emoción que intentas ignorar pero que sigue apareciendo? ¿Qué crees que te está diciendo?',
+    'kant':                 '¿Hay algo de ti mismo que sientes que todavía no terminas de entender?',
+    'schopenhauer':         '¿Hay algo que repites en tu vida aunque una parte de ti sabe que no te conviene? ¿Qué crees que lo mueve?',
+    'darwin':               '¿Hay alguna reacción tuya que ahora entiendes mejor sabiendo que tiene una historia evolutiva?',
+    'ebbinghaus':           '¿Hay algo que aprendiste hace tiempo y que te sorprende haber olvidado? ¿O algo que recuerdas con mucha claridad sin saber por qué?',
+    'fechner':              '¿Hay algo cotidiano que dejaste de notar con el tiempo porque te acostumbraste?',
+    'wundt':                '¿Hay alguna experiencia tuya que, al intentar describirla con palabras, sientes que las palabras no alcanzan?',
+    'james':                '¿Alguna vez intentaste "vaciarte la cabeza" completamente? ¿Qué pasó?',
+    'thorndike':            '¿Hay algún hábito tuyo que ahora entiendes mejor sabiendo que aprendiste por las consecuencias que tuvo?',
+    'watson':               '¿Tienes algún miedo o reacción automática que crees que aprendiste en algún momento de tu vida?',
+    'skinner':              '¿Hay algún comportamiento tuyo que ahora entiendes mejor como el resultado de consecuencias pasadas?',
+  } as Record<string, string>,
+
+  progressPhrases: {
+    0: 'Completaste una etapa. El camino continúa.',
+    1: 'Te falta 1 autor para completar esta etapa.',
+    2: 'Te faltan 2 autores para completar esta etapa.',
+    3: 'Te faltan 3 autores. Estás cerca.',
+  } as Record<number, string>,
+};

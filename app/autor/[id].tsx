@@ -48,6 +48,8 @@ const BLOCK_STARTED_KEY  = 'psylens_block_started';
 const PREMIUM_KEY        = 'psylens_is_premium';
 const STREAK_KEY         = 'psylens_streak';
 const LAST_ACTIVE_KEY    = 'psylens_last_active';
+const LAST_COMPLETED_AUTHOR_KEY = 'psylens_last_completed_author';
+const LAST_COMPLETED_DATE_KEY   = 'psylens_last_completed_date';
 
 function diffDays(isoEarlier: string, isoLater: string): number {
   const a = new Date(isoEarlier + 'T00:00:00').getTime();
@@ -460,6 +462,11 @@ export default function AutorScreen() {
         AsyncStorage.setItem(LAST_ACTIVE_KEY, today),
       ]).catch(() => {});
     }
+
+    await Promise.all([
+      AsyncStorage.setItem(LAST_COMPLETED_AUTHOR_KEY, author!.id),
+      AsyncStorage.setItem(LAST_COMPLETED_DATE_KEY, today),
+    ]).catch(() => {});
 
     if (nextDest) {
       const raw      = await AsyncStorage.getItem(UNLOCK_KEY).catch(() => null);
