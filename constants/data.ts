@@ -1491,6 +1491,104 @@ export const conceptThreads = [
   { from: 'kant',                to: 'schopenhauer', text: 'Schopenhauer tomó el noúmeno kantiano y lo convirtió en la Voluntad — una fuerza irracional que gobierna desde debajo de la conciencia.' },
 ];
 
+// ── Banco de frases para "Guardar en mi diario" ──────────────────────────────
+// Ver docs/psylens_savable_quotes.md. Frases en forma limpia, sin repetir el
+// nombre del autor — el prefijo "Para [Nombre], " se agrega programáticamente
+// solo en el returning screen (Tipo 2/3); en el post-quiz y el Diario se
+// muestran tal cual, porque el nombre ya es visible como header/separador.
+export const savableQuotes: Record<string, string[]> = {
+  'heraclito-democrito': [
+    'No hubo un día en que dejaste de ser esa persona y empezaste a ser esta — fue pasando solo, despacio, sin que nadie lo notara.',
+    'Lo que llamamos estabilidad no es la ausencia de movimiento — es el momento en que las fuerzas opuestas se compensan.',
+    'No hay nada sobrenatural en lo que somos — si quieres entender lo que sientes, tienes que mirar adentro del cuerpo.',
+  ],
+  'hipocrates': [
+    'No es lo mismo decirle a alguien "esto te pasa porque eres así" que decirle "esto te pasa y podemos intentar entender por qué."',
+    'Las diferencias en cómo sentimos y reaccionamos no son caprichos ni debilidades — son patrones con una base en el cuerpo.',
+    'El sufrimiento no es un castigo ni una señal de debilidad — es algo que ocurre, y que puede entenderse.',
+  ],
+  'platon': [
+    'Si alguna vez sentiste que "sabes lo que debes hacer" pero "no puedes evitar" hacer otra cosa, ya conoces esa tensión interna.',
+    'Vivir bien no es eliminar el deseo ni el impulso — es aprender a conducirlos sin que se desboquen.',
+    'Cuando dices "mi cabeza dice una cosa pero mis emociones dicen otra", estás describiendo algo que ya se pensaba hace veinticuatro siglos.',
+  ],
+  'aristoteles': [
+    'Cada emoción lleva dentro una interpretación del mundo — una lectura de lo que está pasando, no solo una reacción.',
+    'El alma y el cuerpo no son dos cosas separadas, sino una sola que no funciona sin sus dos partes.',
+    'Si quieres entender las emociones, observa cómo se comportan las personas reales — no basta con teorizar sobre ellas.',
+  ],
+  'helenisticas': [
+    'El sufrimiento no viene directamente de los hechos sino de los juicios que hacemos sobre ellos.',
+    'No se trata de "no creer en nada" sino de no necesitar tener todas las respuestas para vivir tranquilo.',
+    'La calidad de las relaciones cercanas es uno de los ingredientes más importantes de una vida que valga la pena.',
+  ],
+  'avicena': [
+    'El cuerpo a veces expresa lo que la mente no puede nombrar.',
+    'No existe una línea clara entre tratar el cuerpo y tratar la mente — son, siempre, la misma conversación.',
+    'El miedo sostenido en el tiempo debilita el cuerpo, y la alegría tiene efectos que hoy llamaríamos terapéuticos.',
+  ],
+  'descartes': [
+    '¿Alguna vez descartaste algo que sentías con un "es solo psicológico"? Esa idea tiene cuatrocientos años — y todavía no la hemos cuestionado del todo.',
+    'Si el cuerpo es una máquina, puede estudiarse como tal — esa idea abrió la puerta a la medicina científica moderna.',
+    'No aceptar nada por tradición ni por autoridad, y buscar la certeza desde la propia razón.',
+  ],
+  'spinoza': [
+    'La única forma de transformar una emoción no es suprimirla, sino entenderla — ver de dónde viene, qué la produce.',
+    'Intentar suprimir una emoción con pura fuerza de voluntad es tan inútil como pedirle al cuerpo que deje de reaccionar.',
+    'La libertad no es no sentir — es entender lo que sientes sin ser arrastrado por ello.',
+  ],
+  'kant': [
+    'La persona que crees ser hoy es una interpretación, no la verdad última sobre ti.',
+    'Siempre hay una capa más en lo que podemos conocer — incluido conocerse a uno mismo.',
+    'Nunca conocemos la realidad tal como es — solo la forma en que nos aparece a través de nuestra propia mente.',
+  ],
+  'schopenhauer': [
+    'Consigues lo que quieres y aparece un nuevo deseo. El alivio dura poco. Y luego vuelve el impulso.',
+    'Debajo de todo lo que razonamos hay una fuerza que no elegimos ni controlamos del todo.',
+    'La razón no decide tanto como cree — muchas veces solo racionaliza lo que el impulso ya decidió.',
+  ],
+  'darwin': [
+    'No somos como somos por capricho ni por destino. Somos como somos porque eso funcionó.',
+    'Nuestras emociones tienen raíces compartidas con otros animales — respuestas que sobrevivieron porque funcionaron.',
+    'Nuestras reacciones automáticas no son arbitrarias — son el resultado de millones de años resolviendo el mismo problema: sobrevivir.',
+  ],
+  'ebbinghaus': [
+    'Olvidar no es un fallo tuyo. Es el funcionamiento normal de la memoria.',
+    'Olvidamos rápido al principio y cada vez más lento después — la curva del olvido.',
+    'Repasar en momentos separados en el tiempo es mucho más efectivo que estudiar todo de una sola vez.',
+  ],
+  'fechner': [
+    '¿Hay algo que antes notabas con claridad y que ahora ya no percibes — porque te acostumbraste a que estuviera ahí?',
+    'Lo que notamos depende de cuánto ya había, no solo del cambio en sí mismo.',
+    'Incluso algo tan personal como lo que sentimos sigue patrones que pueden describirse con precisión.',
+  ],
+  'wundt': [
+    '¿Qué está pasando dentro de ti mientras lees esto? Esa pregunta tiene respuesta.',
+    'La experiencia consciente está hecha de elementos simples que se combinan — como los ingredientes de un plato.',
+    'La mente puede estudiarse con el mismo rigor con que se estudia cualquier otra cosa — con experimentos y mediciones.',
+  ],
+  'james': [
+    'A veces puedes actuar antes de sentirte listo.',
+    'La conciencia no es un estado fijo — es un flujo continuo que nunca se detiene ni se repite igual.',
+    'La pregunta no es solo qué es la mente, sino para qué sirve.',
+  ],
+  'thorndike': [
+    'Entender por qué repetimos ciertos hábitos no resuelve todo, pero cambia cómo te miras a ti mismo.',
+    'Lo que produce un resultado satisfactorio tiende a repetirse, sin necesitar comprensión consciente.',
+    'Si algo produjo un resultado positivo alguna vez, la tendencia a repetirlo puede persistir aunque ya no funcione igual.',
+  ],
+  'watson': [
+    'Entender a una persona no siempre requiere preguntarle qué siente. A veces basta con observar qué hace.',
+    'Los miedos pueden aprenderse a través de la experiencia — y por lo tanto, también pueden desaprenderse.',
+    'Si no puedes verlo ni medirlo desde afuera, es difícil estudiarlo con rigor científico.',
+  ],
+  'skinner': [
+    'Tus hábitos, lo que evitas, cómo reaccionas — todo es el resultado de un historial de consecuencias que has vivido.',
+    'Lo que llamamos elección libre es, en gran medida, el resultado de un historial de refuerzos y castigos que nos fue dando forma.',
+    'El comportamiento puede moldearse de forma predecible a través de sus consecuencias — premiar lo que quieres que se repita.',
+  ],
+};
+
 // ── Returning-user screens (app/returning.tsx) ───────────────────────────────
 // Ver docs/psylens_returning_screens.md para la lógica de selección diaria.
 export const returningContent = {
@@ -1504,27 +1602,6 @@ export const returningContent = {
     { days: 21, text: 'Veintiún días. La ciencia dice que aquí es donde los hábitos se consolidan.' },
     { days: 30, text: 'Un mes completo. Eso dice algo sobre ti.' },
   ],
-
-  authorPhrases: {
-    'heraclito-democrito': 'Para Heráclito, no hubo un día en que dejaste de ser esa persona y empezaste a ser esta — fue pasando solo, despacio, sin que nadie lo notara.',
-    'hipocrates':          'Hipócrates entendía la diferencia: no es lo mismo decirle a alguien "esto te pasa porque eres así" que decirle "esto te pasa y podemos intentar entender por qué."',
-    'platon':               'Si alguna vez sentiste que "sabes lo que debes hacer" pero "no puedes evitar" hacer otra cosa, ya experimentaste lo que Platón describía en su idea del alma dividida.',
-    'aristoteles':          'Para Aristóteles, cada emoción lleva dentro una interpretación del mundo. ¿Qué te está diciendo la que sientes ahora mismo?',
-    'helenisticas':         'Para los escépticos como Pirrón, no se trataba de "no creer en nada" sino de no necesitar tener todas las respuestas para vivir tranquilo.',
-    'avicena':              'Avicena observó algo que la medicina tardaría siglos en aceptar: el cuerpo a veces expresa lo que la mente no puede nombrar.',
-    'descartes':            '¿Alguna vez descartaste algo que sentías con un "es solo psicológico"? Esa idea viene de Descartes — y la psicología todavía no ha terminado de cuestionarla.',
-    'spinoza':              'Para Spinoza, la única forma de transformar una emoción no era suprimirla, sino entenderla — ver de dónde viene, qué la produce.',
-    'kant':                 'Para Kant, la persona que crees ser hoy es una interpretación, no la verdad última sobre ti.',
-    'schopenhauer':         'Schopenhauer lo describía así: consigues lo que quieres y aparece un nuevo deseo. El alivio dura poco. Y luego vuelve el impulso.',
-    'darwin':               'Para Darwin, no somos como somos por capricho ni por destino. Somos como somos porque eso funcionó.',
-    'ebbinghaus':           'Ebbinghaus lo dejó claro: olvidar no es un fallo tuyo. Es el funcionamiento normal de la memoria.',
-    'fechner':              '¿Hay algo que antes notabas con claridad y que ahora ya no percibes — porque te acostumbraste a que estuviera ahí? Esa es la pregunta que Fechner pasó años intentando responder.',
-    'wundt':                '¿Qué está pasando dentro de ti mientras lees esto? Wundt fue el primero en creer que esa pregunta tenía respuesta.',
-    'james':                'James lo resumía así: a veces puedes actuar antes de sentirte listo.',
-    'thorndike':            'Para Thorndike, entender por qué repetimos ciertos hábitos no resuelve todo, pero cambia cómo te miras a ti mismo.',
-    'watson':               'Para Watson, entender a una persona no requería preguntarle qué sentía. Requería observar qué hacía.',
-    'skinner':              'Skinner lo planteaba así: tus hábitos, lo que evitas, cómo reaccionas — todo es el resultado de un historial de consecuencias que has vivido.',
-  } as Record<string, string>,
 
   reflectionQuestions: {
     'heraclito-democrito': '¿En qué has cambiado más en los últimos años?',

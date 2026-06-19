@@ -11,29 +11,51 @@ import {
   Modal,
   useWindowDimensions,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, glossaryTerms, conceptThreads } from '../../constants/data';
 import { useTheme } from '../../hooks/useTheme';
+import { JournalEntry, JOURNAL_PREFIX } from '../../utils/journal';
+import { getSavedQuotes, SavedQuote } from '../../utils/savedQuotes';
 
 type Theme = typeof colors.dark;
 
 const PROGRESS_KEY   = 'psylens_progress';
-const JOURNAL_PREFIX = 'psylens_journal_';
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
 
-type JournalEntry = {
+const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+function formatShortDateEs(iso: string): string {
+  const d = new Date(iso + 'T00:00:00');
+  return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
+}
+
+type QuoteGroup = {
   authorId:   string;
   authorName: string;
-  question:   string;
-  answer:     string;
-  date:       string;
+  quotes:     SavedQuote[];
 };
+
+function buildQuoteGroups(quotes: SavedQuote[]): QuoteGroup[] {
+  const byAuthor = new Map<string, SavedQuote[]>();
+  for (const q of quotes) {
+    const list = byAuthor.get(q.authorId) ?? [];
+    list.push(q);
+    byAuthor.set(q.authorId, list);
+  }
+  const groups: QuoteGroup[] = [...byAuthor.entries()].map(([authorId, list]) => ({
+    authorId,
+    authorName: list[0].authorName,
+    quotes: [...list].sort((a, b) => b.dateAdded.localeCompare(a.dateAdded)),
+  }));
+  groups.sort((a, b) => b.quotes[0].dateAdded.localeCompare(a.quotes[0].dateAdded));
+  return groups;
+}
 
 function isComplete(prog: ProgressMap, authorId: string): boolean {
   const p = prog[authorId];
@@ -263,6 +285,7 @@ function EmptyState({ query }: { query: string }) {
 export default function GlosarioScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const params = useLocalSearchParams<{ tab?: string }>();
 
   const [activeTab,      setActiveTab]      = useState<'glosario' | 'diario'>('glosario');
   const [progress,       setProgress]       = useState<ProgressMap>({});
@@ -270,6 +293,11 @@ export default function GlosarioScreen() {
   const [selectedTerm,   setSelectedTerm]   = useState<Term | null>(null);
   const [sheetVisible,   setSheetVisible]   = useState(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [savedQuotes,    setSavedQuotes]    = useState<SavedQuote[]>([]);
+
+  useEffect(() => {
+    if (params.tab === 'diario') setActiveTab('diario');
+  }, [params.tab]);
 
   useFocusEffect(
     useCallback(() => {
@@ -277,13 +305,14 @@ export default function GlosarioScreen() {
         .then(raw => { if (raw) setProgress(JSON.parse(raw)); })
         .catch(() => {});
 
+      getSavedQuotes().then(setSavedQuotes).catch(() => {});
+
       AsyncStorage.getAllKeys().catch(() => [] as readonly string[]).then(async keys => {
         const journalKeys = [...keys].filter(k => k.startsWith(JOURNAL_PREFIX));
         if (!journalKeys.length) { setJournalEntries([]); return; }
         const pairs = await AsyncStorage.multiGet(journalKeys).catch(() => [] as [string, string | null][]);
         const entries = pairs
-          .map(([, val]) => (val ? JSON.parse(val) as JournalEntry : null))
-          .filter((e): e is JournalEntry => e !== null)
+          .flatMap(([, val]) => (val ? (JSON.parse(val) as JournalEntry[]) : []))
           .sort((a, b) => b.date.localeCompare(a.date));
         setJournalEntries(entries);
       });
@@ -303,6 +332,7 @@ export default function GlosarioScreen() {
   }, [query, unlocked]);
 
   const groups = useMemo(() => buildGroups(filtered), [filtered]);
+  const quoteGroups = useMemo(() => buildQuoteGroups(savedQuotes), [savedQuotes]);
 
   const styles = useMemo(() => makeStyles(theme), [theme]);
 
@@ -404,7 +434,7 @@ export default function GlosarioScreen() {
 
       {/* ── Diario tab ───────────────────────────────────── */}
       {activeTab === 'diario' && (
-        journalEntries.length === 0 ? (
+        journalEntries.length === 0 && quoteGroups.length === 0 ? (
           <View style={styles.diaryEmpty}>
             <Text style={styles.diaryEmptyText}>Tus reflexiones aparecerán aquí</Text>
           </View>
@@ -416,7 +446,7 @@ export default function GlosarioScreen() {
           >
             {journalEntries.map((entry, i) => (
               <View
-                key={entry.authorId}
+                key={`${entry.authorId}-${entry.date}-${i}`}
                 style={[styles.journalEntry, i < journalEntries.length - 1 && styles.journalEntryBorder]}
               >
                 <View style={styles.journalEntryHeader}>
@@ -427,6 +457,27 @@ export default function GlosarioScreen() {
                 <Text style={styles.journalAnswer}>{entry.answer}</Text>
               </View>
             ))}
+
+            {quoteGroups.length > 0 && (
+              <View style={styles.quotesSection}>
+                <Text style={styles.quotesSectionHeader}>INSPIRADAS EN</Text>
+                {quoteGroups.map(group => (
+                  <View key={group.authorId} style={styles.quoteGroup}>
+                    <View style={styles.quoteGroupHeaderRow}>
+                      <View style={styles.quoteGroupRule} />
+                      <Text style={styles.quoteGroupAuthor}>{group.authorName}</Text>
+                      <View style={styles.quoteGroupRule} />
+                    </View>
+                    {group.quotes.map((q, i) => (
+                      <View key={`${q.authorId}-${q.dateAdded}-${i}`} style={styles.savedQuoteItem}>
+                        <Text style={styles.savedQuoteText}>"{q.quote}"</Text>
+                        <Text style={styles.savedQuoteDate}>Guardada el {formatShortDateEs(q.dateAdded)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            )}
           </ScrollView>
         )
       )}
@@ -745,6 +796,56 @@ function makeStyles(theme: Theme) {
       ...typography.bodyS,
       color: theme.text,
       lineHeight: 22,
+    },
+
+    // Diario — Frases guardadas
+    quotesSection: {
+      marginTop: spacing.xl,
+      paddingTop: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+    },
+    quotesSectionHeader: {
+      ...typography.label,
+      color: theme.text3,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: spacing.lg,
+      textAlign: 'center',
+    },
+    quoteGroup: {
+      marginBottom: spacing.xl,
+    },
+    quoteGroupHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    quoteGroupRule: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.border,
+    },
+    quoteGroupAuthor: {
+      ...typography.label,
+      color: theme.green,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+    },
+    savedQuoteItem: {
+      marginBottom: spacing.md,
+    },
+    savedQuoteText: {
+      ...typography.bodyS,
+      color: theme.text,
+      fontStyle: 'italic',
+      lineHeight: 22,
+      marginBottom: spacing.xs,
+    },
+    savedQuoteDate: {
+      ...typography.bodyXS,
+      color: theme.text3,
     },
 
     // Author section

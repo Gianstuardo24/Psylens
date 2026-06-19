@@ -38,55 +38,41 @@ Ilustración: chips de racha con los días marcados (igual que en el Dashboard)
 Aparece cuando el usuario completó un autor el día anterior.
 Muestra el portrait del autor y una frase personalizada.
 
+**Fuente de la frase:** usa `savableQuotes[authorId]` definido en `psylens_savable_quotes.md`. Selecciona 1 índice aleatorio (0, 1 o 2) del array de ese autor. Al renderizar, antepone "Para [Nombre del autor], " a la frase (primera letra de la frase en minúscula tras la coma).
+
 ### Plantilla
 ```
 [Portrait del autor — imagen circular]
 "Ayer conociste a [Nombre]."
-[Frase del autor — ver tabla abajo]
+
+"Para [Nombre], [frase con primera letra en minúscula]"
+
+[♡ Guardar en mi diario]  o  [♡ Guardada en mi diario]
+
+[Ver mi diario]  ←  solo aparece si la guardó en este momento
 [Botón: Continuar →]
 ```
-
-### Frases por autor
-
-Nota: estas frases son paráfrasis editoriales de la idea del autor, no citas textuales — por eso siempre se introducen con "Para [Autor]..." o similar, dejando claro que es una interpretación, no una cita literal.
-
-| authorId | Nombre | Frase |
-|----------|--------|-------|
-| heraclito-democrito | Los presocráticos | "Para Heráclito, no hubo un día en que dejaste de ser esa persona y empezaste a ser esta — fue pasando solo, despacio, sin que nadie lo notara." |
-| hipocrates | Hipócrates | "Hipócrates entendía la diferencia: no es lo mismo decirle a alguien 'esto te pasa porque eres así' que decirle 'esto te pasa y podemos intentar entender por qué.'" |
-| platon | Platón | "Si alguna vez sentiste que 'sabes lo que debes hacer' pero 'no puedes evitar' hacer otra cosa, ya experimentaste lo que Platón describía en su idea del alma dividida." |
-| aristoteles | Aristóteles | "Para Aristóteles, cada emoción lleva dentro una interpretación del mundo. ¿Qué te está diciendo la que sientes ahora mismo?" |
-| helenisticas | Filosofías Helenísticas | "Para los escépticos como Pirrón, no se trataba de 'no creer en nada' sino de no necesitar tener todas las respuestas para vivir tranquilo." |
-| avicena | Avicena | "Avicena observó algo que la medicina tardaría siglos en aceptar: el cuerpo a veces expresa lo que la mente no puede nombrar." |
-| descartes | René Descartes | "¿Alguna vez descartaste algo que sentías con un 'es solo psicológico'? Esa idea viene de Descartes — y la psicología todavía no ha terminado de cuestionarla." |
-| spinoza | Baruch Spinoza | "Para Spinoza, la única forma de transformar una emoción no era suprimirla, sino entenderla — ver de dónde viene, qué la produce." |
-| kant | Immanuel Kant | "Para Kant, la persona que crees ser hoy es una interpretación, no la verdad última sobre ti." |
-| schopenhauer | Arthur Schopenhauer | "Schopenhauer lo describía así: consigues lo que quieres y aparece un nuevo deseo. El alivio dura poco. Y luego vuelve el impulso." |
-| darwin | Charles Darwin | "Para Darwin, no somos como somos por capricho ni por destino. Somos como somos porque eso funcionó." |
-| ebbinghaus | Hermann Ebbinghaus | "Ebbinghaus lo dejó claro: olvidar no es un fallo tuyo. Es el funcionamiento normal de la memoria." |
-| fechner | Gustav Fechner | "¿Hay algo que antes notabas con claridad y que ahora ya no percibes — porque te acostumbraste a que estuviera ahí? Esa es la pregunta que Fechner pasó años intentando responder." |
-| wundt | Wilhelm Wundt | "¿Qué está pasando dentro de ti mientras lees esto? Wundt fue el primero en creer que esa pregunta tenía respuesta." |
-| james | William James | "James lo resumía así: a veces puedes actuar antes de sentirte listo." |
-| thorndike | Edward Thorndike | "Para Thorndike, entender por qué repetimos ciertos hábitos no resuelve todo, pero cambia cómo te miras a ti mismo." |
-| watson | John B. Watson | "Para Watson, entender a una persona no requería preguntarle qué sentía. Requería observar qué hacía." |
-| skinner | B.F. Skinner | "Skinner lo planteaba así: tus hábitos, lo que evitas, cómo reaccionas — todo es el resultado de un historial de consecuencias que has vivido." |
 
 ---
 
 ## TIPO 3 — Frase del día
 
-Aparece de forma general, rotando entre autores ya completados por el usuario.
-Mismas frases que el Tipo 2 pero sin contexto de "ayer conociste a..."
+Aparece de forma general, como parte del banco aleatorio de autores ya completados por el usuario (ver lógica de selección diaria más abajo).
+
+**Fuente de la frase:** misma fuente que el Tipo 2 — `savableQuotes[authorId]` de `psylens_savable_quotes.md`, con el mismo prefijo dinámico "Para [Nombre], ".
 
 ### Plantilla
 ```
-[Portrait del autor — imagen circular, pequeña]
+[Portrait del autor — imagen circular]
 [Nombre del autor]
-[Frase]
+
+"Para [Nombre], [frase con primera letra en minúscula]"
+
+[♡ Guardar en mi diario]  o  [♡ Guardada en mi diario]
+
+[Ver mi diario]  ←  solo aparece si la guardó en este momento
 [Botón: Continuar →]
 ```
-
-Usa la misma tabla de frases del Tipo 2.
 
 ---
 
@@ -116,16 +102,23 @@ Sin ilustración — solo texto y barra de progreso.
 
 ## TIPO 5 — Reflexión
 
-Aparece de forma aleatoria entre los autores ya completados por el usuario.
-Muestra el portrait del autor y una pregunta de reflexión.
+Aparece como parte del banco aleatorio (mismo mecanismo que Tipo 3), alternando con él.
+Muestra el portrait del autor y una pregunta de reflexión, con espacio para responder directamente.
 
 ### Plantilla
 ```
 [Portrait del autor — imagen circular]
 "Sobre [Nombre]..."
+
 [Pregunta de reflexión]
-[Botón: Continuar →]
+
+[Campo de texto — opcional, mínimo 0 caracteres, no bloquea avanzar]
+
+[Botón: Guardar respuesta]  ←  solo si escribió algo
+[Botón: Continuar →]        ←  siempre presente
 ```
+
+La respuesta, si se guarda, va a "Mis reflexiones" en el Diario — como una entrada nueva con fecha (no sobreescribe respuestas anteriores a la misma pregunta, ya que el valor está en ver cómo cambia la perspectiva del usuario con el tiempo).
 
 ### Preguntas de reflexión por autor
 
@@ -152,7 +145,10 @@ Muestra el portrait del autor y una pregunta de reflexión.
 
 ---
 
-## Notas de implementación
+### Notas de implementación
+
+### Documento complementario
+Este sistema depende de `psylens_savable_quotes.md` para el contenido de Tipo 2 y Tipo 3 (banco de frases por autor) y su lógica de guardado en el Diario. Ambos documentos deben implementarse juntos.
 
 ### Lógica de selección diaria
 

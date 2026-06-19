@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, Image, StyleSheet, Pressable, SafeAreaView } from 'react-native';
+import { View, Text, Image, StyleSheet, Pressable, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
-import { authors, blocks, subBlocks, returningContent } from '../constants/data';
+import { authors, blocks, subBlocks, returningContent, savableQuotes } from '../constants/data';
 import { useTheme } from '../hooks/useTheme';
+import { SaveQuoteButton } from '../components/SaveQuoteButton';
+import { appendJournalEntry } from '../utils/journal';
 
 type Theme = typeof colors.dark;
 
@@ -109,10 +112,20 @@ function getProgressPhrase(remaining: number, completed: number, total: number):
 type Selection =
   | { kind: 'skip' }
   | { kind: 1; streak: number }
-  | { kind: 2; authorId: string }
-  | { kind: 3; authorId: string }
+  | { kind: 2; authorId: string; quoteIndex: number }
+  | { kind: 3; authorId: string; quoteIndex: number }
   | { kind: 4; remaining: number; completed: number; total: number }
   | { kind: 5; authorId: string };
+
+function randomQuoteIndex(): number {
+  return Math.floor(Math.random() * 3);
+}
+
+// "Para [Nombre], [frase con primera letra en minúscula]"
+function withAuthorPrefix(authorName: string, quote: string): string {
+  const lowered = quote.charAt(0).toLowerCase() + quote.slice(1);
+  return `Para ${authorName}, ${lowered}`;
+}
 
 function findActiveAuthorId(progress: ProgressMap): string | null {
   return ORDERED_AUTHOR_IDS.find(id => !isComplete(progress, id)) ?? null;
@@ -152,8 +165,8 @@ async function resolveSelection(): Promise<Selection> {
 
   // Priority 2 — author completed yesterday
   if (!selection && lastCompletedDate === yesterday && lastCompletedAuthor
-      && returningContent.authorPhrases[lastCompletedAuthor]) {
-    selection = { kind: 2, authorId: lastCompletedAuthor };
+      && savableQuotes[lastCompletedAuthor]) {
+    selection = { kind: 2, authorId: lastCompletedAuthor, quoteIndex: randomQuoteIndex() };
   }
 
   // Priority 3 — sub-block progress
@@ -176,11 +189,13 @@ async function resolveSelection(): Promise<Selection> {
 
   // Bank — random completed author with available content, avoiding yesterday's pick
   if (!selection) {
-    const bank = completedAuthorIds.filter(id => returningContent.authorPhrases[id]);
+    const bank = completedAuthorIds.filter(id => savableQuotes[id]);
     if (bank.length > 0) {
       const pool = bank.length > 1 ? bank.filter(id => id !== lastAuthor) : bank;
       const chosenAuthor = pool[Math.floor(Math.random() * pool.length)];
-      selection = Math.random() < 0.5 ? { kind: 3, authorId: chosenAuthor } : { kind: 5, authorId: chosenAuthor };
+      selection = Math.random() < 0.5
+        ? { kind: 3, authorId: chosenAuthor, quoteIndex: randomQuoteIndex() }
+        : { kind: 5, authorId: chosenAuthor };
     }
   }
 
@@ -233,6 +248,23 @@ export default function ReturningScreen() {
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [selection, setSelection]     = useState<Selection | null>(null);
   const [daysVisited, setDaysVisited] = useState<string[]>([]);
+  const [justSaved, setJustSaved]             = useState(false);
+  const [reflectionAnswer, setReflectionAnswer] = useState('');
+  const [reflectionSaved, setReflectionSaved]   = useState(false);
+
+  async function handleSaveReflection() {
+    if (selection?.kind !== 5 || !reflectionAnswer.trim()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setReflectionSaved(true);
+    setJustSaved(true);
+    await appendJournalEntry({
+      authorId:   selection.authorId,
+      authorName: AUTHOR_NAMES[selection.authorId],
+      question:   returningContent.reflectionQuestions[selection.authorId],
+      answer:     reflectionAnswer.trim(),
+      date:       todayISO(),
+    });
+  }
 
   useEffect(() => {
     let active = true;
@@ -289,7 +321,16 @@ export default function ReturningScreen() {
               ) : (
                 <Text style={styles.authorName}>{AUTHOR_NAMES[selection.authorId]}</Text>
               )}
-              <Text style={styles.phrase}>{returningContent.authorPhrases[selection.authorId]}</Text>
+              <Text style={styles.phrase}>
+                "{withAuthorPrefix(AUTHOR_NAMES[selection.authorId], savableQuotes[selection.authorId][selection.quoteIndex])}"
+              </Text>
+              <Text style={styles.quoteCaption}>inspirada en su pensamiento</Text>
+              <SaveQuoteButton
+                authorId={selection.authorId}
+                authorName={AUTHOR_NAMES[selection.authorId]}
+                quote={savableQuotes[selection.authorId][selection.quoteIndex]}
+                onSaved={() => setJustSaved(true)}
+              />
             </>
           )}
 
@@ -311,9 +352,37 @@ export default function ReturningScreen() {
               <PortraitCircle authorId={selection.authorId} size={120} theme={theme} />
               <Text style={styles.introLine}>Sobre {AUTHOR_NAMES[selection.authorId]}...</Text>
               <Text style={styles.phrase}>{returningContent.reflectionQuestions[selection.authorId]}</Text>
+              <TextInput
+                style={styles.reflectionInput}
+                multiline
+                value={reflectionAnswer}
+                onChangeText={setReflectionAnswer}
+                placeholder="Escribe tu respuesta (opcional)..."
+                placeholderTextColor={theme.text3}
+                textAlignVertical="top"
+                editable={!reflectionSaved}
+              />
+              {reflectionAnswer.trim().length > 0 && !reflectionSaved && (
+                <TouchableOpacity style={styles.saveReflectionButton} onPress={handleSaveReflection} activeOpacity={0.85}>
+                  <Text style={styles.saveReflectionButtonText}>Guardar respuesta</Text>
+                </TouchableOpacity>
+              )}
+              {reflectionSaved && (
+                <Text style={styles.reflectionSavedText}>Respuesta guardada en tu diario</Text>
+              )}
             </>
           )}
         </View>
+
+        {justSaved && (
+          <TouchableOpacity
+            style={styles.viewDiaryButton}
+            onPress={() => router.push('/(tabs)/glosario?tab=diario')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.viewDiaryButtonText}>Ver mi diario</Text>
+          </TouchableOpacity>
+        )}
 
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -418,6 +487,61 @@ function makeStyles(theme: Theme) {
       color: theme.text,
       textAlign: 'center',
       lineHeight: 32,
+    },
+
+    // Type 2/3 — quote caption
+    quoteCaption: {
+      ...typography.bodyS,
+      color: theme.text3,
+      textAlign: 'center',
+    },
+
+    // Type 5 — reflection input
+    reflectionInput: {
+      width: '100%',
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      ...typography.bodyS,
+      color: theme.text,
+      borderWidth: 1,
+      borderColor: theme.border,
+      minHeight: 100,
+      lineHeight: 22,
+    },
+    saveReflectionButton: {
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.green,
+    },
+    saveReflectionButtonText: {
+      ...typography.bodyS,
+      color: theme.green,
+      fontWeight: '600',
+    },
+    reflectionSavedText: {
+      ...typography.bodyS,
+      color: theme.text3,
+    },
+
+    // "Ver mi diario" (Type 2/3/5, shown once something was saved this session)
+    viewDiaryButton: {
+      alignSelf: 'center',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: theme.green,
+      marginBottom: spacing.md,
+    },
+    viewDiaryButtonText: {
+      ...typography.bodyS,
+      color: theme.green,
+      fontWeight: '600',
     },
 
     button: {

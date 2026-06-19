@@ -237,7 +237,13 @@ export default function YoScreen() {
               'psylens_unlocked',
               'psylens_days_visited',
               'psylens_user_name',
+              'psylens_saved_quotes',
             ]).catch(() => {});
+            const allKeys = await AsyncStorage.getAllKeys();
+            const journalKeys = allKeys.filter(k => k.startsWith('psylens_journal_'));
+            if (journalKeys.length > 0) {
+              await AsyncStorage.multiRemove(journalKeys);
+            }
             router.replace('/splash');
           },
         },
@@ -264,6 +270,7 @@ export default function YoScreen() {
               'psylens_is_premium',
               'psylens_unlocked',
               'psylens_days_visited',
+              'psylens_saved_quotes',
             ]).catch(() => {});
             const allKeys = await AsyncStorage.getAllKeys();
             const journalKeys = allKeys.filter(k => k.startsWith('psylens_journal_'));
@@ -275,6 +282,14 @@ export default function YoScreen() {
         },
       ],
     );
+  }
+
+  function handleResetReturningScreen() {
+    AsyncStorage.multiRemove([
+      'psylens_returning_last_shown',
+      'psylens_returning_last_type',
+    ]).catch(() => {});
+    router.replace('/splash');
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -410,6 +425,15 @@ export default function YoScreen() {
           labelColor={theme.coral}
           onPress={handleResetProgress}
         />
+
+        {__DEV__ && (
+          <SettingRow
+            theme={theme}
+            label="Debug: Reset returning screen"
+            labelColor={theme.text2}
+            onPress={handleResetReturningScreen}
+          />
+        )}
 
         <SettingRow
           theme={theme}

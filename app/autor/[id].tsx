@@ -17,12 +17,14 @@ import { typography, spacing, radius } from '../../constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
-import { authors, blocks, glossaryTerms, revolutionCards, subBlocks, QuizQuestion } from '../../constants/data';
+import { authors, blocks, glossaryTerms, revolutionCards, savableQuotes, subBlocks, QuizQuestion } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
 import { IntroIllustration } from '../../components/IntroIllustrations';
+import { SaveQuoteButton } from '../../components/SaveQuoteButton';
 import { useTheme } from '../../hooks/useTheme';
+import { appendJournalEntry, getJournalEntries, JournalEntry } from '../../utils/journal';
 
 type Theme = typeof colors.dark;
 
@@ -177,9 +179,9 @@ export default function AutorScreen() {
   const [tfWasCorrect,   setTfWasCorrect]   = useState(false);
   const [openAnswer,     setOpenAnswer]     = useState('');
 
-  const [savedJournalEntry, setSavedJournalEntry] = useState<{
-    authorId: string; authorName: string; question: string; answer: string; date: string;
-  } | null>(null);
+  const [journalEntries,    setJournalEntries]    = useState<JournalEntry[]>([]);
+  const [savedAnyQuote,     setSavedAnyQuote]     = useState(false);
+  const savedJournalEntry = journalEntries[journalEntries.length - 1] ?? null;
 
   const styles = useMemo(() => makeStyles(theme), [theme]);
 
@@ -201,11 +203,11 @@ export default function AutorScreen() {
 
   useEffect(() => {
     Promise.all([
-      AsyncStorage.getItem(`psylens_journal_${id}`).catch(() => null),
+      getJournalEntries(id as string).catch(() => [] as JournalEntry[]),
       AsyncStorage.getItem(`psylens_quiz_step_${id}`).catch(() => null),
       AsyncStorage.getItem(`psylens_quiz_open_${id}`).catch(() => null),
-    ]).then(([rawJournal, rawStep, rawOpen]) => {
-      setSavedJournalEntry(rawJournal ? JSON.parse(rawJournal) : null);
+    ]).then(([entries, rawStep, rawOpen]) => {
+      setJournalEntries(entries);
       if (rawStep !== null) setQuizStep(parseInt(rawStep, 10));
       if (rawOpen) setOpenAnswer(rawOpen);
     });
@@ -213,6 +215,7 @@ export default function AutorScreen() {
 
   useEffect(() => {
     if (showCelebration) {
+      setSavedAnyQuote(false);
       animScale.setValue(0.85);
       animOpacity.setValue(0);
       Animated.parallel([
@@ -546,16 +549,14 @@ export default function AutorScreen() {
   async function finishQuiz() {
     const openQ = authorQuiz?.find(q => q.type === 'open');
     if (openQ && openAnswer.trim().length >= 20) {
-      await AsyncStorage.setItem(
-        `psylens_journal_${author!.id}`,
-        JSON.stringify({
-          authorId:   author!.id,
-          authorName: author!.name,
-          question:   openQ.question,
-          answer:     openAnswer.trim(),
-          date:       new Date().toISOString().slice(0, 10),
-        })
-      ).catch(() => {});
+      const entries = await appendJournalEntry({
+        authorId:   author!.id,
+        authorName: author!.name,
+        question:   openQ.question,
+        answer:     openAnswer.trim(),
+        date:       new Date().toISOString().slice(0, 10),
+      });
+      setJournalEntries(entries);
     }
     await Promise.all([
       AsyncStorage.removeItem(`psylens_quiz_step_${author!.id}`),
@@ -809,6 +810,35 @@ export default function AutorScreen() {
             <Text style={styles.celebBadge}>Completado</Text>
             <Text style={styles.celebAuthorName}>{author.name}</Text>
             <Text style={styles.celebSubtitle}>{isTwoLayer ? 'Has leído las dos capas' : 'Has leído las tres capas'}</Text>
+
+            {savableQuotes[author.id] && (
+              <View style={styles.quotesSection}>
+                <Text style={styles.quotesHeading}>¿Alguna de estas ideas se queda contigo?</Text>
+                {savableQuotes[author.id].map((quote, i) => (
+                  <View key={i} style={styles.quoteBlock}>
+                    <Text style={styles.quoteText}>"{quote}"</Text>
+                    <SaveQuoteButton
+                      authorId={author.id}
+                      authorName={author.name}
+                      quote={quote}
+                      onSaved={() => setSavedAnyQuote(true)}
+                    />
+                  </View>
+                ))}
+                <Text style={styles.quotesFooter}>
+                  Inspiradas en el pensamiento de {author.name}
+                </Text>
+                {savedAnyQuote && (
+                  <TouchableOpacity
+                    style={styles.viewDiaryButton}
+                    onPress={() => router.push('/(tabs)/glosario?tab=diario')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.viewDiaryButtonText}>Ver mi diario</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             {nextDest ? (
               <TouchableOpacity style={styles.celebNextButton} onPress={navigateToNext} activeOpacity={0.85}>
@@ -1422,6 +1452,53 @@ function makeStyles(theme: Theme) {
     celebDismissText: {
       ...typography.bodyS,
       color: theme.text3,
+    },
+    // Post-quiz savable quotes (inside celebration modal)
+    quotesSection: {
+      width: '100%',
+      marginTop: spacing.lg,
+      marginBottom: spacing.lg,
+      paddingTop: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+    },
+    quotesHeading: {
+      ...typography.bodyS,
+      fontWeight: '600',
+      color: theme.text,
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    quoteBlock: {
+      marginBottom: spacing.md,
+    },
+    quoteText: {
+      ...typography.bodyS,
+      color: theme.text2,
+      lineHeight: 20,
+      marginBottom: spacing.xs,
+      fontFamily: 'PlayfairDisplay_400Regular_Italic',
+    },
+    quotesFooter: {
+      ...typography.label,
+      color: theme.text3,
+      textAlign: 'center',
+      marginTop: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    viewDiaryButton: {
+      alignSelf: 'center',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: theme.green,
+      marginBottom: spacing.sm,
+    },
+    viewDiaryButtonText: {
+      ...typography.bodyS,
+      color: theme.green,
+      fontWeight: '600',
     },
     // Quiz modal
     quizOverlay: {
