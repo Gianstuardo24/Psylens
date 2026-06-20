@@ -1503,12 +1503,12 @@ export const savableQuotes: Record<string, string[]> = {
     'No hay nada sobrenatural en lo que somos — si quieres entender lo que sientes, tienes que mirar adentro del cuerpo.',
   ],
   'hipocrates': [
-    'No es lo mismo decirle a alguien "esto te pasa porque eres así" que decirle "esto te pasa y podemos intentar entender por qué."',
+    "No es lo mismo decirle a alguien 'esto te pasa porque eres así' que decirle 'esto te pasa y podemos intentar entender por qué.'",
     'Las diferencias en cómo sentimos y reaccionamos no son caprichos ni debilidades — son patrones con una base en el cuerpo.',
     'El sufrimiento no es un castigo ni una señal de debilidad — es algo que ocurre, y que puede entenderse.',
   ],
   'platon': [
-    'Si alguna vez sentiste que "sabes lo que debes hacer" pero "no puedes evitar" hacer otra cosa, ya conoces esa tensión interna.',
+    "Si alguna vez sentiste que 'sabes lo que debes hacer' pero 'no puedes evitar' hacer otra cosa, ya conoces esa tensión interna.",
     'Vivir bien no es eliminar el deseo ni el impulso — es aprender a conducirlos sin que se desboquen.',
     'Cuando dices "mi cabeza dice una cosa pero mis emociones dicen otra", estás describiendo algo que ya se pensaba hace veinticuatro siglos.',
   ],
@@ -1528,7 +1528,7 @@ export const savableQuotes: Record<string, string[]> = {
     'El miedo sostenido en el tiempo debilita el cuerpo, y la alegría tiene efectos que hoy llamaríamos terapéuticos.',
   ],
   'descartes': [
-    '¿Alguna vez descartaste algo que sentías con un "es solo psicológico"? Esa idea tiene cuatrocientos años — y todavía no la hemos cuestionado del todo.',
+    "¿Alguna vez descartaste algo que sentías con un 'es solo psicológico'? Esa idea tiene cuatrocientos años — y todavía no la hemos cuestionado del todo.",
     'Si el cuerpo es una máquina, puede estudiarse como tal — esa idea abrió la puerta a la medicina científica moderna.',
     'No aceptar nada por tradición ni por autoridad, y buscar la certeza desde la propia razón.',
   ],
@@ -1593,14 +1593,14 @@ export const savableQuotes: Record<string, string[]> = {
 // Ver docs/psylens_returning_screens.md para la lógica de selección diaria.
 export const returningContent = {
   streakPhrases: [
-    { days: 2,  text: 'Llevas 2 días seguidos. El hábito está empezando.' },
-    { days: 3,  text: 'Tres días consecutivos. Ya hay un patrón.' },
-    { days: 5,  text: 'Cinco días seguidos. Eso no es suerte — es intención.' },
-    { days: 7,  text: 'Una semana completa. El recorrido ya es parte de tu rutina.' },
-    { days: 10, text: 'Diez días. Ya no es un intento — es un hábito.' },
-    { days: 14, text: 'Dos semanas seguidas. Muy pocos llegan hasta aquí.' },
-    { days: 21, text: 'Veintiún días. La ciencia dice que aquí es donde los hábitos se consolidan.' },
-    { days: 30, text: 'Un mes completo. Eso dice algo sobre ti.' },
+    { days: 2,  text: 'Llevas 2 días seguidos.\nEl hábito está empezando.' },
+    { days: 3,  text: 'Tres días consecutivos.\nYa hay un patrón.' },
+    { days: 5,  text: 'Cinco días seguidos.\nEso no es suerte — es intención.' },
+    { days: 7,  text: 'Una semana completa.\nEl recorrido ya es parte de tu rutina.' },
+    { days: 10, text: 'Diez días.\nYa no es un intento — es un hábito.' },
+    { days: 14, text: 'Dos semanas seguidas.\nMuy pocos llegan hasta aquí.' },
+    { days: 21, text: 'Veintiún días.\nLa ciencia dice que aquí es donde los hábitos se consolidan.' },
+    { days: 30, text: 'Un mes completo.\nEso dice algo sobre ti.' },
   ],
 
   reflectionQuestions: {
@@ -1623,11 +1623,4 @@ export const returningContent = {
     'watson':               '¿Tienes algún miedo o reacción automática que crees que aprendiste en algún momento de tu vida?',
     'skinner':              '¿Hay algún comportamiento tuyo que ahora entiendes mejor como el resultado de consecuencias pasadas?',
   } as Record<string, string>,
-
-  progressPhrases: {
-    0: 'Completaste una etapa. El camino continúa.',
-    1: 'Te falta 1 autor para completar esta etapa.',
-    2: 'Te faltan 2 autores para completar esta etapa.',
-    3: 'Te faltan 3 autores. Estás cerca.',
-  } as Record<number, string>,
 };

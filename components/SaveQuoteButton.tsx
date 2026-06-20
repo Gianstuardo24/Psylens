@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Animated, StyleProp, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../constants/colors';
 import { typography, spacing } from '../constants/typography';
@@ -13,11 +13,17 @@ export function SaveQuoteButton({
   authorName,
   quote,
   onSaved,
+  style,
+  heartStyle,
+  labelStyle,
 }: {
   authorId: string;
   authorName: string;
   quote: string;
   onSaved?: () => void;
+  style?: StyleProp<ViewStyle>;
+  heartStyle?: StyleProp<TextStyle>;
+  labelStyle?: StyleProp<TextStyle>;
 }) {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
@@ -46,15 +52,15 @@ export function SaveQuoteButton({
 
   return (
     <TouchableOpacity
-      style={styles.button}
+      style={[styles.button, style]}
       onPress={handlePress}
       activeOpacity={saved ? 1 : 0.7}
       disabled={saved}
     >
-      <Animated.Text style={[styles.heart, saved && styles.heartSaved, { transform: [{ scale }] }]}>
+      <Animated.Text style={[styles.heart, saved && styles.heartSaved, heartStyle, { transform: [{ scale }] }]}>
         {saved ? '♥' : '♡'}
       </Animated.Text>
-      <Text style={[styles.label, saved && styles.labelSaved]}>
+      <Text style={[styles.label, saved && styles.labelSaved, labelStyle]}>
         {saved ? 'Guardada en mi diario' : 'Guardar en mi diario'}
       </Text>
     </TouchableOpacity>

@@ -284,11 +284,9 @@ export default function YoScreen() {
     );
   }
 
-  function handleResetReturningScreen() {
-    AsyncStorage.multiRemove([
-      'psylens_returning_last_shown',
-      'psylens_returning_last_type',
-    ]).catch(() => {});
+  function handleForceReturningType(type: number) {
+    AsyncStorage.multiRemove(['psylens_returning_last_shown']).catch(() => {});
+    AsyncStorage.setItem('psylens_returning_debug_force', String(type)).catch(() => {});
     router.replace('/splash');
   }
 
@@ -427,12 +425,32 @@ export default function YoScreen() {
         />
 
         {__DEV__ && (
-          <SettingRow
-            theme={theme}
-            label="Debug: Reset returning screen"
-            labelColor={theme.text2}
-            onPress={handleResetReturningScreen}
-          />
+          <>
+            <SettingRow
+              theme={theme}
+              label="Debug: Racha"
+              labelColor={theme.text2}
+              onPress={() => handleForceReturningType(1)}
+            />
+            <SettingRow
+              theme={theme}
+              label="Debug: Frase de un autor"
+              labelColor={theme.text2}
+              onPress={() => handleForceReturningType(2)}
+            />
+            <SettingRow
+              theme={theme}
+              label="Debug: Tu recorrido (frases guardadas)"
+              labelColor={theme.text2}
+              onPress={() => handleForceReturningType(4)}
+            />
+            <SettingRow
+              theme={theme}
+              label="Debug: Reflexión"
+              labelColor={theme.text2}
+              onPress={() => handleForceReturningType(5)}
+            />
+          </>
         )}
 
         <SettingRow
