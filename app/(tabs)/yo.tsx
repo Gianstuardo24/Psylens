@@ -290,6 +290,30 @@ export default function YoScreen() {
     router.replace('/splash');
   }
 
+  async function handleResetDarwinProgress() {
+    const rawProgress = await AsyncStorage.getItem(PROGRESS_KEY).catch(() => null);
+    if (rawProgress) {
+      const prog: ProgressMap = JSON.parse(rawProgress);
+      delete prog['darwin'];
+      await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(prog)).catch(() => {});
+    }
+
+    const rawQuotes = await AsyncStorage.getItem('psylens_saved_quotes').catch(() => null);
+    if (rawQuotes) {
+      const quotes: { authorId: string }[] = JSON.parse(rawQuotes);
+      const filtered = quotes.filter(q => q.authorId !== 'darwin');
+      await AsyncStorage.setItem('psylens_saved_quotes', JSON.stringify(filtered)).catch(() => {});
+    }
+
+    await AsyncStorage.multiRemove([
+      'psylens_journal_darwin',
+      'psylens_quiz_step_darwin',
+      'psylens_quiz_open_darwin',
+    ]).catch(() => {});
+
+    router.push('/autor/darwin');
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -449,6 +473,12 @@ export default function YoScreen() {
               label="Debug: Reflexión"
               labelColor={theme.text2}
               onPress={() => handleForceReturningType(5)}
+            />
+            <SettingRow
+              theme={theme}
+              label="Debug: Reset darwin progress"
+              labelColor={theme.text2}
+              onPress={handleResetDarwinProgress}
             />
           </>
         )}

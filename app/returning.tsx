@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, Image, StyleSheet, Pressable, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, Image, StyleSheet, Pressable, TextInput, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -39,13 +39,6 @@ function isoOffset(iso: string, days: number): string {
   const d = new Date(iso + 'T00:00:00');
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
-}
-
-const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-function formatShortDateEs(iso: string): string {
-  const d = new Date(iso + 'T00:00:00');
-  return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
 }
 
 const AUTHOR_NAMES: Record<string, string> = Object.fromEntries(authors.map(a => [a.id, a.name]));
@@ -124,10 +117,15 @@ async function resolveSelection(): Promise<Selection> {
 
   if (debugForce) {
     await AsyncStorage.removeItem(RETURNING_DEBUG_FORCE_KEY).catch(() => {});
+    const forcedType = parseInt(debugForce, 10);
     const forced = resolveDebugForcedSelection(
-      parseInt(debugForce, 10), completedAuthorIds, rawStreak, lastCompletedAuthor, lastCompletedDate, today, savedQuotes,
+      forcedType, completedAuthorIds, rawStreak, lastCompletedAuthor, lastCompletedDate, today, savedQuotes,
     );
     if (forced) return persistSelection(forced, today);
+    if (forcedType === 4) {
+      Alert.alert('Debug', 'Necesitas al menos 2 frases guardadas para ver esta pantalla.');
+      return { kind: 'skip' };
+    }
   }
 
   if (lastShown === today) return { kind: 'skip' };
@@ -287,7 +285,7 @@ export default function ReturningScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [selection, setSelection]     = useState<Selection | null>(null);
-  const [justSaved, setJustSaved]             = useState(false);
+  const [savedQuotesCount, setSavedQuotesCount] = useState(0);
   const [reflectionAnswer, setReflectionAnswer] = useState('');
   const [reflectionSaved, setReflectionSaved]   = useState(false);
   const [previousReflection, setPreviousReflection] = useState<JournalEntry | null>(null);
@@ -296,7 +294,6 @@ export default function ReturningScreen() {
     if (selection?.kind !== 5 || !reflectionAnswer.trim()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setReflectionSaved(true);
-    setJustSaved(true);
     await appendJournalEntry({
       authorId:   selection.authorId,
       authorName: AUTHOR_NAMES[selection.authorId],
@@ -367,7 +364,8 @@ export default function ReturningScreen() {
                 authorId={selection.authorId}
                 authorName={AUTHOR_NAMES[selection.authorId]}
                 quote={savableQuotes[selection.authorId][selection.quoteIndex]}
-                onSaved={() => setJustSaved(true)}
+                onSaved={() => setSavedQuotesCount(c => c + 1)}
+                onUnsaved={() => setSavedQuotesCount(c => c - 1)}
                 style={{ marginTop: 8 }}
                 heartStyle={{ fontSize: 16 }}
                 labelStyle={{ fontSize: 16, fontWeight: '600' }}
@@ -393,18 +391,11 @@ export default function ReturningScreen() {
               <View style={{ marginBottom: 28 }}>
                 <PortraitCircle authorId={selection.authorId} size={140} borderWidth={4} theme={theme} />
               </View>
-              {previousReflection ? (
-                <Text style={styles.introLine}>¿Cómo lo ves ahora?</Text>
-              ) : (
-                <Text style={styles.introLine}>Sobre {AUTHOR_NAMES[selection.authorId]}...</Text>
+              <Text style={[styles.authorName, { marginBottom: 10 }]}>{AUTHOR_NAMES[selection.authorId]}</Text>
+              {previousReflection && (
+                <Text style={styles.repeatNotice}>{'Ya respondiste esto antes.\n¿Qué dirías hoy?'}</Text>
               )}
               <Text style={styles.phrase}>{returningContent.reflectionQuestions[selection.authorId]}</Text>
-              {previousReflection && (
-                <View style={styles.previousAnswerBlock}>
-                  <Text style={styles.previousAnswerText}>"{previousReflection.answer}"</Text>
-                  <Text style={styles.previousAnswerDate}>{formatShortDateEs(previousReflection.date)}</Text>
-                </View>
-              )}
               <TextInput
                 style={styles.reflectionInput}
                 multiline
@@ -427,10 +418,10 @@ export default function ReturningScreen() {
           )}
         </View>
 
-        {justSaved && (
+        {(savedQuotesCount > 0 || reflectionSaved) && (
           <TouchableOpacity
             style={styles.viewDiaryButton}
-            onPress={() => router.push('/(tabs)/diario?tab=diario')}
+            onPress={() => router.push('/(tabs)/diario?tab=frases')}
             activeOpacity={0.7}
           >
             <Text style={styles.viewDiaryButtonText}>Ver mi diario</Text>
@@ -574,9 +565,12 @@ function makeStyles(theme: Theme) {
       fontFamily: 'PlayfairDisplay_400Regular_Italic',
       fontWeight: '400',
       fontStyle: 'italic',
+      fontSize: 20,
+      lineHeight: 29,
+      maxWidth: 270,
       color: theme.text,
       textAlign: 'center',
-      lineHeight: 32,
+      marginBottom: 17,
     },
 
     // Type 2/3 — quote (smaller, capped width)
@@ -593,23 +587,13 @@ function makeStyles(theme: Theme) {
     },
 
     // Type 5 — previous answer (revisit)
-    previousAnswerBlock: {
-      width: '100%',
-      backgroundColor: theme.bg3,
-      borderRadius: radius.lg,
-      padding: spacing.lg,
-      marginBottom: spacing.md,
-    },
-    previousAnswerText: {
-      ...typography.bodyS,
-      fontStyle: 'italic',
-      color: theme.text2,
-      lineHeight: 20,
-    },
-    previousAnswerDate: {
+    repeatNotice: {
       ...typography.bodyXS,
+      fontSize: 18,
+      lineHeight: 24,
       color: theme.text3,
-      marginTop: spacing.xs,
+      textAlign: 'center',
+      marginBottom: 8,
     },
 
     // Type 5 — reflection input

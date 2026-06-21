@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,14 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing } from '../../constants/typography';
 import { useTheme } from '../../hooks/useTheme';
 import { JournalEntry, JOURNAL_PREFIX } from '../../utils/journal';
-import { getSavedQuotes, SavedQuote } from '../../utils/savedQuotes';
+import { getSavedQuotes, SavedQuote, unsaveQuote } from '../../utils/savedQuotes';
 
 type Theme = typeof colors.dark;
 
@@ -59,9 +59,18 @@ export default function DiarioScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const pagerRef = useRef<ScrollView>(null);
 
-  const [activeTab,      setActiveTab]      = useState<'frases' | 'reflexiones'>('frases');
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const initialTab: 'frases' | 'reflexiones' = params.tab === 'reflexiones' ? 'reflexiones' : 'frases';
+
+  const [activeTab,      setActiveTab]      = useState<'frases' | 'reflexiones'>(initialTab);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [savedQuotes,    setSavedQuotes]    = useState<SavedQuote[]>([]);
+
+  useEffect(() => {
+    if (initialTab !== 'frases') {
+      pagerRef.current?.scrollTo({ x: TABS.indexOf(initialTab) * screenWidth, animated: false });
+    }
+  }, []);
 
   function selectTab(tab: 'frases' | 'reflexiones') {
     setActiveTab(tab);
@@ -71,6 +80,11 @@ export default function DiarioScreen() {
   function handlePagerScrollEnd(e: NativeSyntheticEvent<NativeScrollEvent>) {
     const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
     setActiveTab(TABS[index] ?? TABS[0]);
+  }
+
+  async function handleUnsaveQuote(authorId: string, quote: string) {
+    setSavedQuotes(prev => prev.filter(e => !(e.authorId === authorId && e.quote === quote)));
+    await unsaveQuote(authorId, quote);
   }
 
   useFocusEffect(
@@ -166,7 +180,16 @@ export default function DiarioScreen() {
                     </View>
                     {group.quotes.map((q, i) => (
                       <View key={`${q.authorId}-${q.dateAdded}-${i}`} style={styles.savedQuoteItem}>
-                        <Text style={styles.savedQuoteText}>"{q.quote}"</Text>
+                        <View style={styles.savedQuoteRow}>
+                          <Text style={[styles.savedQuoteText, styles.savedQuoteTextFlex]}>"{q.quote}"</Text>
+                          <TouchableOpacity
+                            style={styles.savedQuoteDeleteButton}
+                            onPress={() => handleUnsaveQuote(q.authorId, q.quote)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Text style={styles.savedQuoteDeleteText}>×</Text>
+                          </TouchableOpacity>
+                        </View>
                         <Text style={styles.savedQuoteDate}>Guardada el {formatShortDateEs(q.dateAdded)}</Text>
                       </View>
                     ))}
@@ -359,12 +382,28 @@ function makeStyles(theme: Theme) {
     savedQuoteItem: {
       marginBottom: spacing.md,
     },
+    savedQuoteRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
     savedQuoteText: {
       ...typography.bodyS,
       color: theme.text,
       fontStyle: 'italic',
       lineHeight: 22,
       marginBottom: spacing.xs,
+    },
+    savedQuoteTextFlex: {
+      flex: 1,
+    },
+    savedQuoteDeleteButton: {
+      paddingHorizontal: spacing.xs,
+      paddingVertical: 2,
+      marginLeft: spacing.xs,
+    },
+    savedQuoteDeleteText: {
+      fontSize: 16,
+      color: theme.text3,
     },
     savedQuoteDate: {
       ...typography.bodyXS,

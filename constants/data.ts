@@ -62,6 +62,22 @@ export type QuizQuestion =
   | { type: 'true_false'; question: string; correct: boolean; explanation: string }
   | { type: 'open'; question: string };
 
+// Free/premium boundary. b0 is split at the sub-block level (sb-0a/sb-0b free,
+// sb-0c/sb-0d premium); every other block is uniformly free or premium.
+const B0_FREE_SUB_BLOCK_IDS = new Set(['sb-0a', 'sb-0b']);
+
+export function isContentFree(entry: { blockId: string; subBlockId?: string }): boolean {
+  if (entry.blockId === 'b0') {
+    return !!entry.subBlockId && B0_FREE_SUB_BLOCK_IDS.has(entry.subBlockId);
+  }
+  return blocks.find(b => b.id === entry.blockId)?.isFree ?? false;
+}
+
+export function isSubBlockFree(subBlockId: string, blockId: string): boolean {
+  if (blockId === 'b0') return B0_FREE_SUB_BLOCK_IDS.has(subBlockId);
+  return blocks.find(b => b.id === blockId)?.isFree ?? false;
+}
+
 export const authors = [
 
   {

@@ -3,7 +3,7 @@ import { Animated, StyleProp, StyleSheet, Text, TextStyle, TouchableOpacity, Vie
 import * as Haptics from 'expo-haptics';
 import { colors } from '../constants/colors';
 import { typography, spacing } from '../constants/typography';
-import { getSavedQuotes, isQuoteSaved, saveQuote } from '../utils/savedQuotes';
+import { getSavedQuotes, isQuoteSaved, saveQuote, unsaveQuote } from '../utils/savedQuotes';
 import { useTheme } from '../hooks/useTheme';
 
 type Theme = typeof colors.dark;
@@ -13,6 +13,7 @@ export function SaveQuoteButton({
   authorName,
   quote,
   onSaved,
+  onUnsaved,
   style,
   heartStyle,
   labelStyle,
@@ -21,6 +22,7 @@ export function SaveQuoteButton({
   authorName: string;
   quote: string;
   onSaved?: () => void;
+  onUnsaved?: () => void;
   style?: StyleProp<ViewStyle>;
   heartStyle?: StyleProp<TextStyle>;
   labelStyle?: StyleProp<TextStyle>;
@@ -39,7 +41,17 @@ export function SaveQuoteButton({
   }, [authorId, quote]);
 
   async function handlePress() {
-    if (saved) return;
+    if (saved) {
+      setSaved(false);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Animated.sequence([
+        Animated.spring(scale, { toValue: 0.8, useNativeDriver: true, speed: 30, bounciness: 8 }),
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }),
+      ]).start();
+      await unsaveQuote(authorId, quote);
+      onUnsaved?.();
+      return;
+    }
     setSaved(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Animated.sequence([
@@ -54,8 +66,7 @@ export function SaveQuoteButton({
     <TouchableOpacity
       style={[styles.button, style]}
       onPress={handlePress}
-      activeOpacity={saved ? 1 : 0.7}
-      disabled={saved}
+      activeOpacity={0.7}
     >
       <Animated.Text style={[styles.heart, saved && styles.heartSaved, heartStyle, { transform: [{ scale }] }]}>
         {saved ? '♥' : '♡'}

@@ -29,3 +29,9 @@ export async function saveQuote(entry: { authorId: string; authorName: string; q
   await AsyncStorage.setItem(SAVED_QUOTES_KEY, JSON.stringify(updated)).catch(() => {});
   return updated;
 }
+
+export async function unsaveQuote(authorId: string, quote: string): Promise<void> {
+  const existing = await getSavedQuotes();
+  const updated = existing.filter(e => !(e.authorId === authorId && e.quote === quote));
+  await AsyncStorage.setItem(SAVED_QUOTES_KEY, JSON.stringify(updated)).catch(() => {});
+}

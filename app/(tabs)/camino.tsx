@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
-import { authors, blocks, subBlocks, revolutionCards } from '../../constants/data';
+import { authors, blocks, subBlocks, revolutionCards, isSubBlockFree } from '../../constants/data';
 import { PaywallSheet } from '../../components/PaywallSheet';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -79,12 +79,19 @@ function isRevCardDone(subBlockId: string, progress: ProgressMap): boolean {
   return !!progress[rev.id]?.concept;
 }
 
+// Blocks beyond b1 aren't built yet — always shown as "coming soon",
+// regardless of premium status (this isn't a paywall, it's missing content).
+function isComingSoonBlock(blockId: string): boolean {
+  return !['intro', 'b0', 'b1'].includes(blockId);
+}
+
 function getBlockStatus(block: typeof blocks[0], isPremium: boolean, progress: ProgressMap): BlockStatus {
   if (block.id === 'intro') return 'active';
   if (block.id === 'b0') {
     const introDone = INTRO_AUTHOR_IDS.every(id => isAuthorDone(progress[id]));
     return introDone ? 'active' : 'locked';
   }
+  if (isComingSoonBlock(block.id)) return 'locked';
   if (block.isFree) return 'active';
   return isPremium ? 'active' : 'locked';
 }
@@ -94,10 +101,29 @@ function getSubBlockStatus(
   block: typeof blocks[0],
   blockStatus: BlockStatus,
   progress: ProgressMap,
+  isPremium: boolean,
 ): SubBlockStatus {
   if (blockStatus === 'locked') return 'locked';
+  if (!isSubBlockFree(subBlockId, block.id) && !isPremium) return 'locked';
+
   const blockSubBlocks = subBlocks.filter(sb => sb.blockId === block.id);
   const idx = blockSubBlocks.findIndex(sb => sb.id === subBlockId);
+
+  // First sub-block of a non-initial block must wait for the previous
+  // block's last sub-block to be fully completed (cross-block sequencing).
+  if (idx === 0 && block.id !== 'b0') {
+    const blockIdx  = blocks.findIndex(b => b.id === block.id);
+    const prevBlock = blockIdx > 0 ? blocks[blockIdx - 1] : null;
+    if (prevBlock) {
+      const prevBlockSubBlocks = subBlocks.filter(sb => sb.blockId === prevBlock.id);
+      const lastSubBlock = prevBlockSubBlocks[prevBlockSubBlocks.length - 1];
+      const prevRequiredIds = lastSubBlock
+        ? lastSubBlock.authorIds.filter(id => prevBlock.authors.includes(id))
+        : prevBlock.authors;
+      if (!prevRequiredIds.every(id => isAuthorDone(progress[id]))) return 'locked';
+    }
+  }
+
   if (idx <= 0) return 'active';
   const prevSubBlock = blockSubBlocks[idx - 1];
   const blockAuthorSet = new Set(block.authors);
@@ -131,10 +157,14 @@ function AuthorCard({
   author,
   state,
   blockBaseColor,
+  premiumLocked,
+  onPaywall,
 }: {
   author: typeof authors[0];
   state: AuthorState;
   blockBaseColor?: string;
+  premiumLocked?: boolean;
+  onPaywall?: () => void;
 }) {
   const { theme } = useTheme();
   const ac = useMemo(() => makeAcStyles(theme), [theme]);
@@ -254,7 +284,16 @@ function AuthorCard({
     </View>
   );
 
-  if (state === 'locked') return inner;
+  if (state === 'locked') {
+    if (premiumLocked && onPaywall) {
+      return (
+        <TouchableOpacity onPress={onPaywall} activeOpacity={0.8}>
+          {inner}
+        </TouchableOpacity>
+      );
+    }
+    return inner;
+  }
 
   return (
     <TouchableOpacity
@@ -273,11 +312,15 @@ function RevolutionCard({
   state,
   subBlockName,
   blockBaseColor,
+  premiumLocked,
+  onPaywall,
 }: {
   rev: typeof revolutionCards[0];
   state: AuthorState;
   subBlockName: string;
   blockBaseColor: string;
+  premiumLocked?: boolean;
+  onPaywall?: () => void;
 }) {
   const { theme } = useTheme();
   const ac = useMemo(() => makeAcStyles(theme), [theme]);
@@ -327,7 +370,16 @@ function RevolutionCard({
     </View>
   );
 
-  if (state === 'locked') return inner;
+  if (state === 'locked') {
+    if (premiumLocked && onPaywall) {
+      return (
+        <TouchableOpacity onPress={onPaywall} activeOpacity={0.8}>
+          {inner}
+        </TouchableOpacity>
+      );
+    }
+    return inner;
+  }
 
   return (
     <TouchableOpacity onPress={() => router.push(`/autor/${rev.id}`)} activeOpacity={0.8}>
@@ -342,16 +394,24 @@ function SubBlockHeader({
   subBlock,
   status,
   blockColor,
+  showFreeTag,
+  isFree,
+  premiumLocked,
+  onPaywall,
 }: {
   subBlock: typeof subBlocks[0];
   status: SubBlockStatus;
   blockColor: { base: string; light: string; text: string };
+  showFreeTag?: boolean;
+  isFree?: boolean;
+  premiumLocked?: boolean;
+  onPaywall?: () => void;
 }) {
   const { theme } = useTheme();
   const sbh = useMemo(() => makeSbhStyles(theme), [theme]);
   const isLocked = status === 'locked';
 
-  return (
+  const content = (
     <View style={[
       sbh.container,
       { borderLeftColor: isLocked ? theme.text3 : blockColor.base },
@@ -374,9 +434,29 @@ function SubBlockHeader({
         >
           {subBlock.name}
         </Text>
+        {showFreeTag && (
+          isFree ? (
+            <View style={sbh.freeTag}>
+              <Text style={sbh.freeTagText}>Gratis</Text>
+            </View>
+          ) : (
+            <View style={sbh.premiumTag}>
+              <Text style={sbh.premiumTagText}>Premium</Text>
+            </View>
+          )
+        )}
       </View>
     </View>
   );
+
+  if (premiumLocked && onPaywall) {
+    return (
+      <TouchableOpacity onPress={onPaywall} activeOpacity={0.8}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+  return content;
 }
 
 // ─── BlockNode ────────────────────────────────────────────────────────────────
@@ -412,7 +492,8 @@ function BlockNode({
   const { theme, isDark } = useTheme();
   const bn = useMemo(() => makeBnStyles(theme), [theme]);
   const bc = blockColors[block.id] ?? blockColors['intro'];
-  const headerBg = isDark ? bc.base + '26' : bc.light;
+  const comingSoon = isComingSoonBlock(block.id);
+  const headerBg = comingSoon ? theme.bg3 : (isDark ? bc.base + '26' : bc.light);
   const listBg   = isDark ? bc.base + '26' : bc.light;
 
   const status   = getBlockStatus(block, isPremium, progress);
@@ -439,56 +520,71 @@ function BlockNode({
         onPress={isLocked
           ? (block.id === 'b0'
               ? () => Alert.alert('Introducción requerida', 'Completa la Introducción para continuar.')
-              : onPaywall)
+              : comingSoon
+                ? () => Alert.alert('Próximamente', 'Este bloque estará disponible próximamente.')
+                : onPaywall)
           : (isActive ? onToggle : undefined)}
         activeOpacity={0.7}
       >
-        {/* Symbol icon */}
-        <View style={[bn.icon, isLocked && bn.iconLocked]}>
-          {block.symbol === 'lens' ? (
-            <Svg width={28} height={28} viewBox="0 0 28 28">
-              <Path d="M14 4 Q4 14 14 24" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
-              <Path d="M14 4 Q24 14 14 24" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
-            </Svg>
-          ) : (
-            <Text style={[bn.iconGlyph, isLocked && bn.iconGlyphLocked]}>
-              {SYMBOL[block.symbol] ?? block.symbol[0].toUpperCase()}
-            </Text>
-          )}
-        </View>
-
-        {/* Name + era + progress */}
-        <View style={bn.meta}>
-          <View style={bn.titleRow}>
-            <Text style={[bn.name, !isLocked && { color: bc.text }, isLocked && bn.nameLocked]} numberOfLines={1}>
-              {block.name}
-            </Text>
-            {block.isFree ? (
-              <View style={bn.freeTag}>
-                <Text style={bn.freeTagText}>Gratis</Text>
-              </View>
-            ) : (
-              <View style={bn.premiumTag}>
-                <Text style={bn.premiumTagText}>Premium</Text>
-              </View>
-            )}
+        {comingSoon ? (
+          <View style={bn.comingSoonRow}>
+            <Text style={bn.comingSoonIcon}>🔒</Text>
+            <Text style={bn.comingSoonText}>Próximamente</Text>
           </View>
-
-          <Text style={[bn.era, !isLocked && { color: bc.text }, isLocked && bn.eraLocked]}>{block.era}</Text>
-
-          {/* Progress bar */}
-          <View style={bn.progressRow}>
-            <View style={bn.progressTrack}>
-              <View style={[bn.progressFill, { width: `${pct}%` }]} />
+        ) : (
+          <>
+            {/* Symbol icon */}
+            <View style={[bn.icon, isLocked && bn.iconLocked]}>
+              {block.symbol === 'lens' ? (
+                <Svg width={28} height={28} viewBox="0 0 28 28">
+                  <Path d="M14 4 Q4 14 14 24" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
+                  <Path d="M14 4 Q24 14 14 24" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
+                </Svg>
+              ) : (
+                <Text style={[bn.iconGlyph, isLocked && bn.iconGlyphLocked]}>
+                  {SYMBOL[block.symbol] ?? block.symbol[0].toUpperCase()}
+                </Text>
+              )}
             </View>
-            <Text style={bn.progressText}>{completed}/{total}</Text>
-          </View>
-        </View>
 
-        {/* Expand / lock indicator */}
-        <Text style={[bn.chevron, isLocked && bn.chevronLocked]}>
-          {isLocked ? '⊘' : isExpanded ? '▾' : '▸'}
-        </Text>
+            {/* Name + era + progress */}
+            <View style={bn.meta}>
+              <View style={bn.titleRow}>
+                <Text style={[bn.name, !isLocked && { color: bc.text }, isLocked && bn.nameLocked]} numberOfLines={1}>
+                  {block.name}
+                </Text>
+                {block.id !== 'b0' && (
+                  block.isFree ? (
+                    <View style={bn.freeTag}>
+                      <Text style={bn.freeTagText}>Gratis</Text>
+                    </View>
+                  ) : (
+                    <View style={bn.premiumTag}>
+                      <Text style={bn.premiumTagText}>Premium</Text>
+                    </View>
+                  )
+                )}
+              </View>
+
+              <Text style={[bn.era, !isLocked && { color: bc.text }, isLocked && bn.eraLocked]}>
+                {block.era}
+              </Text>
+
+              {/* Progress bar */}
+              <View style={bn.progressRow}>
+                <View style={bn.progressTrack}>
+                  <View style={[bn.progressFill, { width: `${pct}%` }]} />
+                </View>
+                <Text style={bn.progressText}>{completed}/{total}</Text>
+              </View>
+            </View>
+
+            {/* Expand / lock indicator */}
+            <Text style={[bn.chevron, isLocked && bn.chevronLocked]}>
+              {isLocked ? '⊘' : isExpanded ? '▾' : '▸'}
+            </Text>
+          </>
+        )}
       </TouchableOpacity>
 
       {/* ── Authors list (expanded) ───────────────────────── */}
@@ -496,7 +592,9 @@ function BlockNode({
         <View style={[bn.authorsList, { backgroundColor: listBg }]}>
           {blockSubBlocks.length > 0 ? (
             blockSubBlocks.map(sb => {
-              const sbStatus    = getSubBlockStatus(sb.id, block, status, progress);
+              const sbFree          = isSubBlockFree(sb.id, block.id);
+              const sbPremiumLocked = !sbFree && !isPremium;
+              const sbStatus    = getSubBlockStatus(sb.id, block, status, progress, isPremium);
               const sbAuthorIds = sb.authorIds.filter(id => blockAuthorSet.has(id));
               const sbAuthors   = sbAuthorIds
                 .map(id => authorById[id])
@@ -507,14 +605,33 @@ function BlockNode({
                 : isRevCardDone(sb.id, progress) ? 'done' : 'active';
               return (
                 <View key={sb.id}>
-                  <SubBlockHeader subBlock={sb} status={sbStatus} blockColor={bc} />
-                  {rev && <RevolutionCard rev={rev} state={revState} subBlockName={sb.name} blockBaseColor={bc.base} />}
+                  <SubBlockHeader
+                    subBlock={sb}
+                    status={sbStatus}
+                    blockColor={bc}
+                    showFreeTag={block.id === 'b0'}
+                    isFree={sbFree}
+                    premiumLocked={sbPremiumLocked}
+                    onPaywall={onPaywall}
+                  />
+                  {rev && (
+                    <RevolutionCard
+                      rev={rev}
+                      state={revState}
+                      subBlockName={sb.name}
+                      blockBaseColor={bc.base}
+                      premiumLocked={sbPremiumLocked}
+                      onPaywall={onPaywall}
+                    />
+                  )}
                   {sbAuthors.map((author, i) => (
                     <AuthorCard
                       key={author.id}
                       author={author}
                       state={computeAuthorState(author.id, i, sbAuthorIds, sbStatus, true, progress, sb.id)}
                       blockBaseColor={bc.base}
+                      premiumLocked={sbPremiumLocked}
+                      onPaywall={onPaywall}
                     />
                   ))}
                 </View>
@@ -898,6 +1015,23 @@ function makeBnStyles(theme: Theme) {
       fontSize: typography.bodyS.fontSize,
     },
 
+    comingSoonRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
+    comingSoonIcon: {
+      fontSize: typography.h3.fontSize,
+      color: theme.text3,
+    },
+    comingSoonText: {
+      ...typography.bodyS,
+      color: theme.text3,
+      fontWeight: '600',
+    },
+
     authorsList: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.md,
@@ -942,6 +1076,26 @@ function makeSbhStyles(theme: Theme) {
     },
     nameLocked: {
       color: theme.text3,
+    },
+    freeTag: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.full,
+      backgroundColor: theme.greenBg,
+    },
+    freeTagText: {
+      ...typography.label,
+      color: theme.green,
+    },
+    premiumTag: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.full,
+      backgroundColor: theme.purpleBg,
+    },
+    premiumTagText: {
+      ...typography.label,
+      color: theme.purple,
     },
   });
 }

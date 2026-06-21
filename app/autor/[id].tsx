@@ -17,7 +17,7 @@ import { typography, spacing, radius } from '../../constants/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
-import { authors, blocks, glossaryTerms, revolutionCards, savableQuotes, subBlocks, QuizQuestion } from '../../constants/data';
+import { authors, blocks, glossaryTerms, isContentFree, revolutionCards, savableQuotes, subBlocks, QuizQuestion } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
@@ -180,7 +180,7 @@ export default function AutorScreen() {
   const [openAnswer,     setOpenAnswer]     = useState('');
 
   const [journalEntries,    setJournalEntries]    = useState<JournalEntry[]>([]);
-  const [savedAnyQuote,     setSavedAnyQuote]     = useState(false);
+  const [savedQuotesCount,  setSavedQuotesCount]  = useState(0);
   const savedJournalEntry = journalEntries[journalEntries.length - 1] ?? null;
 
   const styles = useMemo(() => makeStyles(theme), [theme]);
@@ -215,7 +215,7 @@ export default function AutorScreen() {
 
   useEffect(() => {
     if (showCelebration) {
-      setSavedAnyQuote(false);
+      setSavedQuotesCount(0);
       animScale.setValue(0.85);
       animOpacity.setValue(0);
       Animated.parallel([
@@ -231,15 +231,15 @@ export default function AutorScreen() {
     ? (blocks.find(b => b.id === revCard.blockId) ?? null)
     : author ? (blocks.find(b => b.id === author.blockId) ?? null) : null;
   const authorTerms = glossaryTerms.filter(t => t.authorId === id);
-  const nextDest: { id: string; name: string } | null = (() => {
+  const nextDest: { id: string; name: string; free: boolean } | null = (() => {
     if (!author) return null;
     const pos = GLOBAL_SEQUENCE.indexOf(author.id);
     if (pos < 0 || pos >= GLOBAL_SEQUENCE.length - 1) return null;
     const nextId = GLOBAL_SEQUENCE[pos + 1];
     const nextRev = revolutionCards.find(r => r.id === nextId);
-    if (nextRev) return { id: nextId, name: nextRev.name };
+    if (nextRev) return { id: nextId, name: nextRev.name, free: isContentFree(nextRev) };
     const nextAuth = authors.find(a => a.id === nextId);
-    return nextAuth ? { id: nextId, name: nextAuth.name } : null;
+    return nextAuth ? { id: nextId, name: nextAuth.name, free: isContentFree(nextAuth) } : null;
   })();
 
   // Block-level derived values (safe to compute before the null guard)
@@ -439,9 +439,9 @@ export default function AutorScreen() {
     progress[author.id]?.fondo
   );
 
-  // Concepto + Fondo are premium-gated for non-free blocks
+  // Concepto + Fondo are premium-gated for non-free authors (sub-block-level for b0)
   const isContentLocked =
-    !block.isFree && !isPremium && (activeTab === 'concept' || activeTab === 'fondo');
+    !isContentFree(author) && !isPremium && (activeTab === 'concept' || activeTab === 'fondo');
 
   async function completeAuthor() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -525,6 +525,11 @@ export default function AutorScreen() {
   function navigateToNext() {
     if (!nextDest) return;
     setShowCelebration(false);
+    if (!nextDest.free && !isPremium) {
+      setPendingAuthorId(nextDest.id);
+      setShowPaywall(true);
+      return;
+    }
     router.replace(`/autor/${nextDest.id}`);
   }
 
@@ -821,17 +826,21 @@ export default function AutorScreen() {
                       authorId={author.id}
                       authorName={author.name}
                       quote={quote}
-                      onSaved={() => setSavedAnyQuote(true)}
+                      onSaved={() => setSavedQuotesCount(c => c + 1)}
+                      onUnsaved={() => setSavedQuotesCount(c => c - 1)}
                     />
                   </View>
                 ))}
                 <Text style={styles.quotesFooter}>
                   Inspiradas en el pensamiento de {author.name}
                 </Text>
-                {savedAnyQuote && (
+                {savedQuotesCount > 0 && (
                   <TouchableOpacity
                     style={styles.viewDiaryButton}
-                    onPress={() => router.push('/(tabs)/diario?tab=diario')}
+                    onPress={() => {
+                      setShowCelebration(false);
+                      router.push('/(tabs)/diario?tab=frases');
+                    }}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.viewDiaryButtonText}>Ver mi diario</Text>
@@ -971,8 +980,13 @@ export default function AutorScreen() {
           conceptsCount={blockConcepts}
           daysTaken={blockCompleteDays}
           onContinue={() => {
+            setShowBlockComplete(false);
+            if (savableQuotes[author!.id]) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              setShowCelebration(true);
+              return;
+            }
             if (!nextBlock) {
-              setShowBlockComplete(false);
               return;
             }
             const firstEntryId = GLOBAL_SEQUENCE.find(entryId => {
@@ -981,17 +995,14 @@ export default function AutorScreen() {
               return nextBlock.authors.includes(entryId);
             }) ?? null;
             if (!firstEntryId) {
-              setShowBlockComplete(false);
               router.replace('/(tabs)/camino');
               return;
             }
             if (!nextBlock.isFree && !isPremium) {
-              setShowBlockComplete(false);
               setPendingAuthorId(firstEntryId);
               setShowPaywall(true);
               return;
             }
-            setShowBlockComplete(false);
             router.replace(`/autor/${firstEntryId}`);
           }}
           onViewSummary={() => {
