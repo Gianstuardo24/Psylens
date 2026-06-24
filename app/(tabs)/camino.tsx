@@ -16,6 +16,7 @@ import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, blocks, subBlocks, revolutionCards, isSubBlockFree } from '../../constants/data';
 import { PaywallSheet } from '../../components/PaywallSheet';
+import { HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
 
 type Theme = typeof colors.dark;
@@ -50,13 +51,13 @@ const PORTRAITS: Record<string, number | null> = {
   'spinoza':        require('../../assets/portraits/spinoza.png'),
   'kant':           require('../../assets/portraits/kant.png'),
   'schopenhauer':   require('../../assets/portraits/schopenhauer.png'),
-  'darwin':         null,
+  'darwin':         require('../../assets/portraits/darwin.png'),
   // b1
-  'ebbinghaus':     null,
+  'ebbinghaus':     require('../../assets/portraits/ebbinghaus.png'),
   'fechner':        require('../../assets/portraits/fechner.png'),
   'wundt':          require('../../assets/portraits/wundt.png'),
   'james':          require('../../assets/portraits/james.png'),
-  'thorndike':      null,
+  'thorndike':      require('../../assets/portraits/thorndike.png'),
 };
 
 // ─── Sub-block revolution card lookup ─────────────────────────────────────────
@@ -166,14 +167,15 @@ function AuthorCard({
   premiumLocked?: boolean;
   onPaywall?: () => void;
 }) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const ac = useMemo(() => makeAcStyles(theme), [theme]);
   const cardBorderColor     = blockBaseColor ? blockBaseColor + '33' : undefined;
   const portraitBorderColor = blockBaseColor ? blockBaseColor + '80' : undefined;
 
-  const portrait     = PORTRAITS[author.id] ?? null;
-  const isDual       = author.id === 'heraclito-democrito';
-  const isIntro      = author.id.startsWith('intro-');
+  const portrait        = PORTRAITS[author.id] ?? null;
+  const isDual           = author.id === 'heraclito-democrito';
+  const isIntro          = author.id.startsWith('intro-');
+  const isHelenisticas   = author.id === 'helenisticas';
   const isComingSoon = author.subtitle === 'Contenido próximamente';
 
   const inner = (
@@ -236,6 +238,11 @@ function AuthorCard({
                 <Circle cx="60" cy="60" r="50" stroke="#0f6e56" strokeWidth="2" fill="none" />
               </Svg>
             )}
+            {state === 'locked' && <View style={ac.portraitOverlay} />}
+          </View>
+        ) : isHelenisticas ? (
+          <View style={ac.portrait}>
+            <HelenisticasIllustration size={64} isDark={isDark} />
             {state === 'locked' && <View style={ac.portraitOverlay} />}
           </View>
         ) : (

@@ -21,7 +21,7 @@ import { authors, blocks, glossaryTerms, isContentFree, revolutionCards, savable
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
-import { IntroIllustration } from '../../components/IntroIllustrations';
+import { IntroIllustration, HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { SaveQuoteButton } from '../../components/SaveQuoteButton';
 import { useTheme } from '../../hooks/useTheme';
 import { appendJournalEntry, getJournalEntries, JournalEntry } from '../../utils/journal';
@@ -76,6 +76,9 @@ const PORTRAITS: Record<string, number | null> = {
   'spinoza':       require('../../assets/portraits/spinoza.png'),
   'kant':          require('../../assets/portraits/kant.png'),
   'schopenhauer':  require('../../assets/portraits/schopenhauer.png'),
+  'darwin':        require('../../assets/portraits/darwin.png'),
+  'ebbinghaus':    require('../../assets/portraits/ebbinghaus.png'),
+  'thorndike':     require('../../assets/portraits/thorndike.png'),
 };
 
 type TabKey = 'surface' | 'concept' | 'fondo' | 'reflexion';
@@ -171,6 +174,7 @@ export default function AutorScreen() {
   const animScale      = useRef(new Animated.Value(0.85)).current;
   const animOpacity    = useRef(new Animated.Value(0)).current;
   const quizTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollViewRef   = useRef<ScrollView>(null);
 
   const [showQuiz,       setShowQuiz]       = useState(false);
   const [quizStep,       setQuizStep]       = useState(0);
@@ -212,6 +216,10 @@ export default function AutorScreen() {
       if (rawOpen) setOpenAnswer(rawOpen);
     });
   }, [id]);
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+  }, [activeTab]);
 
   useEffect(() => {
     if (showCelebration) {
@@ -329,6 +337,7 @@ export default function AutorScreen() {
 
         <View style={{ flex: 1 }}>
           <ScrollView
+            ref={scrollViewRef}
             style={styles.scroll}
             contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
             showsVerticalScrollIndicator={false}
@@ -418,9 +427,10 @@ export default function AutorScreen() {
   const content        = { surface: author.surface, concept: author.concept, fondo: author.fondo }[activeTab];
   const PLACEHOLDER_TEXT = 'Este contenido estará disponible pronto.';
   const isPlaceholder  = !content?.text || content.text === PLACEHOLDER_TEXT;
-  const portrait       = PORTRAITS[author.id] ?? null;
-  const isDual         = author.id === 'heraclito-democrito';
-  const isIntroAuthor  = author.id.startsWith('intro-');
+  const portrait        = PORTRAITS[author.id] ?? null;
+  const isDual          = author.id === 'heraclito-democrito';
+  const isIntroAuthor   = author.id.startsWith('intro-');
+  const isHelenisticas  = author.id === 'helenisticas';
   const isTwoLayer     = author.layerType === 'two';
   const activeTabs     = isTwoLayer
     ? [{ key: 'surface' as TabKey, label: 'Entrada' }, { key: 'concept' as TabKey, label: 'Profundidad' }]
@@ -602,6 +612,10 @@ export default function AutorScreen() {
           <View style={styles.introIllustrationWrap}>
             <IntroIllustration authorId={author.id} />
           </View>
+        ) : isHelenisticas ? (
+          <View style={styles.portraitCircle}>
+            <HelenisticasIllustration size={120} isDark={isDark} />
+          </View>
         ) : (
           <View style={styles.portraitCircle}>
             {portrait ? (
@@ -641,6 +655,7 @@ export default function AutorScreen() {
       {/* Scrollable content + lock overlay */}
       <View style={{ flex: 1 }}>
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
           showsVerticalScrollIndicator={false}
@@ -802,6 +817,10 @@ export default function AutorScreen() {
             ) : isIntroAuthor ? (
               <View style={styles.celebIntroCircle}>
                 <IntroIllustration authorId={author.id} size={80} />
+              </View>
+            ) : isHelenisticas ? (
+              <View style={styles.celebCircle}>
+                <HelenisticasIllustration size={96} isDark={isDark} />
               </View>
             ) : (
               <View style={styles.celebCircle}>

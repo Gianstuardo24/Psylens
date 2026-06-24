@@ -1,4 +1,4 @@
-import Svg, { Circle, Ellipse, Line } from 'react-native-svg';
+import Svg, { Circle, Ellipse, Line, Path } from 'react-native-svg';
 
 const GREEN = '#0f6e56';
 const DEFAULT_SIZE = 120;
@@ -59,6 +59,21 @@ function ConcentricIllustration({ size = DEFAULT_SIZE }: { size?: number }) {
       <Circle cx="60" cy="60" r="18" stroke={GREEN} strokeWidth="2" fill="none" />
       <Circle cx="60" cy="60" r="34" stroke={GREEN} strokeWidth="2" fill="none" />
       <Circle cx="60" cy="60" r="50" stroke={GREEN} strokeWidth="2" fill="none" />
+    </Svg>
+  );
+}
+
+export function HelenisticasIllustration({ size = DEFAULT_SIZE, isDark }: { size?: number; isDark: boolean }) {
+  const bg     = isDark ? '#0D1F1A' : '#F5F0E8';
+  const border = isDark ? '#1a4a3a' : '#C9A84C';
+  const accent = isDark ? '#3a9a7a' : '#C9A84C';
+  return (
+    <Svg width={size} height={size} viewBox="0 0 400 400">
+      <Circle cx="200" cy="200" r="196" fill={bg} stroke={border} strokeWidth="4" />
+      <Path d="M200 100 L300 260 L100 260 Z" stroke={accent} strokeWidth="9" fill="none" strokeLinejoin="round" />
+      <Circle cx="200" cy="100" r="22" fill={accent} />
+      <Circle cx="300" cy="260" r="22" fill={accent} />
+      <Circle cx="100" cy="260" r="22" fill={accent} />
     </Svg>
   );
 }

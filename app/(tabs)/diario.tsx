@@ -100,22 +100,6 @@ export default function DiarioScreen() {
           .sort((a, b) => b.date.localeCompare(a.date));
         setJournalEntries(entries);
       });
-
-      // TEMP DEBUG — remove after inspecting raw AsyncStorage values
-      (async () => {
-        const rawQuotes = await AsyncStorage.getItem('psylens_saved_quotes').catch(() => null);
-        console.log('[DEBUG] psylens_saved_quotes raw:', rawQuotes);
-
-        const allKeys = await AsyncStorage.getAllKeys().catch(() => [] as readonly string[]);
-        const journalKeys = [...allKeys].filter(k => k.startsWith('psylens_journal_'));
-        console.log('[DEBUG] psylens_journal_* keys found:', journalKeys);
-        if (journalKeys.length) {
-          const pairs = await AsyncStorage.multiGet(journalKeys).catch(() => [] as [string, string | null][]);
-          for (const [key, val] of pairs) {
-            console.log(`[DEBUG] ${key} raw:`, val);
-          }
-        }
-      })();
     }, []),
   );
 

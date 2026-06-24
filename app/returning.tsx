@@ -7,6 +7,7 @@ import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 import { authors, returningContent, savableQuotes } from '../constants/data';
 import { useTheme } from '../hooks/useTheme';
+import { HelenisticasIllustration } from '../components/IntroIllustrations';
 import { SaveQuoteButton } from '../components/SaveQuoteButton';
 import { appendJournalEntry, getJournalEntries, JournalEntry } from '../utils/journal';
 import { getSavedQuotes, SavedQuote } from '../utils/savedQuotes';
@@ -43,21 +44,23 @@ function isoOffset(iso: string, days: number): string {
 
 const AUTHOR_NAMES: Record<string, string> = Object.fromEntries(authors.map(a => [a.id, a.name]));
 
-const PORTRAITS: Record<string, number> = {
+const PORTRAITS: Record<string, number | null> = {
   'heraclito-democrito': require('../assets/portraits/heraclito.png'),
   'platon':       require('../assets/portraits/platon.png'),
   'aristoteles':  require('../assets/portraits/aristoteles.png'),
+  'helenisticas': null,
   'hipocrates':   require('../assets/portraits/hipocrates.png'),
   'avicena':      require('../assets/portraits/avicena.png'),
   'descartes':    require('../assets/portraits/descartes.png'),
   'spinoza':      require('../assets/portraits/spinoza.png'),
   'kant':         require('../assets/portraits/kant.png'),
   'schopenhauer': require('../assets/portraits/schopenhauer.png'),
+  'darwin':       require('../assets/portraits/darwin.png'),
+  'ebbinghaus':   require('../assets/portraits/ebbinghaus.png'),
   'fechner':      require('../assets/portraits/fechner.png'),
   'wundt':        require('../assets/portraits/wundt.png'),
   'james':        require('../assets/portraits/james.png'),
-  'watson':       require('../assets/portraits/watson.png'),
-  'skinner':      require('../assets/portraits/skinner.png'),
+  'thorndike':    require('../assets/portraits/thorndike.png'),
 };
 
 function getStreakPhrase(n: number): string {
@@ -251,9 +254,17 @@ function resolveDebugForcedSelection(
   }
 }
 
-function PortraitCircle({ authorId, size, theme, borderWidth = 2 }: { authorId: string; size: number; theme: Theme; borderWidth?: number }) {
+function PortraitCircle({ authorId, size, theme, isDark, borderWidth = 2 }: { authorId: string; size: number; theme: Theme; isDark: boolean; borderWidth?: number }) {
   const [errored, setErrored] = useState(false);
   const source = PORTRAITS[authorId];
+
+  if (authorId === 'helenisticas') {
+    return (
+      <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden' }}>
+        <HelenisticasIllustration size={size} isDark={isDark} />
+      </View>
+    );
+  }
 
   if (!source || errored) {
     const initial = (AUTHOR_NAMES[authorId] ?? '?').trim().charAt(0).toUpperCase();
@@ -282,7 +293,7 @@ function PortraitCircle({ authorId, size, theme, borderWidth = 2 }: { authorId: 
 }
 
 export default function ReturningScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [selection, setSelection]     = useState<Selection | null>(null);
   const [savedQuotesCount, setSavedQuotesCount] = useState(0);
@@ -348,7 +359,7 @@ export default function ReturningScreen() {
           {selection.kind === 3 && (
             <View style={styles.quoteBlock}>
               <View style={{ marginBottom: 28 }}>
-                <PortraitCircle authorId={selection.authorId} size={140} borderWidth={4} theme={theme} />
+                <PortraitCircle authorId={selection.authorId} size={140} borderWidth={4} theme={theme} isDark={isDark} />
               </View>
               {selection.recentlyCompleted ? (
                 <Text style={styles.introLine}>
@@ -389,7 +400,7 @@ export default function ReturningScreen() {
           {selection.kind === 5 && (
             <View style={styles.quoteBlock}>
               <View style={{ marginBottom: 28 }}>
-                <PortraitCircle authorId={selection.authorId} size={140} borderWidth={4} theme={theme} />
+                <PortraitCircle authorId={selection.authorId} size={140} borderWidth={4} theme={theme} isDark={isDark} />
               </View>
               <Text style={[styles.authorName, { marginBottom: 10 }]}>{AUTHOR_NAMES[selection.authorId]}</Text>
               {previousReflection && (

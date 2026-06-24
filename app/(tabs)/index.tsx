@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors, blocks, glossaryTerms, subBlocks, revolutionCards } from '../../constants/data';
+import { HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
 
 type Theme = typeof colors.dark;
@@ -141,21 +142,33 @@ function getCurrentWeekDays(): { iso: string; label: string }[] {
 }
 
 // Static portrait map — Metro requires literal require() paths
-const PORTRAITS: Record<string, number> = {
+const PORTRAITS: Record<string, number | null> = {
   'heraclito-democrito': require('../../assets/portraits/heraclito.png'),
   'platon':              require('../../assets/portraits/platon.png'),
   'aristoteles':         require('../../assets/portraits/aristoteles.png'),
+  'helenisticas':        null,
   'hipocrates':          require('../../assets/portraits/hipocrates.png'),
   'descartes':           require('../../assets/portraits/descartes.png'),
   'spinoza':             require('../../assets/portraits/spinoza.png'),
   'kant':                require('../../assets/portraits/kant.png'),
   'schopenhauer':        require('../../assets/portraits/schopenhauer.png'),
+  'darwin':              require('../../assets/portraits/darwin.png'),
+  'ebbinghaus':          require('../../assets/portraits/ebbinghaus.png'),
+  'thorndike':           require('../../assets/portraits/thorndike.png'),
 };
 
 function PortraitCircle({ authorId, size }: { authorId: string; size: number }) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [errored, setErrored] = useState(false);
   const source = PORTRAITS[authorId];
+
+  if (authorId === 'helenisticas') {
+    return (
+      <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden' }}>
+        <HelenisticasIllustration size={size} isDark={isDark} />
+      </View>
+    );
+  }
 
   if (authorId.startsWith('intro-')) {
     const svgSize = Math.round(size * 0.6);

@@ -25,8 +25,7 @@ const PROGRESS_KEY     = 'psylens_progress';
 const DAYS_VISITED_KEY = 'psylens_days_visited';
 const NAME_KEY         = 'psylens_user_name';
 const REMINDER_KEY     = 'psylens_reminder_enabled';
-
-const USER_EMAIL = 'usuario@email.com';
+const ONBOARDING_KEY   = 'psylens_onboarding_done';
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
@@ -211,7 +210,10 @@ export default function YoScreen() {
         {
           text: 'Cerrar sesión',
           style: 'destructive',
-          onPress: () => router.replace('/onboarding'),
+          onPress: async () => {
+            await AsyncStorage.removeItem(ONBOARDING_KEY).catch(() => {});
+            router.replace('/onboarding');
+          },
         },
       ],
     );
@@ -341,7 +343,6 @@ export default function YoScreen() {
           </Text>
         </View>
         <Text style={styles.userName}>{userName || 'Explorador'}</Text>
-        <Text style={styles.userEmail}>{USER_EMAIL}</Text>
       </View>
 
       {/* ── Stats ──────────────────────────────────────── */}

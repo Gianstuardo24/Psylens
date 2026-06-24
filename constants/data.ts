@@ -58,7 +58,7 @@ export const blocks = [
 ];
 
 export type QuizQuestion =
-  | { type: 'multiple_choice'; question: string; options: string[] }
+  | { type: 'multiple_choice'; question: string; options: string[]; reflection?: boolean }
   | { type: 'true_false'; question: string; correct: boolean; explanation: string }
   | { type: 'open'; question: string };
 
@@ -195,6 +195,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: 'Si aceptaras que cambias constantemente, ¿qué sería lo primero que mirarías diferente en ti?',
+        options: ['Dejaría de juzgarme por cómo era antes', 'Sería más paciente con mis procesos de cambio', 'Cuestionaría menos quién "debo" ser', 'Las tres me resuenan'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Hay alguna versión de ti mismo del pasado con la que te has reconciliado, o que todavía te cuesta aceptar?',
+        options: ['Me he reconciliado con casi todo', 'Hay cosas del pasado que me cuestan aceptar', 'Nunca lo había pensado así', 'Sigo en ese proceso'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Heráclito creía que la identidad de una persona es fija e inmutable.',
         correct: false,
@@ -239,6 +251,18 @@ export const authors = [
           'C) Actuar por impulso y arrepentirme después',
           'D) Todas me resultan familiares',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿En qué área de tu vida sientes que la razón y el deseo tiran más en direcciones opuestas?',
+        options: ['En hábitos de salud o alimentación', 'En relaciones o vínculos', 'En decisiones de trabajo o futuro', 'En varias áreas a la vez'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Qué crees que te ayudaría más a reducir esa tensión interna?',
+        options: ['Entender mejor de dónde viene el impulso', 'Ser más compasivo conmigo cuando fallo', 'Crear estructuras externas que me apoyen', 'Una combinación de las tres'],
+        reflection: true,
       },
       {
         type: 'true_false',
@@ -287,6 +311,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: '¿Hay alguna emoción que solías suprimir y que ahora empiezas a ver como información útil?',
+        options: ['Sí, la rabia o la irritación', 'Sí, la tristeza o el desánimo', 'Sí, el miedo o la ansiedad', 'Todavía me cuesta verlas así'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si pudieras preguntarle a tus emociones qué te están diciendo hoy, ¿cuál crees que tiene más para decirte?',
+        options: ['El miedo — algo me está señalando', 'La tristeza — hay algo que necesito soltar', 'La alegría — algo estoy haciendo bien', 'La incomodidad — algo no está alineado'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Para Aristóteles, las emociones contienen información sobre cómo interpretamos lo que nos pasa.',
         correct: true,
@@ -331,6 +367,18 @@ export const authors = [
           'C) Soltar la necesidad de tener todas las respuestas',
           'D) Las tres me parecen valiosas',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: 'De las tres escuelas, ¿cuál sientes que más necesitas incorporar en este momento de tu vida?',
+        options: ['El estoicismo — distinguir lo que depende de mí', 'El epicureísmo — reducir el sufrimiento innecesario', 'El escepticismo — soltar la necesidad de tener todo claro', 'Las tres me hacen falta'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Hay algo que sabes que no depende de ti pero al que le sigues dedicando energía?',
+        options: ['Sí, y me cuesta soltar el control', 'Sí, aunque racionalmente sé que no puedo cambiarlo', 'Estoy aprendiendo a distinguirlo mejor', 'Es uno de mis mayores desafíos'],
+        reflection: true,
       },
       {
         type: 'true_false',
@@ -379,6 +427,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: '¿Cuándo fue la última vez que te detuviste a preguntarte qué le estaba pasando a tu cuerpo emocionalmente?',
+        options: ['Lo hago con frecuencia', 'Rara vez — no suelo conectar ambas cosas', 'Lo hice en algún momento difícil y me ayudó', 'Me gustaría hacerlo más'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si tu cuerpo pudiera hablarte en este momento, ¿qué crees que te diría?',
+        options: ['Que necesito más descanso', 'Que hay algo que no estoy procesando emocionalmente', 'Que estoy bien — y eso me tranquiliza', 'No lo sé, y eso es lo que me llama la atención'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Avicena documentó que el estado emocional puede tener efectos físicos reales en el cuerpo.',
         correct: true,
@@ -423,6 +483,18 @@ export const authors = [
           'C) No lo había relacionado hasta ahora',
           'D) Ambas A y B me resuenan',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Cuánta atención le prestas a la conexión entre cómo te sientes emocionalmente y cómo responde tu cuerpo?',
+        options: ['Bastante — suelo notar esa conexión con claridad', 'Poca — tiendo a separarlos', 'Me gustaría prestarle más atención', 'Es algo que quiero empezar a explorar'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si pudieras cambiar cómo te relacionas con el malestar físico o emocional, ¿qué cambiarías?',
+        options: ['Escucharme más antes de ignorar lo que siento', 'Dejar de juzgarlo como debilidad', 'Buscar entender qué lo produce en vez de solo manejarlo', 'Todas me resultan útiles'],
+        reflection: true,
       },
       {
         type: 'true_false',
@@ -471,6 +543,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: '¿Hay algo que descartas como "solo psicológico" pero que en realidad te afecta más de lo que reconoces?',
+        options: ['Sí, algunas emociones que minimizo', 'Sí, ciertas reacciones físicas que ignoro', 'Sí, pensamientos que descarto sin examinarlos', 'Posiblemente — vale la pena revisarlo'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Qué tan dispuesto estás a cuestionar algo que das por cierto sobre ti mismo?',
+        options: ['Bastante — me gusta cuestionarme', 'Depende del tema — algunos son más difíciles de tocar', 'Me cuesta, pero sé que es necesario', 'Es algo en lo que quiero trabajar'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Para Descartes, el cuerpo y la mente son la misma sustancia vista desde distintos ángulos.',
         correct: false,
@@ -515,6 +599,18 @@ export const authors = [
           'C) Las expreso de inmediato',
           'D) Depende mucho de la situación',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Hay alguna emoción que intentas suprimir con fuerza de voluntad y que sigue volviendo?',
+        options: ['Sí, y empiezo a entender por qué no funciona', 'Sí, y me frustra que no pueda controlarla', 'Sí — quizás lo que necesito es entenderla, no suprimirla', 'Me está pasando ahora mismo con algo'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Qué significaría para ti entender una emoción difícil en lugar de combatirla?',
+        options: ['Más aceptación — menos guerra interna', 'Más claridad — saber qué hacer con ella', 'Más libertad — no quedar atrapado en ella', 'Las tres me resuenan'],
+        reflection: true,
       },
       {
         type: 'true_false',
@@ -563,6 +659,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: '¿Hay algo de ti mismo que sientes que nunca terminas de entender del todo?',
+        options: ['Mis patrones en las relaciones', 'Por qué reacciono como reacciono en ciertas situaciones', 'Lo que realmente quiero', 'Varias cosas — y empiezo a aceptar que eso es normal'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Cómo te sientes con la idea de que el autoconocimiento no tiene un punto de llegada?',
+        options: ['Me tranquiliza — deja de ser una meta que fallar', 'Me incomoda — prefería creer que hay una respuesta definitiva', 'Me parece realista — lo vivo así en la práctica', 'Es algo en lo que todavía estoy pensando'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Para Kant, siempre hay un límite en lo que podemos conocer de la realidad, incluyendo conocernos a nosotros mismos.',
         correct: true,
@@ -609,6 +717,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: '¿Hay algún impulso en tu vida que se repite aunque conscientemente no lo elijas?',
+        options: ['Sí, en cómo busco validación o aprobación', 'Sí, en cómo respondo al conflicto o la tensión', 'Sí, en ciertos hábitos que repito aunque quiera cambiarlos', 'Sí — y recién ahora empiezo a verlo con más claridad'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si pudieras entender mejor uno de esos impulsos, ¿qué elegirías explorar primero?',
+        options: ['Por qué busco lo que busco en las relaciones', 'Por qué reacciono como reacciono ante ciertos temas', 'Por qué algunos hábitos persisten aunque no me convienen', 'Hay más de uno — no sé por cuál empezar'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Para Schopenhauer, la razón es la fuerza más poderosa que nos mueve.',
         correct: false,
@@ -639,9 +759,9 @@ export const authors = [
       closingLine: 'Para Darwin, entendernos a nosotros mismos requería entender de dónde venimos. Y de dónde venimos es mucho más antiguo de lo que cualquiera había imaginado.',
     },
     fondo: {
-      question: '¿Por qué Darwin cierra este bloque?',
-      text: `Porque lo que propuso no fue solo una teoría sobre los animales — fue una nueva forma de hacer preguntas sobre la mente humana. Y esa nueva forma de preguntar es exactamente lo que abre el siguiente bloque.\n\nAntes de Darwin, la psicología — en la medida en que existía — preguntaba qué es la mente y cómo funciona. Después de Darwin, apareció una pregunta nueva: ¿para qué sirve? ¿Qué función cumple? ¿Por qué evolucionó de esta manera y no de otra? Esa pregunta transformó todo. William James, el primer gran psicólogo americano que verás al comenzar el Bloque 1, partió directamente de ahí — propuso que la conciencia existe porque es útil, porque ayuda a los organismos a adaptarse. Sin Darwin, esa pregunta no habría tenido sentido.\n\nPero la influencia de Darwin va más lejos todavía. La idea de que tenemos impulsos, emociones y comportamientos que no elegimos conscientemente — que vienen de una historia mucho más larga que nuestra propia vida — es el suelo sobre el que Freud construyó buena parte de su teoría. El inconsciente de Freud no es solo la Voluntad de Schopenhauer con otro nombre. Es también, en parte, la herencia evolutiva de Darwin: todo lo que llevamos dentro sin haberlo decidido.\n\nY hay algo más personal en todo esto. Darwin nos quitó el centro — dejamos de ser una creación especial, separada del resto de la naturaleza. Pero al hacerlo, nos dio algo que quizás vale más: una explicación. No somos como somos por capricho ni por destino. Somos como somos porque eso funcionó — porque hubo un proceso largo que nos fue dando forma. Y entender ese proceso, aunque no lo cambie, cambia cómo nos miramos.`,
-      closingLine: 'El Bloque 0 empezó con una pregunta sin respuesta sobrenatural — la de los presocráticos, que se atrevieron a buscar en el mundo lo que antes solo se buscaba en los dioses. Termina con algo todavía más radical: la propuesta de Darwin de que somos naturaleza que se mira a sí misma y se pregunta por qué es como es.',
+      question: '¿Por qué Darwin marca un quiebre tan importante?',
+      text: `Porque lo que propuso no fue solo una teoría sobre los animales — fue una nueva forma de hacer preguntas sobre la mente humana. Y esa nueva forma de preguntar es exactamente lo que viene a continuación.\n\nAntes de Darwin, la psicología — en la medida en que existía — preguntaba qué es la mente y cómo funciona. Después de Darwin, apareció una pregunta nueva: ¿para qué sirve? ¿Qué función cumple? ¿Por qué evolucionó de esta manera y no de otra? Esa pregunta transformó todo. William James, el primer gran psicólogo americano que conocerás más adelante en este recorrido, partió directamente de ahí — propuso que la conciencia existe porque es útil, porque ayuda a los organismos a adaptarse. Sin Darwin, esa pregunta no habría tenido sentido.\n\nPero la influencia de Darwin va más lejos todavía. La idea de que tenemos impulsos, emociones y comportamientos que no elegimos conscientemente — que vienen de una historia mucho más larga que nuestra propia vida — es el suelo sobre el que Freud construyó buena parte de su teoría. El inconsciente de Freud no es solo la Voluntad de Schopenhauer con otro nombre. Es también, en parte, la herencia evolutiva de Darwin: todo lo que llevamos dentro sin haberlo decidido.\n\nY hay algo más personal en todo esto. Darwin nos quitó el centro — dejamos de ser una creación especial, separada del resto de la naturaleza. Pero al hacerlo, nos dio algo que quizás vale más: una explicación. No somos como somos por capricho ni por destino. Somos como somos porque eso funcionó — porque hubo un proceso largo que nos fue dando forma. Y entender ese proceso, aunque no lo cambie, cambia cómo nos miramos.`,
+      closingLine: 'Este recorrido empezó con una pregunta sin respuesta sobrenatural — la de los presocráticos, que se atrevieron a buscar en el mundo lo que antes solo se buscaba en los dioses. Termina con algo todavía más radical: la propuesta de Darwin de que somos naturaleza que se mira a sí misma y se pregunta por qué es como es.',
     },
     quiz: [
       {
@@ -653,6 +773,18 @@ export const authors = [
           'C) Que comparto más con otros animales de lo que creía',
           'D) Todas me hacen pensar diferente',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Hay alguna reacción tuya que ahora ves con más compasión al entender que tiene una historia evolutiva?',
+        options: ['El miedo o la hipervigilancia', 'La necesidad de pertenencia o conexión', 'La resistencia al cambio', 'Varias — cambió cómo me juzgo'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Qué cambia en cómo te tratas a ti mismo si entiendes que muchas de tus reacciones no son "fallos" sino respuestas que funcionaron?',
+        options: ['Me juzgo menos duramente', 'Entiendo mejor por qué me cuesta cambiar ciertas cosas', 'Soy más paciente con mi propio proceso', 'Las tres cambian algo'],
+        reflection: true,
       },
       {
         type: 'true_false',
@@ -702,6 +834,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: '¿Hay algo que intentaste aprender y se te olvidó antes de poder usarlo?',
+        options: ['Sí, y ahora entiendo mejor por qué', 'Sí, y me frustraba no recordarlo', 'Sí, pero lo asociaba a otra cosa, no al olvido', 'Me pasa seguido con ciertas áreas'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si pudieras cambiar algo de cómo aprendes, ¿qué sería?',
+        options: ['Distribuir más el estudio en el tiempo', 'Repasar en vez de releer desde cero', 'No exigirme recordar todo de una vez', 'Todas me parecen útiles'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Ebbinghaus descubrió que olvidamos de forma constante y pareja con el tiempo.',
         correct: false,
@@ -745,6 +889,18 @@ export const authors = [
           'C) Cuando algo me llama la atención sin saber por qué',
           'D) Me resulta difícil saberlo conscientemente',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Hay algo en tu vida cotidiana que dejaste de valorar porque te acostumbraste a que estuviera?',
+        options: ['Sí, en mis relaciones cercanas', 'Sí, en aspectos de mi salud o bienestar', 'Sí, en cosas pequeñas del día a día', 'Varias cosas — al leerlo me di cuenta'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Qué te ayudaría a volver a notar lo que das por sentado?',
+        options: ['Hacer pausas más conscientes durante el día', 'Recordar momentos en que no lo tenía', 'Nombrarlo o agradecerlo de alguna forma', 'No lo sé todavía — es algo en lo que pensar'],
+        reflection: true,
       },
       {
         type: 'true_false',
@@ -792,6 +948,18 @@ export const authors = [
         ],
       },
       {
+        type: 'multiple_choice',
+        question: '¿Qué tan seguido te detienes a observar lo que estás sintiendo mientras lo estás viviendo?',
+        options: ['Con frecuencia — es algo que practico', 'Poco — suelo procesarlo después', 'Me gustaría hacerlo más, pero me cuesta', 'Es algo que quiero desarrollar'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si pudieras tener más acceso a tu propia experiencia interior, ¿qué sería lo primero que querrías entender mejor?',
+        options: ['Por qué ciertas situaciones me afectan más que otras', 'Qué hay detrás de mis reacciones automáticas', 'Cómo funciona mi atención — qué la atrae y qué la dispersa', 'Algo que todavía no sé nombrar bien'],
+        reflection: true,
+      },
+      {
         type: 'true_false',
         question: 'Wundt creía que la experiencia consciente podía descomponerse en elementos básicos.',
         correct: true,
@@ -835,6 +1003,18 @@ export const authors = [
           'C) Como algo difícil de observar mientras ocurre',
           'D) No suelo pensarlo, pero la primera opción me resuena',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si la conciencia es un flujo continuo, ¿qué crees que más lo interrumpe o lo enturbia en tu caso?',
+        options: ['Las preocupaciones sobre el futuro', 'Los juicios sobre el pasado', 'La multitarea o el ruido externo', 'Una combinación de todo eso'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Hay algo que sabes que necesitas hacer pero que esperas a "sentirte listo" para empezar?',
+        options: ['Sí, y James diría que la acción puede venir antes que el sentimiento', 'Sí — reconozco ese patrón en mí', 'A veces — depende del tema', 'Es algo que me resuena más de lo que quisiera'],
+        reflection: true,
       },
       {
         type: 'true_false',
@@ -881,6 +1061,18 @@ export const authors = [
           'C) Probablemente, pero no lo había pensado así',
           'D) No estoy seguro',
         ],
+      },
+      {
+        type: 'multiple_choice',
+        question: '¿Hay algún hábito tuyo que crees que se instaló por las consecuencias que tuvo, aunque ya no te sirva igual?',
+        options: ['Sí, en cómo busco aprobación o evito conflictos', 'Sí, en cómo respondo al estrés o la presión', 'Sí, en algún hábito cotidiano que persiste sin mucha razón', 'Posiblemente — es algo en lo que pensar'],
+        reflection: true,
+      },
+      {
+        type: 'multiple_choice',
+        question: 'Si quisieras instalar un hábito nuevo, ¿qué cambiaría en tu enfoque sabiendo que el aprendizaje ocurre por consecuencias?',
+        options: ['Buscaría hacer que la consecuencia positiva sea inmediata y visible', 'Reduciría la exigencia inicial para que el hábito tenga más oportunidades de "ganar"', 'Sería más paciente — sé que el cambio se acumula gradualmente', 'Todas cambian algo en cómo lo enfocaría'],
+        reflection: true,
       },
       {
         type: 'true_false',
