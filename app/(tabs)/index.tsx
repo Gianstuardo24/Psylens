@@ -436,12 +436,12 @@ export default function DashboardScreen() {
           <View style={styles.continuePortrait}>
             {activeRevCard ? (
               <View style={{
-                width: 80, height: 80, borderRadius: 40,
+                width: 112, height: 112, borderRadius: 56,
                 borderWidth: 2, borderColor: blockColors[activeBlock.id]?.base ?? theme.green,
                 backgroundColor: theme.bg3,
                 alignItems: 'center', justifyContent: 'center',
               }}>
-                <Svg width={40} height={40} viewBox="0 0 44 44">
+                <Svg width={56} height={56} viewBox="0 0 44 44">
                   <Path
                     d="M22 4 L40 22 L22 40 L4 22 Z"
                     stroke={blockColors[activeBlock.id]?.base ?? theme.green}

@@ -166,6 +166,7 @@ export default function AutorScreen() {
   const [progress,          setProgress]          = useState<ProgressMap>({});
   const [isPremium,         setIsPremium]         = useState(false);
   const [showCelebration,   setShowCelebration]   = useState(false);
+  const [celebOpenedFromHeart, setCelebOpenedFromHeart] = useState(false);
   const [showBlockComplete, setShowBlockComplete] = useState(false);
   const [blockCompleteDays, setBlockCompleteDays] = useState(1);
   const [showPaywall,       setShowPaywall]       = useState(false);
@@ -230,6 +231,8 @@ export default function AutorScreen() {
         Animated.spring(animScale, { toValue: 1, useNativeDriver: true, damping: 15, stiffness: 180 }),
         Animated.timing(animOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
       ]).start();
+    } else {
+      setCelebOpenedFromHeart(false);
     }
   }, [showCelebration]);
 
@@ -597,6 +600,20 @@ export default function AutorScreen() {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
+      {isAuthorComplete && (
+        <TouchableOpacity
+          style={[styles.heartButton, { top: insets.top + spacing.sm }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setCelebOpenedFromHeart(true);
+            setShowCelebration(true);
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={styles.heartButtonText}>♡</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Centered header */}
       <View style={[styles.header, { paddingTop: insets.top + 48 }]}>
         {isDual ? (
@@ -868,7 +885,7 @@ export default function AutorScreen() {
               </View>
             )}
 
-            {nextDest ? (
+            {!celebOpenedFromHeart && nextDest ? (
               <TouchableOpacity style={styles.celebNextButton} onPress={navigateToNext} activeOpacity={0.85}>
                 <Text style={styles.celebNextText}>Siguiente →</Text>
               </TouchableOpacity>
@@ -1066,6 +1083,17 @@ function makeStyles(theme: Theme) {
       fontSize: 26,
       color: theme.text,
       lineHeight: 32,
+    },
+    heartButton: {
+      position: 'absolute',
+      right: spacing.lg,
+      zIndex: 10,
+      padding: spacing.xs,
+    },
+    heartButtonText: {
+      fontSize: 24,
+      color: theme.text,
+      lineHeight: 28,
     },
     revIconCircle: {
       width: 120,

@@ -262,7 +262,7 @@ function AuthorCard({
       </View>
 
       {/* Info */}
-      <View style={ac.info}>
+      <View style={[ac.info, isDual && { paddingLeft: 16 }]}>
         <Text style={[ac.name, state === 'locked' && ac.dimText]} numberOfLines={1}>
           {author.name}
         </Text>
