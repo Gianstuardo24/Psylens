@@ -273,6 +273,7 @@ export default function YoScreen() {
               'psylens_unlocked',
               'psylens_days_visited',
               'psylens_saved_quotes',
+              'psylens_theme',
             ]).catch(() => {});
             const allKeys = await AsyncStorage.getAllKeys();
             const journalKeys = allKeys.filter(k => k.startsWith('psylens_journal_'));

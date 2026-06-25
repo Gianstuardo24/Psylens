@@ -249,6 +249,7 @@ function QuestionIllustration({ active }: { active: boolean }) {
 }
 
 function CirclesIllustration({ active }: { active: boolean }) {
+  const { isDark } = useTheme();
   const S = 150, T = 152;
 
   const cx1 = useRef(new Animated.Value(S)).current;
@@ -304,7 +305,7 @@ function CirclesIllustration({ active }: { active: boolean }) {
         <AnimatedCircle cx={cx3} cy={cy3} r={r3} opacity={opacity3} fill="none" stroke="#0F6E56" strokeWidth="8.5" />
       </Svg>
       <Animated.View style={{ position: 'absolute', top: 88, left: 0, right: 0, alignItems: 'center', marginLeft: -13, opacity: psiOpacity }}>
-        <Text style={{ fontFamily: 'Georgia', fontWeight: 'bold', fontSize: 34, color: '#1a1a1a' }}>Ψ</Text>
+        <Text style={{ fontFamily: 'Georgia', fontWeight: 'bold', fontSize: 34, color: isDark ? '#f0ece3' : '#1a1a1a' }}>Ψ</Text>
       </Animated.View>
     </View>
   );
