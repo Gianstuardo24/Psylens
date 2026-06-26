@@ -24,8 +24,8 @@ export const colors = {
     border:   '#2a2a27',
   },
   light: {
-    bg:       '#fafaf6',
-    bg2:      '#f0ece3',
+    bg:       '#f0ece3',
+    bg2:      '#fafaf6',
     bg3:      '#e8e4db',
     text:     '#0f0f0e',
     text2:    '#3a3a38',

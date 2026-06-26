@@ -293,6 +293,20 @@ export default function YoScreen() {
     router.replace('/splash');
   }
 
+  async function handleCompleteUntilAvicena() {
+    const rawProgress = await AsyncStorage.getItem(PROGRESS_KEY).catch(() => null);
+    const prog: ProgressMap = rawProgress ? JSON.parse(rawProgress) : {};
+    const ids = ['intro-1', 'intro-2', 'intro-3', 'intro-4',
+                 'heraclito-democrito', 'hipocrates', 'platon', 'aristoteles', 'helenisticas', 'avicena'];
+    for (const id of ids) {
+      prog[id] = { surface: true, concept: true, fondo: true };
+    }
+    await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(prog)).catch(() => {});
+    const unlockedIds = ['intro-2', 'intro-3', 'intro-4', 'rev-0a', 'heraclito-democrito', 'hipocrates', 'platon', 'rev-0b', 'aristoteles', 'helenisticas', 'avicena'];
+    await AsyncStorage.setItem('psylens_unlocked', JSON.stringify(unlockedIds)).catch(() => {});
+    router.replace('/splash');
+  }
+
   async function handleResetDarwinProgress() {
     const rawProgress = await AsyncStorage.getItem(PROGRESS_KEY).catch(() => null);
     if (rawProgress) {
@@ -478,6 +492,12 @@ export default function YoScreen() {
             />
             <SettingRow
               theme={theme}
+              label="Debug: Completar hasta Avicena"
+              labelColor={theme.text2}
+              onPress={handleCompleteUntilAvicena}
+            />
+            <SettingRow
+              theme={theme}
               label="Debug: Reset darwin progress"
               labelColor={theme.text2}
               onPress={handleResetDarwinProgress}
@@ -598,8 +618,12 @@ function makeStyles(theme: Theme) {
       borderRadius: radius.xl,
       borderWidth: 1,
       borderColor: theme.border,
-      overflow: 'hidden',
       marginBottom: spacing.lg,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     stat: {
       flex: 1,
@@ -630,8 +654,12 @@ function makeStyles(theme: Theme) {
       borderRadius: radius.xl,
       borderWidth: 1,
       borderColor: theme.border,
-      overflow: 'hidden',
       marginBottom: spacing.lg,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
 
     // ── Version note

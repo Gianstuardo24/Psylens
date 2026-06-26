@@ -199,7 +199,7 @@ export default function DiarioScreen() {
               {journalEntries.map((entry, i) => (
                 <View
                   key={`${entry.authorId}-${entry.date}-${i}`}
-                  style={[styles.journalEntry, i < journalEntries.length - 1 && styles.journalEntryBorder]}
+                  style={styles.journalEntry}
                 >
                   <View style={styles.journalEntryHeader}>
                     <Text style={styles.journalAuthor}>{entry.authorName}</Text>
@@ -294,11 +294,15 @@ function makeStyles(theme: Theme) {
       paddingBottom: spacing.xxxl,
     },
     journalEntry: {
-      paddingVertical: spacing.lg,
-    },
-    journalEntryBorder: {
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+      backgroundColor: theme.bg2,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     journalEntryHeader: {
       flexDirection: 'row',
@@ -364,7 +368,15 @@ function makeStyles(theme: Theme) {
       letterSpacing: 0.6,
     },
     savedQuoteItem: {
-      marginBottom: spacing.md,
+      backgroundColor: theme.bg2,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     savedQuoteRow: {
       flexDirection: 'row',

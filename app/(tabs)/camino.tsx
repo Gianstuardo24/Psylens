@@ -33,6 +33,7 @@ const PROGRESS_KEY     = 'psylens_progress';
 const UNLOCK_KEY       = 'psylens_unlocked';
 const PREMIUM_KEY      = 'psylens_is_premium';
 const INTRO_AUTHOR_IDS = ['intro-1', 'intro-2', 'intro-3', 'intro-4'];
+const B0_AUTHOR_IDS    = ['heraclito-democrito', 'platon', 'aristoteles', 'helenisticas', 'avicena', 'hipocrates', 'descartes', 'spinoza', 'kant', 'schopenhauer', 'darwin'];
 
 // ─── Portrait images ──────────────────────────────────────────────────────────
 
@@ -94,7 +95,9 @@ function getBlockStatus(block: typeof blocks[0], isPremium: boolean, progress: P
   }
   if (isComingSoonBlock(block.id)) return 'locked';
   if (block.isFree) return 'active';
-  return isPremium ? 'active' : 'locked';
+  if (!isPremium) return 'locked';
+  const b0Done = B0_AUTHOR_IDS.every(id => isAuthorDone(progress[id]));
+  return b0Done ? 'active' : 'locked';
 }
 
 function getSubBlockStatus(
@@ -523,7 +526,7 @@ function BlockNode({
 
       {/* ── Block header ──────────────────────────────────── */}
       <TouchableOpacity
-        style={[bn.header, { backgroundColor: headerBg }]}
+        style={[bn.header, { backgroundColor: headerBg }, (!isActive || !isExpanded) && { borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl }]}
         onPress={isLocked
           ? (block.id === 'b0'
               ? () => Alert.alert('Introducción requerida', 'Completa la Introducción para continuar.')
@@ -764,6 +767,11 @@ function makeAcStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: 'transparent',
       marginBottom: spacing.sm,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     cardActive: {
       borderWidth: 1.5,
@@ -908,10 +916,16 @@ function makeBnStyles(theme: Theme) {
       marginBottom: spacing.lg,
       borderRadius: radius.xl,
       backgroundColor: theme.bg2,
-      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     wrapperLocked: {
       opacity: 0.55,
+      shadowOpacity: 0,
+      elevation: 0,
     },
 
     header: {
@@ -919,6 +933,8 @@ function makeBnStyles(theme: Theme) {
       alignItems: 'center',
       padding: spacing.lg,
       gap: spacing.md,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
     },
 
     icon: {
@@ -999,6 +1015,11 @@ function makeBnStyles(theme: Theme) {
       borderRadius: 2,
       backgroundColor: theme.bg3,
       overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     progressFill: {
       height: 3,
@@ -1042,6 +1063,8 @@ function makeBnStyles(theme: Theme) {
     authorsList: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.md,
+      borderBottomLeftRadius: radius.xl,
+      borderBottomRightRadius: radius.xl,
     },
   });
 }
@@ -1058,6 +1081,11 @@ function makeSbhStyles(theme: Theme) {
       paddingBottom: spacing.sm,
       marginBottom: spacing.xs,
       marginTop: spacing.md,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     containerLocked: {
       opacity: 0.4,

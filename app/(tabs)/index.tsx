@@ -307,11 +307,12 @@ export default function DashboardScreen() {
   const doneLayers   = LAYERS.filter(l => activeProg[l.key]).length;
   const currentLayer = Math.min(doneLayers + 1, isTwoLayer ? 2 : 3);
 
-  // Next = entry right after active; only show "Próximo" if it's an author
-  const nextEntry  = activeEntryIdx >= 0 && activeEntryIdx < ALL_ENTRIES.length - 1
+  // Next = entry right after active (any type)
+  const nextEntry   = activeEntryIdx >= 0 && activeEntryIdx < ALL_ENTRIES.length - 1
     ? ALL_ENTRIES[activeEntryIdx + 1] : null;
-  const nextAuthor = nextEntry?.type === 'author' ? nextEntry.data : null;
-  const nextBlock  = nextAuthor ? blocks.find(b => b.id === nextAuthor.blockId) ?? null : null;
+  const nextRevCard = nextEntry?.type === 'revolution' ? nextEntry.data : null;
+  const nextAuthor  = nextEntry?.type === 'author'     ? nextEntry.data : null;
+  const nextBlock   = nextEntry ? blocks.find(b => b.id === nextEntry.data.blockId) ?? null : null;
 
   // Stats
   const completedAuthors = authors.filter(a => isComplete(progress, a.id)).length;
@@ -522,12 +523,13 @@ export default function DashboardScreen() {
 
       {/* ── ÚLTIMOS CONCEPTOS ──────────────────────────────────────────────── */}
       {lastConcepts.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Últimos conceptos</Text>
+        <View style={[styles.section, { paddingBottom: 8 }]}>
+          <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>Últimos conceptos</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.conceptsRow}
+            style={{ overflow: 'visible' }}
           >
             {lastConcepts.map(term => {
               const termAuthor = authors.find(a => a.id === term.authorId);
@@ -545,13 +547,13 @@ export default function DashboardScreen() {
       )}
 
       {/* ── PRÓXIMO EN EL CAMINO ───────────────────────────────────────────── */}
-      {nextAuthor && (
+      {nextEntry && (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Próximo en el camino</Text>
           <TouchableOpacity
             style={[styles.nextCard, { flexDirection: 'row', alignItems: 'center' }, !isActiveComplete && { opacity: 0.5 }]}
             onPress={isActiveComplete
-              ? () => router.push(`/autor/${nextAuthor.id}`)
+              ? () => router.push(`/autor/${nextEntry.data.id}`)
               : () => Alert.alert('Autor bloqueado', `Completa ${activeRevCard ? 'la introducción' : activeAuthor?.name} primero para continuar`)
             }
             activeOpacity={0.85}
@@ -560,11 +562,33 @@ export default function DashboardScreen() {
               <View style={styles.nextBlockChip}>
                 <Text style={styles.nextBlockChipText}>{nextBlock?.name}</Text>
               </View>
-              <Text style={styles.nextAuthorName}>{nextAuthor.name}</Text>
-              <Text style={styles.nextDates}>{nextAuthor.dates}</Text>
+              <Text style={styles.nextAuthorName}>
+                {formatTitle(nextEntry.data.id, nextRevCard ? nextRevCard.name : nextAuthor!.name)}
+              </Text>
+              <Text style={styles.nextDates}>
+                {nextRevCard ? nextRevCard.dates : nextAuthor!.dates}
+              </Text>
             </View>
             <View style={{ marginRight: 20 }}>
-              <PortraitCircle authorId={nextAuthor.id} size={80} />
+              {nextRevCard ? (
+                <View style={{
+                  width: 80, height: 80, borderRadius: 40,
+                  borderWidth: 2, borderColor: blockColors[nextBlock?.id ?? '']?.base ?? theme.green,
+                  backgroundColor: theme.bg3,
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Svg width={40} height={40} viewBox="0 0 44 44">
+                    <Path
+                      d="M22 4 L40 22 L22 40 L4 22 Z"
+                      stroke={blockColors[nextBlock?.id ?? '']?.base ?? theme.green}
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                  </Svg>
+                </View>
+              ) : (
+                <PortraitCircle authorId={nextAuthor!.id} size={80} />
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -640,9 +664,14 @@ function makeStyles(theme: Theme) {
       flex: 1,
       height: 44,
       borderRadius: radius.md,
-      backgroundColor: theme.bg3,
+      backgroundColor: theme.bg2,
       alignItems: 'center',
       justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     streakChipDone: {
       backgroundColor: theme.green,
@@ -663,6 +692,11 @@ function makeStyles(theme: Theme) {
       borderColor: theme.border,
       paddingVertical: spacing.lg,
       paddingHorizontal: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     continuePortrait: {
       position: 'absolute',
@@ -749,6 +783,11 @@ function makeStyles(theme: Theme) {
       paddingVertical: spacing.lg,
       paddingHorizontal: spacing.sm,
       alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     statValue: {
       ...typography.h2,
@@ -765,7 +804,8 @@ function makeStyles(theme: Theme) {
     // Últimos conceptos
     conceptsRow: {
       gap: spacing.sm,
-      paddingRight: spacing.xl,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
     },
     conceptChip: {
       width: 148,
@@ -774,6 +814,11 @@ function makeStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: theme.border,
       padding: spacing.md,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     conceptBlock: {
       ...typography.bodyXS,
@@ -799,6 +844,11 @@ function makeStyles(theme: Theme) {
       borderColor: theme.border,
       padding: spacing.lg,
       opacity: 0.7,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     nextBlockChip: {
       alignSelf: 'flex-start',
@@ -841,6 +891,11 @@ function makeStyles(theme: Theme) {
     progressTrack: {
       backgroundColor: theme.bg3,
       overflow: 'hidden' as const,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
     },
     progressFill: {
       // height, borderRadius, width, backgroundColor set inline per bar
