@@ -2,6 +2,7 @@
   "expo": {
     "name": "Psylens",
     "slug": "psylens",
+    "icon": "./assets/icon.png",
     "version": "1.0.0",
     "scheme": "psylens",
     "orientation": "portrait",
