@@ -9,6 +9,9 @@ import {
   Alert,
   Platform,
   RefreshControl,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -108,6 +111,8 @@ export default function YoScreen() {
   const [reminderEnabled,  setReminderEnabled]  = useState(false);
   const [isPremium]                             = useState(false);
   const [refreshing,    setRefreshing]    = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameInput,     setNameInput]     = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -272,6 +277,7 @@ export default function YoScreen() {
               'psylens_is_premium',
               'psylens_unlocked',
               'psylens_days_visited',
+              'psylens_user_name',
               'psylens_saved_quotes',
               'psylens_theme',
             ]).catch(() => {});
@@ -352,10 +358,19 @@ export default function YoScreen() {
 
       {/* ── Avatar section ─────────────────────────────── */}
       <View style={styles.avatarSection}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarInitial}>
-            {(userName || 'Explorador')[0].toUpperCase()}
-          </Text>
+        <View>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarInitial}>
+              {(userName || 'Explorador')[0].toUpperCase()}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => { setNameInput(userName); setShowNameModal(true); }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.editButtonText}>✎</Text>
+          </TouchableOpacity>
         </View>
         <Text style={styles.userName}>{userName || 'Explorador'}</Text>
       </View>
@@ -518,6 +533,55 @@ export default function YoScreen() {
       {/* Version note */}
       <Text style={styles.versionText}>Psylens v1.0</Text>
 
+      {/* ── Name edit modal ─────────────────────────────── */}
+      <Modal
+        visible={showNameModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowNameModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Tu nombre</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={nameInput}
+              onChangeText={setNameInput}
+              placeholder="Nombre"
+              placeholderTextColor={theme.text3}
+              autoFocus
+              maxLength={40}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setShowNameModal(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSave, !nameInput.trim() && styles.modalSaveDisabled]}
+                onPress={async () => {
+                  if (!nameInput.trim()) return;
+                  await AsyncStorage.setItem(NAME_KEY, nameInput.trim()).catch(() => {});
+                  setUserName(nameInput.trim());
+                  setShowNameModal(false);
+                }}
+                activeOpacity={nameInput.trim() ? 0.85 : 1}
+              >
+                <Text style={[styles.modalSaveText, !nameInput.trim() && styles.modalSaveTextDisabled]}>
+                  Guardar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
     </ScrollView>
   );
 }
@@ -577,9 +641,9 @@ function makeStyles(theme: Theme) {
       paddingVertical: spacing.xxl,
     },
     avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: 112,
+      height: 112,
+      borderRadius: 56,
       backgroundColor: theme.purpleBg,
       borderWidth: 1.5,
       borderColor: theme.purple,
@@ -590,6 +654,24 @@ function makeStyles(theme: Theme) {
     avatarInitial: {
       ...typography.h1,
       color: theme.purple,
+    },
+    editButton: {
+      position: 'absolute',
+      bottom: 8,
+      right: 8,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.bg2,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    editButtonText: {
+      fontSize: 14,
+      color: theme.text,
+      lineHeight: 16,
     },
     userName: {
       ...typography.h2,
@@ -660,6 +742,73 @@ function makeStyles(theme: Theme) {
       shadowOpacity: 0.07,
       shadowRadius: 8,
       elevation: 3,
+    },
+
+    // ── Name modal
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    modalCard: {
+      width: '100%',
+      backgroundColor: theme.bg2,
+      borderRadius: radius.xl,
+      padding: spacing.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    modalTitle: {
+      ...typography.h3,
+      color: theme.text,
+      marginBottom: spacing.lg,
+      textAlign: 'center',
+    },
+    modalInput: {
+      ...typography.body,
+      color: theme.text,
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      marginBottom: spacing.lg,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    modalCancel: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+    },
+    modalCancelText: {
+      ...typography.body,
+      color: theme.text2,
+    },
+    modalSave: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+      backgroundColor: theme.green,
+      alignItems: 'center',
+    },
+    modalSaveDisabled: {
+      backgroundColor: theme.bg3,
+    },
+    modalSaveText: {
+      ...typography.body,
+      color: '#ffffff',
+      fontWeight: '600',
+    },
+    modalSaveTextDisabled: {
+      color: theme.text3,
     },
 
     // ── Version note
