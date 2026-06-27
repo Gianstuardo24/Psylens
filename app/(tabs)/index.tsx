@@ -6,9 +6,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   RefreshControl,
   Alert,
   Dimensions,
+  Modal,
 } from 'react-native';
 
 const SCREEN_WIDTH    = Dimensions.get('window').width;
@@ -23,6 +25,7 @@ import { typography, spacing, radius } from '../../constants/typography';
 import { authors, blocks, glossaryTerms, subBlocks, revolutionCards } from '../../constants/data';
 import { HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type Theme = typeof colors.dark;
 
@@ -240,12 +243,13 @@ const LAYERS = [
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [progress,    setProgress]    = useState<ProgressMap>({});
   const [daysVisited, setDaysVisited] = useState<string[]>([]);
   const [refreshing,  setRefreshing]  = useState(false);
   const [userName,    setUserName]    = useState('');
   const [streak,      setStreak]      = useState(0);
+  const [selectedTerm, setSelectedTerm] = useState<typeof glossaryTerms[0] | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(NAME_KEY)
@@ -317,7 +321,11 @@ export default function DashboardScreen() {
   // Stats
   const completedAuthors = authors.filter(a => isComplete(progress, a.id)).length;
   const unlockedConcepts = glossaryTerms.filter(t => isComplete(progress, t.authorId));
-  const lastConcepts     = [...unlockedConcepts].reverse().slice(0, 3);
+  const lastConcepts     = [...unlockedConcepts]
+    .reverse()
+    .filter((t, i, arr) => arr.findIndex(x => x.term === t.term) === i)
+    .slice(0, 5);
+  const selectedAuthor   = authors.find(a => a.id === selectedTerm?.authorId);
 
   const completedInBlock  = activeBlock.authors.filter(id => isComplete(progress, id)).length;
   const blockPct          = Math.round((completedInBlock / activeBlock.authors.length) * 100);
@@ -341,6 +349,7 @@ export default function DashboardScreen() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xl }]}
@@ -523,26 +532,45 @@ export default function DashboardScreen() {
 
       {/* ── ÚLTIMOS CONCEPTOS ──────────────────────────────────────────────── */}
       {lastConcepts.length > 0 && (
-        <View style={[styles.section, { paddingBottom: 8 }]}>
+        <View style={[styles.section, { paddingBottom: 9, marginBottom: 0 }]}>
           <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>Últimos conceptos</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.conceptsRow}
-            style={{ overflow: 'visible' }}
-          >
-            {lastConcepts.map(term => {
-              const termAuthor = authors.find(a => a.id === term.authorId);
-              const termBlock  = blocks.find(b => b.authors.includes(term.authorId));
-              return (
-                <View key={term.id} style={styles.conceptChip}>
-                  <Text style={styles.conceptBlock} numberOfLines={1}>{termBlock?.name}</Text>
-                  <Text style={styles.conceptTerm}>{term.term}</Text>
-                  <Text style={styles.conceptAuthor} numberOfLines={1}>{termAuthor?.name}</Text>
-                </View>
-              );
-            })}
-          </ScrollView>
+          <View style={{ position: 'relative', overflow: 'hidden', paddingBottom: 8 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.conceptsRow}
+              style={{ overflow: 'visible' }}
+            >
+              {lastConcepts.map(term => {
+                const termAuthor = authors.find(a => a.id === term.authorId);
+                const termBlock  = blocks.find(b => b.authors.includes(term.authorId));
+                return (
+                  <TouchableOpacity
+                    key={term.id}
+                    style={styles.conceptChip}
+                    onPress={() => setSelectedTerm(term)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.conceptBlock} numberOfLines={1}>{termBlock?.name}</Text>
+                    <Text style={styles.conceptTerm}>{term.term}</Text>
+                    <Text style={styles.conceptAuthor} numberOfLines={1}>{termAuthor?.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <LinearGradient
+              colors={[isDark ? '#0f0f0e' : '#f0ece3', isDark ? '#0f0f0e00' : '#f0ece300']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 32, zIndex: 2, pointerEvents: 'none' }}
+            />
+            <LinearGradient
+              colors={[isDark ? '#0f0f0e00' : '#f0ece300', isDark ? '#0f0f0e' : '#f0ece3']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, zIndex: 2, pointerEvents: 'none' }}
+            />
+          </View>
         </View>
       )}
 
@@ -554,7 +582,7 @@ export default function DashboardScreen() {
             style={[styles.nextCard, { flexDirection: 'row', alignItems: 'center' }, !isActiveComplete && { opacity: 0.5 }]}
             onPress={isActiveComplete
               ? () => router.push(`/autor/${nextEntry.data.id}`)
-              : () => Alert.alert('Autor bloqueado', `Completa ${activeRevCard ? 'la introducción' : activeAuthor?.name} primero para continuar`)
+              : () => Alert.alert('Pendiente', `Completa "${activeRevCard ? activeRevCard.name : activeAuthor?.name}" primero para continuar`)
             }
             activeOpacity={0.85}
           >
@@ -569,7 +597,7 @@ export default function DashboardScreen() {
                 {nextRevCard ? nextRevCard.dates : nextAuthor!.dates}
               </Text>
             </View>
-            <View style={{ marginRight: 20 }}>
+            <View style={{ marginRight: 20, overflow: 'hidden', borderRadius: 40 }}>
               {nextRevCard ? (
                 <View style={{
                   width: 80, height: 80, borderRadius: 40,
@@ -595,6 +623,55 @@ export default function DashboardScreen() {
       )}
 
     </ScrollView>
+
+    <Modal
+      visible={selectedTerm !== null}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setSelectedTerm(null)}
+    >
+      <View
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
+      >
+        <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setSelectedTerm(null)} />
+        <View
+          style={{ width: '100%', maxHeight: 320, backgroundColor: theme.bg2, borderRadius: 16, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 28 }}
+        >
+          <TouchableOpacity
+            onPress={() => setSelectedTerm(null)}
+            style={{ position: 'absolute', top: 12, right: 12, width: 28, height: 28, borderRadius: 14, backgroundColor: theme.bg3, alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
+          >
+            <Text style={{ fontSize: 13, color: theme.text2 }}>✕</Text>
+          </TouchableOpacity>
+
+          <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: theme.text, marginBottom: 4, paddingRight: 32 }}>
+            {selectedTerm?.term}
+          </Text>
+          <Text style={{ fontSize: 11, color: theme.green, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 16 }}>
+            {selectedAuthor?.name ?? ''}
+          </Text>
+
+          <View style={{ maxHeight: 240 }}>
+            <LinearGradient
+              colors={[theme.bg2 + 'FF', theme.bg2 + 'FF', theme.bg2 + '00']}
+              locations={[0, 0.4, 1]}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 22, pointerEvents: 'none', zIndex: 1 }}
+            />
+            <ScrollView showsVerticalScrollIndicator={false} scrollEnabled={true} nestedScrollEnabled={true} bounces={true} alwaysBounceVertical={true} style={{ height: 180 }}>
+              <Text style={{ fontSize: 14, color: theme.text, lineHeight: 22, fontFamily: 'PlayfairDisplay_400Regular', paddingTop: 12, paddingBottom: 12 }}>
+                {selectedTerm?.definition}
+              </Text>
+            </ScrollView>
+            <LinearGradient
+              colors={[theme.bg2 + '00', theme.bg2 + 'FF', theme.bg2 + 'FF']}
+              locations={[0, 0.6, 1]}
+              style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 22, pointerEvents: 'none' }}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -703,6 +780,8 @@ function makeStyles(theme: Theme) {
       top: 24,
       right: 24,
       zIndex: 1,
+      overflow: 'hidden',
+      borderRadius: 56,
     },
     blockChip: {
       alignSelf: 'flex-start',
