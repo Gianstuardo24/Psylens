@@ -403,13 +403,28 @@ export default function DashboardScreen() {
               {completedInBlock} de {activeBlock.authors.length}
             </Text>
           </View>
-          <View style={[styles.progressTrack, { height: 6, borderRadius: 3 }]}>
-            <View style={[styles.progressFill, {
-              height: 6,
-              borderRadius: 3,
-              width: `${activeBlock.authors.length > 0 ? Math.round((completedInBlock / activeBlock.authors.length) * 100) : 0}%`,
-              backgroundColor: blockColors[activeBlock.id]?.base ?? theme.green,
-            }]} />
+          <View style={{ flexDirection: 'row', gap: 3, height: 8 }}>
+            {activeBlock.authors.map((authorId) => {
+              const done = isComplete(progress, authorId);
+              return (
+                <View
+                  key={authorId}
+                  style={{
+                    flex: 1,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: done
+                      ? (blockColors[activeBlock.id]?.base ?? theme.green)
+                      : theme.bg3,
+                    shadowColor: done ? (blockColors[activeBlock.id]?.base ?? theme.green) : 'transparent',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: done ? 0.4 : 0,
+                    shadowRadius: 2,
+                    elevation: done ? 2 : 0,
+                  }}
+                />
+              );
+            })}
           </View>
         </View>
 
@@ -422,14 +437,28 @@ export default function DashboardScreen() {
                 {completedInSubBlock} de {subBlockVisibleIds.length}
               </Text>
             </View>
-            <View style={[styles.progressTrack, { height: 6, borderRadius: 3 }]}>
-              <View style={[styles.progressFill, {
-                height: 6,
-                borderRadius: 3,
-                width: `${Math.round((completedInSubBlock / subBlockVisibleIds.length) * 100)}%`,
-                backgroundColor: blockColors[activeBlock.id]?.base ?? theme.green,
-                opacity: 0.6,
-              }]} />
+            <View style={{ flexDirection: 'row', gap: 3, height: 8 }}>
+              {subBlockVisibleIds.map((authorId) => {
+                const done = isComplete(progress, authorId);
+                return (
+                  <View
+                    key={authorId}
+                    style={{
+                      flex: 1,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: done
+                        ? (blockColors[activeBlock.id]?.base ?? theme.green)
+                        : theme.bg3,
+                      shadowColor: done ? (blockColors[activeBlock.id]?.base ?? theme.green) : 'transparent',
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: done ? 0.4 : 0,
+                      shadowRadius: 2,
+                      elevation: done ? 2 : 0,
+                    }}
+                  />
+                );
+              })}
             </View>
           </View>
         )}
@@ -966,18 +995,6 @@ function makeStyles(theme: Theme) {
     progressLabel: {
       ...typography.bodyXS,
       color: theme.text3,
-    },
-    progressTrack: {
-      backgroundColor: theme.bg3,
-      overflow: 'hidden' as const,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
-      shadowRadius: 8,
-      elevation: 3,
-    },
-    progressFill: {
-      // height, borderRadius, width, backgroundColor set inline per bar
     },
   });
 }
