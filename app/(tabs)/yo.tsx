@@ -412,7 +412,7 @@ export default function YoScreen() {
             {selectedPortrait && PORTRAITS[selectedPortrait] ? (
               <Image
                 source={PORTRAITS[selectedPortrait] as number}
-                style={{ width: 112, height: 112, borderRadius: 56 }}
+                style={{ width: 124, height: 124, borderRadius: 62 }}
                 resizeMode="cover"
               />
             ) : (
@@ -760,18 +760,20 @@ function makeStyles(theme: Theme, isDark: boolean) {
     // ── Avatar section
     avatarSection: {
       alignItems: 'center',
-      paddingVertical: spacing.xxl,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.md,
     },
     avatar: {
-      width: 112,
-      height: 112,
-      borderRadius: 56,
+      width: 124,
+      height: 124,
+      borderRadius: 62,
       backgroundColor: theme.purpleBg,
       borderWidth: 1.5,
       borderColor: theme.purple,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.lg,
+      overflow: 'hidden',
     },
     avatarInitial: {
       ...typography.h1,
@@ -798,7 +800,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
     userName: {
       ...typography.h2,
       color: theme.text,
-      marginBottom: spacing.xs,
+      marginBottom: 0,
     },
     userEmail: {
       ...typography.bodyS,
