@@ -2,9 +2,11 @@ import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   Switch,
   Alert,
   Platform,
@@ -30,6 +32,27 @@ const DAYS_VISITED_KEY = 'psylens_days_visited';
 const NAME_KEY         = 'psylens_user_name';
 const REMINDER_KEY     = 'psylens_reminder_enabled';
 const ONBOARDING_KEY   = 'psylens_onboarding_done';
+const PORTRAIT_KEY     = 'psylens_profile_portrait';
+
+// Metro requires static require() paths — cannot be imported from a shared file
+const PORTRAITS: Record<string, number | null> = {
+  'heraclito-democrito': require('../../assets/portraits/heraclito.png'),
+  'platon':              require('../../assets/portraits/platon.png'),
+  'aristoteles':         require('../../assets/portraits/aristoteles.png'),
+  'helenisticas':        null,
+  'avicena':             require('../../assets/portraits/avicena.png'),
+  'hipocrates':          require('../../assets/portraits/hipocrates.png'),
+  'descartes':           require('../../assets/portraits/descartes.png'),
+  'spinoza':             require('../../assets/portraits/spinoza.png'),
+  'kant':                require('../../assets/portraits/kant.png'),
+  'schopenhauer':        require('../../assets/portraits/schopenhauer.png'),
+  'darwin':              require('../../assets/portraits/darwin.png'),
+  'ebbinghaus':          require('../../assets/portraits/ebbinghaus.png'),
+  'fechner':             require('../../assets/portraits/fechner.png'),
+  'wundt':               require('../../assets/portraits/wundt.png'),
+  'james':               require('../../assets/portraits/james.png'),
+  'thorndike':           require('../../assets/portraits/thorndike.png'),
+};
 
 type LayerProgress = { surface?: boolean; concept?: boolean; fondo?: boolean };
 type ProgressMap   = Record<string, LayerProgress>;
@@ -112,8 +135,10 @@ export default function YoScreen() {
   const [reminderEnabled,  setReminderEnabled]  = useState(false);
   const [isPremium]                             = useState(false);
   const [refreshing,    setRefreshing]    = useState(false);
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [nameInput,     setNameInput]     = useState('');
+  const [showNameModal,     setShowNameModal]     = useState(false);
+  const [nameInput,         setNameInput]         = useState('');
+  const [selectedPortrait,  setSelectedPortrait]  = useState<string | null>(null);
+  const [showPortraitModal, setShowPortraitModal] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -122,11 +147,13 @@ export default function YoScreen() {
         AsyncStorage.getItem(DAYS_VISITED_KEY).catch(() => null),
         AsyncStorage.getItem(NAME_KEY).catch(() => null),
         AsyncStorage.getItem(REMINDER_KEY).catch(() => null),
-      ]).then(([rawProg, rawDays, rawName, rawReminder]) => {
+        AsyncStorage.getItem(PORTRAIT_KEY).catch(() => null),
+      ]).then(([rawProg, rawDays, rawName, rawReminder, rawPortrait]) => {
         if (rawProg) setProgress(JSON.parse(rawProg));
         if (rawDays) setDaysVisited(JSON.parse(rawDays));
         setUserName(rawName ?? '');
         setReminderEnabled(rawReminder === 'true');
+        setSelectedPortrait(rawPortrait);
       });
     }, []),
   );
@@ -144,6 +171,16 @@ export default function YoScreen() {
   function handleRefresh() {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 800);
+  }
+
+  async function handleSelectPortrait(authorId: string | null) {
+    setSelectedPortrait(authorId);
+    if (authorId) {
+      await AsyncStorage.setItem(PORTRAIT_KEY, authorId).catch(() => {});
+    } else {
+      await AsyncStorage.removeItem(PORTRAIT_KEY).catch(() => {});
+    }
+    setShowPortraitModal(false);
   }
 
   function handleLanguage() {
@@ -246,6 +283,7 @@ export default function YoScreen() {
               'psylens_days_visited',
               'psylens_user_name',
               'psylens_saved_quotes',
+              'psylens_profile_portrait',
             ]).catch(() => {});
             const allKeys = await AsyncStorage.getAllKeys();
             const journalKeys = allKeys.filter(k => k.startsWith('psylens_journal_'));
@@ -280,6 +318,7 @@ export default function YoScreen() {
               'psylens_days_visited',
               'psylens_user_name',
               'psylens_saved_quotes',
+              'psylens_profile_portrait',
               'psylens_theme',
             ]).catch(() => {});
             const allKeys = await AsyncStorage.getAllKeys();
@@ -360,11 +399,28 @@ export default function YoScreen() {
       {/* ── Avatar section ─────────────────────────────── */}
       <View style={styles.avatarSection}>
         <View>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarInitial}>
-              {(userName || 'Explorador')[0].toUpperCase()}
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.avatar,
+              selectedPortrait && PORTRAITS[selectedPortrait]
+                ? { backgroundColor: 'transparent', borderColor: theme.green }
+                : null,
+            ]}
+            onPress={() => setShowPortraitModal(true)}
+            activeOpacity={0.85}
+          >
+            {selectedPortrait && PORTRAITS[selectedPortrait] ? (
+              <Image
+                source={PORTRAITS[selectedPortrait] as number}
+                style={{ width: 112, height: 112, borderRadius: 56 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.avatarInitial}>
+                {(userName || 'Explorador')[0].toUpperCase()}
+              </Text>
+            )}
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => { setNameInput(userName); setShowNameModal(true); }}
@@ -584,6 +640,68 @@ export default function YoScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ── Portrait picker modal ─────────────────────────── */}
+      <Modal
+        visible={showPortraitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPortraitModal(false)}
+      >
+        <Pressable style={styles.portraitBackdrop} onPress={() => setShowPortraitModal(false)}>
+          <Pressable style={styles.portraitCard} onPress={e => e.stopPropagation()}>
+            <View style={styles.portraitCardHeader}>
+              <Text style={styles.portraitCardTitle}>Elige tu avatar</Text>
+              <TouchableOpacity
+                onPress={() => setShowPortraitModal(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.portraitCardClose}>×</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              style={styles.portraitScroll}
+              contentContainerStyle={[styles.portraitGrid, { paddingTop: 12, paddingLeft: 22 }]}
+              showsVerticalScrollIndicator={false}
+            >
+              <TouchableOpacity
+                style={styles.portraitItem}
+                onPress={() => handleSelectPortrait(null)}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.portraitCircle, !selectedPortrait && styles.portraitCircleSelected]}>
+                  <Text style={styles.portraitInitial}>
+                    {(userName || 'Explorador')[0].toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.portraitName} numberOfLines={1}>Inicial</Text>
+              </TouchableOpacity>
+
+              {authors
+                .filter(a => isComplete(progress, a.id) && PORTRAITS[a.id] != null)
+                .map(a => (
+                  <TouchableOpacity
+                    key={a.id}
+                    style={styles.portraitItem}
+                    onPress={() => handleSelectPortrait(a.id)}
+                    activeOpacity={0.75}
+                  >
+                    <Image
+                      source={PORTRAITS[a.id] as number}
+                      style={[
+                        styles.portraitOptionImage,
+                        selectedPortrait === a.id && styles.portraitCircleSelected,
+                      ]}
+                      resizeMode="cover"
+                    />
+                    <Text style={styles.portraitName} numberOfLines={1}>{a.name}</Text>
+                  </TouchableOpacity>
+                ))
+              }
+            </ScrollView>
+          </Pressable>
+        </Pressable>
       </Modal>
 
     </ScrollView>
@@ -821,6 +939,88 @@ function makeStyles(theme: Theme, isDark: boolean) {
       color: theme.text3,
       textAlign: 'center',
       marginTop: spacing.xl,
+    },
+
+    // ── Portrait picker modal
+    portraitBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    portraitCard: {
+      width: '100%',
+      backgroundColor: theme.bg2,
+      borderRadius: 16,
+      paddingTop: spacing.sm,
+      paddingBottom: 20,
+      paddingHorizontal: 12,
+      maxHeight: 420,
+    },
+    portraitCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.md,
+    },
+    portraitCardTitle: {
+      ...typography.h3,
+      color: theme.text,
+    },
+    portraitCardClose: {
+      fontSize: 24,
+      color: theme.text3,
+      lineHeight: 26,
+    },
+    portraitScroll: {
+      flexShrink: 1,
+    },
+    portraitGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-start',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xxxl,
+      gap: spacing.lg,
+    },
+    portraitItem: {
+      alignItems: 'center',
+      width: 96,
+    },
+    portraitCircle: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      backgroundColor: theme.purpleBg,
+      borderWidth: 2,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    portraitCircleSelected: {
+      borderColor: theme.green,
+      borderWidth: 2.5,
+    },
+    portraitOptionImage: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      borderWidth: 2,
+      borderColor: theme.border,
+    },
+    portraitInitial: {
+      ...typography.h3,
+      color: theme.purple,
+    },
+    portraitName: {
+      ...typography.bodyXS,
+      color: theme.text2,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+      maxWidth: 80,
     },
   });
 }
