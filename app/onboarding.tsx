@@ -20,6 +20,7 @@ import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 import { useTheme } from '../hooks/useTheme';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const AnimatedCircle  = Animated.createAnimatedComponent(Circle);
 const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
@@ -395,6 +396,12 @@ export default function OnboardingScreen() {
                     }}
                     activeOpacity={0.85}
                   >
+                    <LinearGradient
+                      colors={['#1a8a6a', '#0F6E56', '#0a5a45']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0, y: 1 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
                     <Text style={styles.buttonText}>Empezar</Text>
                   </TouchableOpacity>
                 </View>
@@ -601,10 +608,10 @@ function makeStyles(theme: Theme) {
 
     button: {
       width: '100%',
-      backgroundColor: theme.green,
       paddingVertical: spacing.lg,
       borderRadius: radius.lg,
       alignItems: 'center',
+      overflow: 'hidden',
     },
 
     buttonText: {

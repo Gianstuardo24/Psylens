@@ -55,7 +55,7 @@ const TABS = ['frases', 'reflexiones'] as const;
 
 export default function DiarioScreen() {
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const pagerRef = useRef<ScrollView>(null);
 
@@ -105,7 +105,7 @@ export default function DiarioScreen() {
 
   const quoteGroups = useMemo(() => buildQuoteGroups(savedQuotes), [savedQuotes]);
 
-  const styles = useMemo(() => makeStyles(theme), [theme]);
+  const styles = useMemo(() => makeStyles(theme, isDark), [theme, isDark]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -220,7 +220,7 @@ export default function DiarioScreen() {
 
 // ─── Screen styles ────────────────────────────────────────────────────────────
 
-function makeStyles(theme: Theme) {
+function makeStyles(theme: Theme, isDark: boolean) {
   return StyleSheet.create({
     root: {
       flex: 1,
@@ -300,7 +300,7 @@ function makeStyles(theme: Theme) {
       marginBottom: spacing.sm,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -374,7 +374,7 @@ function makeStyles(theme: Theme) {
       marginBottom: spacing.sm,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },

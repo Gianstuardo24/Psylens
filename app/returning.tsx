@@ -7,6 +7,7 @@ import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 import { authors, returningContent, savableQuotes } from '../constants/data';
 import { useTheme } from '../hooks/useTheme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { HelenisticasIllustration } from '../components/IntroIllustrations';
 import { SaveQuoteButton } from '../components/SaveQuoteButton';
 import { appendJournalEntry, getJournalEntries, JournalEntry } from '../utils/journal';
@@ -443,6 +444,12 @@ export default function ReturningScreen() {
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
           onPress={() => router.replace('/(tabs)')}
         >
+          <LinearGradient
+            colors={['#1a8a6a', '#0F6E56', '#0a5a45']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
           <Text style={styles.buttonText}>Continuar →</Text>
         </Pressable>
       </View>
@@ -656,10 +663,10 @@ function makeStyles(theme: Theme) {
     },
 
     button: {
-      backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.xl,
       alignItems: 'center',
+      overflow: 'hidden',
     },
     buttonPressed: {
       opacity: 0.8,

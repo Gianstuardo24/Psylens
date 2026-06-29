@@ -21,6 +21,7 @@ import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { authors } from '../../constants/data';
 import { useTheme } from '../../hooks/useTheme';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type Theme = typeof colors.dark;
 
@@ -136,7 +137,7 @@ export default function YoScreen() {
   ), 0);
   const streak = computeStreak(daysVisited);
 
-  const styles = useMemo(() => makeStyles(theme), [theme]);
+  const styles = useMemo(() => makeStyles(theme, isDark), [theme, isDark]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -573,6 +574,9 @@ export default function YoScreen() {
                 }}
                 activeOpacity={nameInput.trim() ? 0.85 : 1}
               >
+                {!!nameInput.trim() && (
+                  <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
+                )}
                 <Text style={[styles.modalSaveText, !nameInput.trim() && styles.modalSaveTextDisabled]}>
                   Guardar
                 </Text>
@@ -625,7 +629,7 @@ function makeSrStyles(theme: Theme) {
 
 // ─── Screen styles ────────────────────────────────────────────────────────────
 
-function makeStyles(theme: Theme) {
+function makeStyles(theme: Theme, isDark: boolean) {
   return StyleSheet.create({
     scroll: {
       flex: 1,
@@ -703,7 +707,7 @@ function makeStyles(theme: Theme) {
       marginBottom: spacing.lg,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -739,7 +743,7 @@ function makeStyles(theme: Theme) {
       marginBottom: spacing.lg,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -796,8 +800,8 @@ function makeStyles(theme: Theme) {
       flex: 1,
       paddingVertical: spacing.md,
       borderRadius: radius.lg,
-      backgroundColor: theme.green,
       alignItems: 'center',
+      overflow: 'hidden',
     },
     modalSaveDisabled: {
       backgroundColor: theme.bg3,

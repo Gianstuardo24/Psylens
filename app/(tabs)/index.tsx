@@ -341,10 +341,16 @@ export default function DashboardScreen() {
     : [];
   const completedInSubBlock = subBlockVisibleIds.filter(id => isComplete(progress, id)).length;
 
+  const activeBlockAuthorsOrdered = activeBlock
+    ? subBlocks
+        .filter(sb => sb.blockId === activeBlock.id)
+        .flatMap(sb => sb.authorIds.filter(id => activeBlock.authors.includes(id)))
+    : [];
+
   // Streak chips
   const last7 = getCurrentWeekDays();
 
-  const styles = useMemo(() => makeStyles(theme), [theme]);
+  const styles = useMemo(() => makeStyles(theme, isDark), [theme, isDark]);
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -384,9 +390,19 @@ export default function DashboardScreen() {
         <View style={styles.streakRow}>
           {last7.map(({ iso, label }) => {
             const done = daysVisited.includes(iso);
-            return (
-              <View key={iso} style={[styles.streakChip, done && styles.streakChipDone]}>
-                <Text style={[styles.streakLabel, done && styles.streakLabelDone]}>{label}</Text>
+            return done ? (
+              <LinearGradient
+                key={iso}
+                colors={['#1a8a6a', '#0F6E56', '#0a5a45']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.streakChip}
+              >
+                <Text style={styles.streakLabelDone}>{label}</Text>
+              </LinearGradient>
+            ) : (
+              <View key={iso} style={styles.streakChip}>
+                <Text style={styles.streakLabel}>{label}</Text>
               </View>
             );
           })}
@@ -404,7 +420,7 @@ export default function DashboardScreen() {
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 3, height: 8 }}>
-            {activeBlock.authors.map((authorId) => {
+            {activeBlockAuthorsOrdered.map((authorId) => {
               const done = isComplete(progress, authorId);
               return (
                 <View
@@ -534,9 +550,14 @@ export default function DashboardScreen() {
             )}
           </>
 
-          <View style={styles.readButton}>
+          <LinearGradient
+            colors={['#1a8a6a', '#0F6E56', '#0a5a45']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.readButton}
+          >
             <Text style={styles.readButtonText}>Seguir leyendo →</Text>
-          </View>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -706,7 +727,7 @@ export default function DashboardScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-function makeStyles(theme: Theme) {
+function makeStyles(theme: Theme, isDark: boolean) {
   return StyleSheet.create({
     scroll: {
       flex: 1,
@@ -720,7 +741,7 @@ function makeStyles(theme: Theme) {
     // Header
     header: {
       alignItems: 'center',
-      marginBottom: spacing.xxl,
+      marginBottom: spacing.lg,
     },
     wordmark: {
       ...typography.h2,
@@ -775,7 +796,7 @@ function makeStyles(theme: Theme) {
       justifyContent: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -800,7 +821,7 @@ function makeStyles(theme: Theme) {
       paddingHorizontal: 16,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -866,10 +887,10 @@ function makeStyles(theme: Theme) {
       marginBottom: spacing.lg,
     },
     readButton: {
-      backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.md,
       alignItems: 'center',
+      overflow: 'hidden',
     },
     readButtonText: {
       ...typography.body,
@@ -893,7 +914,7 @@ function makeStyles(theme: Theme) {
       alignItems: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -924,7 +945,7 @@ function makeStyles(theme: Theme) {
       padding: spacing.md,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -954,7 +975,7 @@ function makeStyles(theme: Theme) {
       opacity: 0.7,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -983,7 +1004,7 @@ function makeStyles(theme: Theme) {
 
     // Progress bars
     progressSection: {
-      paddingVertical: 12,
+      paddingVertical: 0,
       gap: 16,
       marginBottom: spacing.xxl,
     },

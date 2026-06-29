@@ -12,6 +12,7 @@ import Svg, { Path } from 'react-native-svg';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
 import { useTheme } from '../hooks/useTheme';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type Theme = typeof colors.dark;
 
@@ -253,6 +254,12 @@ export function BlockCompleteModal({
             onPress={nextBlock ? onContinue : onViewSummary}
             activeOpacity={0.85}
           >
+            <LinearGradient
+              colors={['#1a8a6a', '#0F6E56', '#0a5a45']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFillObject}
+            />
             <Text style={styles.primaryButtonText}>
               {nextBlock ? 'Continuar' : 'Ver resumen'}
             </Text>
@@ -371,12 +378,12 @@ function makeStyles(theme: Theme) {
     // Buttons
     primaryButton: {
       width: '100%',
-      backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.lg,
       paddingHorizontal: 20,
       alignItems: 'center',
       marginBottom: spacing.md,
+      overflow: 'hidden',
     },
     primaryButtonText: {
       ...typography.body,

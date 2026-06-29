@@ -171,7 +171,7 @@ function AuthorCard({
   onPaywall?: () => void;
 }) {
   const { theme, isDark } = useTheme();
-  const ac = useMemo(() => makeAcStyles(theme), [theme]);
+  const ac = useMemo(() => makeAcStyles(theme, isDark), [theme, isDark]);
   const cardBorderColor     = blockBaseColor ? blockBaseColor + '33' : undefined;
   const portraitBorderColor = blockBaseColor ? blockBaseColor + '80' : undefined;
 
@@ -332,8 +332,8 @@ function RevolutionCard({
   premiumLocked?: boolean;
   onPaywall?: () => void;
 }) {
-  const { theme } = useTheme();
-  const ac = useMemo(() => makeAcStyles(theme), [theme]);
+  const { theme, isDark } = useTheme();
+  const ac = useMemo(() => makeAcStyles(theme, isDark), [theme, isDark]);
 
   const inner = (
     <View
@@ -417,8 +417,8 @@ function SubBlockHeader({
   premiumLocked?: boolean;
   onPaywall?: () => void;
 }) {
-  const { theme } = useTheme();
-  const sbh = useMemo(() => makeSbhStyles(theme), [theme]);
+  const { theme, isDark } = useTheme();
+  const sbh = useMemo(() => makeSbhStyles(theme, isDark), [theme, isDark]);
   const isLocked = status === 'locked';
 
   const content = (
@@ -500,7 +500,7 @@ function BlockNode({
   isPremium: boolean;
 }) {
   const { theme, isDark } = useTheme();
-  const bn = useMemo(() => makeBnStyles(theme), [theme]);
+  const bn = useMemo(() => makeBnStyles(theme, isDark), [theme, isDark]);
   const bc = blockColors[block.id] ?? blockColors['intro'];
   const comingSoon = isComingSoonBlock(block.id);
   const headerBg = comingSoon ? theme.bg3 : (isDark ? bc.base + '26' : bc.light);
@@ -756,7 +756,7 @@ export default function CaminoScreen() {
 
 // ─── AuthorCard styles ────────────────────────────────────────────────────────
 
-function makeAcStyles(theme: Theme) {
+function makeAcStyles(theme: Theme, isDark: boolean) {
   return StyleSheet.create({
     card: {
       height: 110,
@@ -769,7 +769,7 @@ function makeAcStyles(theme: Theme) {
       marginBottom: spacing.sm,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -910,7 +910,7 @@ function makeAcStyles(theme: Theme) {
 
 // ─── BlockNode styles ─────────────────────────────────────────────────────────
 
-function makeBnStyles(theme: Theme) {
+function makeBnStyles(theme: Theme, isDark: boolean) {
   return StyleSheet.create({
     wrapper: {
       marginBottom: spacing.lg,
@@ -918,7 +918,7 @@ function makeBnStyles(theme: Theme) {
       backgroundColor: theme.bg2,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -1017,7 +1017,7 @@ function makeBnStyles(theme: Theme) {
       overflow: 'hidden',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },
@@ -1071,7 +1071,7 @@ function makeBnStyles(theme: Theme) {
 
 // ─── SubBlockHeader styles ────────────────────────────────────────────────────
 
-function makeSbhStyles(theme: Theme) {
+function makeSbhStyles(theme: Theme, isDark: boolean) {
   return StyleSheet.create({
     container: {
       borderLeftWidth: 2,
@@ -1083,7 +1083,7 @@ function makeSbhStyles(theme: Theme) {
       marginTop: spacing.md,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
+      shadowOpacity: isDark ? 0.5 : 0.1,
       shadowRadius: 8,
       elevation: 3,
     },

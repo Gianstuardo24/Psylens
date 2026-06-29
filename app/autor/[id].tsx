@@ -24,6 +24,7 @@ import { PaywallSheet } from '../../components/PaywallSheet';
 import { IntroIllustration, HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { SaveQuoteButton } from '../../components/SaveQuoteButton';
 import { useTheme } from '../../hooks/useTheme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { appendJournalEntry, getJournalEntries, JournalEntry } from '../../utils/journal';
 
 type Theme = typeof colors.dark;
@@ -162,6 +163,7 @@ export default function AutorScreen() {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>('surface');
+  const [revTab,    setRevTab]    = useState<'surface' | 'concept'>('surface');
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
   const [progress,          setProgress]          = useState<ProgressMap>({});
   const [isPremium,         setIsPremium]         = useState(false);
@@ -221,6 +223,10 @@ export default function AutorScreen() {
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [activeTab]);
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+  }, [revTab]);
 
   useEffect(() => {
     if (showCelebration) {
@@ -330,12 +336,20 @@ export default function AutorScreen() {
           <Text style={styles.authorName}>{revCard.name}</Text>
         </View>
 
-        {/* Single tab */}
         <View style={styles.tabBar}>
-          <View style={[styles.tabItem, { flex: 1 }]}>
-            <Text style={[styles.tabLabel, styles.tabLabelActive]}>Profundidad</Text>
-            <View style={styles.tabUnderline} />
-          </View>
+          {([{ key: 'surface', label: 'Entrada' }, { key: 'concept', label: 'Profundidad' }] as const).map(tab => (
+            <TouchableOpacity
+              key={tab.key}
+              style={styles.tabItem}
+              onPress={() => setRevTab(tab.key)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabLabel, revTab === tab.key && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+              {revTab === tab.key && <View style={styles.tabUnderline} />}
+            </TouchableOpacity>
+          ))}
         </View>
 
         <View style={{ flex: 1 }}>
@@ -345,17 +359,24 @@ export default function AutorScreen() {
             contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
             showsVerticalScrollIndicator={false}
           >
-            {revCard.concept.question ? (
-              <>
-                <Text style={styles.question}>{revCard.concept.question}</Text>
-                <View style={styles.divider} />
-              </>
-            ) : null}
-            {revCard.concept.text.split('\n\n').map((para, i) => (
-              <View key={i} style={styles.paragraph}>
-                <Text style={styles.contentText}>{para}</Text>
-              </View>
-            ))}
+            {(() => {
+              const layer = revTab === 'surface' ? revCard.surface : revCard.concept;
+              return (
+                <>
+                  {layer.question ? (
+                    <>
+                      <Text style={styles.question}>{layer.question}</Text>
+                      <View style={styles.divider} />
+                    </>
+                  ) : null}
+                  {layer.text.split('\n\n').map((para, i) => (
+                    <View key={i} style={styles.paragraph}>
+                      <Text style={styles.contentText}>{para}</Text>
+                    </View>
+                  ))}
+                </>
+              );
+            })()}
           </ScrollView>
         </View>
 
@@ -373,8 +394,17 @@ export default function AutorScreen() {
                 <Text style={styles.nextButtonText}>Continuar →</Text>
               </TouchableOpacity>
             </>
+          ) : revTab === 'surface' ? (
+            <TouchableOpacity
+              style={styles.deeperButton}
+              onPress={() => setRevTab('concept')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.deeperButtonText}>Ir más profundo →</Text>
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.readButton} onPress={markRevDone} activeOpacity={0.85}>
+              <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
               <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
             </TouchableOpacity>
           )}
@@ -401,6 +431,7 @@ export default function AutorScreen() {
                 }}
                 activeOpacity={0.85}
               >
+                <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
                 <Text style={styles.celebNextText}>Continuar →</Text>
               </TouchableOpacity>
             </Animated.View>
@@ -797,10 +828,12 @@ export default function AutorScreen() {
         ) : isLastTab && !isAuthorComplete ? (
           hasQuiz && !savedJournalEntry ? (
             <TouchableOpacity style={styles.readButton} onPress={() => setShowQuiz(true)} activeOpacity={0.85}>
+              <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
               <Text style={styles.readButtonText}>Completar reflexión →</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.readButton} onPress={markAllDone} activeOpacity={0.85}>
+              <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
               <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
             </TouchableOpacity>
           )
@@ -887,6 +920,7 @@ export default function AutorScreen() {
 
             {!celebOpenedFromHeart && nextDest ? (
               <TouchableOpacity style={styles.celebNextButton} onPress={navigateToNext} activeOpacity={0.85}>
+                <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
                 <Text style={styles.celebNextText}>Siguiente →</Text>
               </TouchableOpacity>
             ) : (
@@ -949,6 +983,7 @@ export default function AutorScreen() {
                       <Text style={styles.quizFeedbackText}>{currentQ.explanation}</Text>
                     </View>
                     <TouchableOpacity style={styles.quizContinue} onPress={advanceQuiz} activeOpacity={0.85}>
+                      <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
                       <Text style={styles.quizContinueText}>Continuar →</Text>
                     </TouchableOpacity>
                   </>
@@ -973,6 +1008,9 @@ export default function AutorScreen() {
                   onPress={() => { if (openAnswer.trim().length >= 20) advanceQuiz(); }}
                   activeOpacity={openAnswer.trim().length >= 20 ? 0.85 : 1}
                 >
+                  {openAnswer.trim().length >= 20 && (
+                    <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
+                  )}
                   <Text style={[styles.quizContinueText, openAnswer.trim().length < 20 && { color: theme.text3 }]}>
                     Continuar →
                   </Text>
@@ -1281,10 +1319,10 @@ function makeStyles(theme: Theme) {
       fontWeight: '600',
     },
     readButton: {
-      backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.lg,
       alignItems: 'center',
+      overflow: 'hidden',
     },
     readButtonDone: {
       backgroundColor: theme.greenBg,
@@ -1489,12 +1527,12 @@ function makeStyles(theme: Theme) {
     },
     celebNextButton: {
       width: '100%',
-      backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.lg,
       paddingHorizontal: 20,
       alignItems: 'center',
       marginBottom: spacing.md,
+      overflow: 'hidden',
     },
     celebNextText: {
       ...typography.body,
@@ -1653,11 +1691,11 @@ function makeStyles(theme: Theme) {
       lineHeight: 20,
     },
     quizContinue: {
-      backgroundColor: theme.green,
       borderRadius: radius.lg,
       paddingVertical: spacing.lg,
       alignItems: 'center',
       marginTop: spacing.sm,
+      overflow: 'hidden',
     },
     quizContinueDisabled: {
       backgroundColor: theme.bg3,
