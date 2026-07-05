@@ -158,12 +158,28 @@ function HighlightedText({
   );
 }
 
+// Build the flashcard sequence for a layer: an optional green question card,
+// one cream card per paragraph, and an optional closing card. Empty question /
+// closingLine strings are skipped (revolution cards routinely have them blank).
+type LayerCard = { kind: 'question' | 'para' | 'closing'; text: string };
+function buildLayerCards(layer: { question?: string; text: string; closingLine?: string }): LayerCard[] {
+  const cards: LayerCard[] = [];
+  if (layer.question && layer.question.trim()) cards.push({ kind: 'question', text: layer.question });
+  layer.text.split('\n\n').forEach(p => {
+    if (p.trim()) cards.push({ kind: 'para', text: p });
+  });
+  if (layer.closingLine && layer.closingLine.trim()) cards.push({ kind: 'closing', text: layer.closingLine });
+  return cards;
+}
+
 export default function AutorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>('surface');
   const [revTab,    setRevTab]    = useState<'surface' | 'concept'>('surface');
+  const [cardIndex, setCardIndex] = useState<number>(0);
+  const [hasStarted, setHasStarted] = useState(false);
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
   const [progress,          setProgress]          = useState<ProgressMap>({});
   const [isPremium,         setIsPremium]         = useState(false);
@@ -176,6 +192,8 @@ export default function AutorScreen() {
 
   const animScale      = useRef(new Animated.Value(0.85)).current;
   const animOpacity    = useRef(new Animated.Value(0)).current;
+  const welcomeAnim    = useRef(new Animated.Value(1)).current;  // 1 = welcome visible, 0 = faded out
+  const cardsAnim      = useRef(new Animated.Value(0)).current;  // 0 = hidden, 1 = shown
   const quizTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollViewRef   = useRef<ScrollView>(null);
 
@@ -221,12 +239,27 @@ export default function AutorScreen() {
   }, [id]);
 
   useEffect(() => {
+    setCardIndex(0);
+    setHasStarted(false);
+    welcomeAnim.setValue(1);
+    cardsAnim.setValue(0);
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [activeTab]);
 
   useEffect(() => {
+    setCardIndex(0);
+    setHasStarted(false);
+    welcomeAnim.setValue(1);
+    cardsAnim.setValue(0);
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [revTab]);
+
+  // Fade/slide the cards in once the user taps "Empezar"
+  useEffect(() => {
+    if (!hasStarted) return;
+    cardsAnim.setValue(0);
+    Animated.timing(cardsAnim, { toValue: 1, duration: 260, useNativeDriver: true }).start();
+  }, [hasStarted]);
 
   useEffect(() => {
     if (showCelebration) {
@@ -312,103 +345,156 @@ export default function AutorScreen() {
     setShowCelebration(true);
   }
 
+  function startCards() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Animated.timing(welcomeAnim, { toValue: 0, duration: 200, useNativeDriver: true })
+      .start(() => setHasStarted(true));
+  }
+
   // ─── Revolution card render ────────────────────────────────────────────────
   if (revCard) {
+    const revLayerCards = buildLayerCards(revTab === 'surface' ? revCard.surface : revCard.concept);
+    const revCardPos    = Math.min(cardIndex, Math.max(0, revLayerCards.length - 1));
     return (
       <View style={styles.container}>
         <TouchableOpacity
-          style={[styles.backButton, { top: insets.top + spacing.sm }]}
+          style={[styles.backButton, { top: insets.top + spacing.md }]}
           onPress={() => router.back()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
 
-        <View style={[styles.header, { paddingTop: insets.top + 48 }]}>
-          <View style={styles.revIconCircle}>
-            <Svg width={44} height={44} viewBox="0 0 44 44">
-              <Path d="M22 4 L40 22 L22 40 L4 22 Z" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
-            </Svg>
-          </View>
-          <View style={styles.blockChip}>
-            <Text style={styles.blockChipText}>{block?.name ?? ''}</Text>
-          </View>
-          <Text style={styles.authorName}>{revCard.name}</Text>
-        </View>
-
-        <View style={styles.tabBar}>
-          {([{ key: 'surface', label: 'Entrada' }, { key: 'concept', label: 'Profundidad' }] as const).map(tab => (
-            <TouchableOpacity
-              key={tab.key}
-              style={styles.tabItem}
-              onPress={() => setRevTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.tabLabel, revTab === tab.key && styles.tabLabelActive]}>
-                {tab.label}
-              </Text>
-              {revTab === tab.key && <View style={styles.tabUnderline} />}
+        {!hasStarted ? (
+          <Animated.View style={[styles.welcomeContainer, { opacity: welcomeAnim }]}>
+            <View style={styles.header}>
+              <View style={styles.revIconCircle}>
+                <Svg width={44} height={44} viewBox="0 0 44 44">
+                  <Path d="M22 4 L40 22 L22 40 L4 22 Z" stroke="#0f6e56" strokeWidth="1.5" fill="none" />
+                </Svg>
+              </View>
+              <View style={styles.blockChip}>
+                <Text style={styles.blockChipText}>{block?.name ?? ''}</Text>
+              </View>
+              <Text style={styles.authorName}>{revCard.name}</Text>
+            </View>
+            <TouchableOpacity style={styles.startButton} onPress={startCards} activeOpacity={0.85}>
+              <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
+              <Text style={styles.readButtonText}>Empezar →</Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          </Animated.View>
+        ) : (
+          <>
+            <View style={[styles.tabBar, { paddingTop: hasStarted ? insets.top + spacing.sm : spacing.sm }]}>
+              {([{ key: 'surface', label: 'Entrada' }, { key: 'concept', label: 'Profundidad' }] as const).map(tab => (
+                <TouchableOpacity
+                  key={tab.key}
+                  style={styles.tabItem}
+                  onPress={() => setRevTab(tab.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.tabLabel, revTab === tab.key && styles.tabLabelActive]}>
+                    {tab.label}
+                  </Text>
+                  {revTab === tab.key && <View style={styles.tabUnderline} />}
+                </TouchableOpacity>
+              ))}
+            </View>
 
-        <View style={{ flex: 1 }}>
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.scroll}
-            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 88 }]}
-            showsVerticalScrollIndicator={false}
-          >
-            {(() => {
-              const layer = revTab === 'surface' ? revCard.surface : revCard.concept;
+            <View style={{ flex: 1 }}>
+              {(() => {
+                const layer = revTab === 'surface' ? revCard.surface : revCard.concept;
+                const revCards = buildLayerCards(layer);
+                const idx = Math.min(cardIndex, revCards.length - 1);
+                const card = revCards[idx];
+                if (!card) return null;
+                return (
+                  <Animated.View style={[styles.cardsFill, { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: insets.bottom + 88, opacity: cardsAnim, transform: [{ translateY: cardsAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
+                    <View style={styles.cardProgressRow}>
+                      <View style={styles.cardProgressTrack}>
+                        <View style={[styles.cardProgressFill, { width: `${((idx + 1) / revCards.length) * 100}%` }]} />
+                      </View>
+                      <Text style={styles.cardProgressCount}>{idx + 1} de {revCards.length}</Text>
+                    </View>
+                    <View style={styles.cardCenter}>
+                      {card.kind === 'question' ? (
+                        <View style={styles.cardGreen}>
+                          <Text style={styles.cardGreenText}>{card.text}</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.cardCream}>
+                          <Text style={card.kind === 'closing' ? styles.cardClosingText : styles.contentText}>
+                            {card.text}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </Animated.View>
+                );
+              })()}
+            </View>
+          </>
+        )}
+
+        {hasStarted && (
+        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.sm }]}>
+          <View style={revLayerCards.length > 1 ? { marginBottom: spacing.md } : undefined}>
+          {(() => {
+            const layer = revTab === 'surface' ? revCard.surface : revCard.concept;
+            const revCards = buildLayerCards(layer);
+            const atLastCard = cardIndex >= revCards.length - 1;
+            if (isRevComplete) {
               return (
                 <>
-                  {layer.question ? (
-                    <>
-                      <Text style={styles.question}>{layer.question}</Text>
-                      <View style={styles.divider} />
-                    </>
-                  ) : null}
-                  {layer.text.split('\n\n').map((para, i) => (
-                    <View key={i} style={styles.paragraph}>
-                      <Text style={styles.contentText}>{para}</Text>
-                    </View>
-                  ))}
+                  <TouchableOpacity style={[styles.readButton, styles.readButtonDone]} activeOpacity={1}>
+                    <Text style={[styles.readButtonText, styles.readButtonTextDone]}>Leído ✓</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.nextButton, { marginTop: spacing.sm }]}
+                    onPress={() => revFirstAuthorId ? router.replace(`/autor/${revFirstAuthorId}`) : router.back()}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.nextButtonText}>Continuar →</Text>
+                  </TouchableOpacity>
                 </>
               );
-            })()}
-          </ScrollView>
-        </View>
-
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.sm }]}>
-          {isRevComplete ? (
-            <>
-              <TouchableOpacity style={[styles.readButton, styles.readButtonDone]} activeOpacity={1}>
-                <Text style={[styles.readButtonText, styles.readButtonTextDone]}>Leído ✓</Text>
+            }
+            if (!atLastCard) {
+              return (
+                <TouchableOpacity
+                  style={styles.deeperButton}
+                  onPress={() => setCardIndex(i => i + 1)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.deeperButtonText}>Continuar →</Text>
+                </TouchableOpacity>
+              );
+            }
+            if (revTab === 'surface') {
+              return (
+                <TouchableOpacity style={styles.readButton} onPress={() => setRevTab('concept')} activeOpacity={0.85}>
+                  <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
+                  <Text style={styles.readButtonText}>Profundidad →</Text>
+                </TouchableOpacity>
+              );
+            }
+            return (
+              <TouchableOpacity style={styles.readButton} onPress={markRevDone} activeOpacity={0.85}>
+                <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
+                <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.nextButton, { marginTop: spacing.sm }]}
-                onPress={() => revFirstAuthorId ? router.replace(`/autor/${revFirstAuthorId}`) : router.back()}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.nextButtonText}>Continuar →</Text>
-              </TouchableOpacity>
-            </>
-          ) : revTab === 'surface' ? (
-            <TouchableOpacity
-              style={styles.deeperButton}
-              onPress={() => setRevTab('concept')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.deeperButtonText}>Ir más profundo →</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.readButton} onPress={markRevDone} activeOpacity={0.85}>
-              <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
-              <Text style={styles.readButtonText}>Marcar como leído ✓</Text>
-            </TouchableOpacity>
+            );
+          })()}
+          </View>
+          {revLayerCards.length > 1 && (
+            <View style={styles.cardDots}>
+              {revLayerCards.map((_, i) => (
+                <View key={i} style={[styles.cardDot, i === revCardPos && styles.cardDotActive]} />
+              ))}
+            </View>
           )}
         </View>
+        )}
 
         {/* Celebration modal */}
         <Modal visible={showCelebration} transparent statusBarTranslucent animationType="none">
@@ -447,7 +533,7 @@ export default function AutorScreen() {
       <View style={styles.errorContainer}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { top: insets.top + spacing.sm }]}
+          style={[styles.backButton, { top: insets.top + spacing.md }]}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Text style={styles.backButtonText}>←</Text>
@@ -486,6 +572,20 @@ export default function AutorScreen() {
   // Concepto + Fondo are premium-gated for non-free authors (sub-block-level for b0)
   const isContentLocked =
     !isContentFree(author) && !isPremium && (activeTab === 'concept' || activeTab === 'fondo');
+
+  // Flashcard mode: one card at a time. Only for real content (not the
+  // placeholder, the reflexion review, or a locked premium layer).
+  const cardMode = !isContentLocked && activeTab !== 'reflexion' && !isPlaceholder;
+  const cards    = cardMode && content ? buildLayerCards(content) : [];
+  const cardPos  = Math.min(cardIndex, Math.max(0, cards.length - 1));
+  // Content layers only, excluding the 'reflexion' review tab, to find "next tab".
+  const contentTabsList = isTwoLayer
+    ? [{ key: 'surface' as TabKey, label: 'Entrada' }, { key: 'concept' as TabKey, label: 'Profundidad' }]
+    : TABS;
+  const nextContentTab = (() => {
+    const idx = contentTabsList.findIndex(t => t.key === activeTab);
+    return idx >= 0 && idx < contentTabsList.length - 1 ? contentTabsList[idx + 1] : null;
+  })();
 
   async function completeAuthor() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -620,11 +720,48 @@ export default function AutorScreen() {
     await completeAuthor();
   }
 
+  // Portrait / badge / title / dates — shared by the welcome and header layouts
+  const authorHeaderInner = (
+    <>
+      {isDual ? (
+        <View style={[styles.dualPortraitWrap, { marginBottom: spacing.lg }]}>
+          <View style={styles.dualPortraitCircle}>
+            <Image source={PORTRAIT_HERACLITO} style={styles.dualPortraitImage} resizeMode="cover" />
+          </View>
+          <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight]}>
+            <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
+          </View>
+        </View>
+      ) : isIntroAuthor ? (
+        <View style={styles.introIllustrationWrap}>
+          <IntroIllustration authorId={author.id} />
+        </View>
+      ) : isHelenisticas ? (
+        <View style={styles.portraitCircle}>
+          <HelenisticasIllustration size={120} isDark={isDark} />
+        </View>
+      ) : (
+        <View style={styles.portraitCircle}>
+          {portrait ? (
+            <Image source={portrait} style={styles.portraitImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.portraitInitial}>{author.name[0]}</Text>
+          )}
+        </View>
+      )}
+      <View style={styles.blockChip}>
+        <Text style={styles.blockChipText}>{block.name}</Text>
+      </View>
+      <Text style={styles.authorName}>{author.name}</Text>
+      <Text style={styles.authorDates}>{author.dates}</Text>
+    </>
+  );
+
   return (
     <View style={styles.container}>
       {/* Back button */}
       <TouchableOpacity
-        style={[styles.backButton, { top: insets.top + spacing.sm }]}
+        style={[styles.backButton, { top: insets.top + spacing.md }]}
         onPress={() => router.back()}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
@@ -633,7 +770,7 @@ export default function AutorScreen() {
 
       {isAuthorComplete && (
         <TouchableOpacity
-          style={[styles.heartButton, { top: insets.top + spacing.sm }]}
+          style={[styles.heartButton, { top: insets.top + spacing.md }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setCelebOpenedFromHeart(true);
@@ -645,43 +782,26 @@ export default function AutorScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Centered header */}
-      <View style={[styles.header, { paddingTop: insets.top + 48 }]}>
-        {isDual ? (
-          <View style={[styles.dualPortraitWrap, { marginBottom: spacing.lg }]}>
-            <View style={styles.dualPortraitCircle}>
-              <Image source={PORTRAIT_HERACLITO} style={styles.dualPortraitImage} resizeMode="cover" />
-            </View>
-            <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight]}>
-              <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
-            </View>
-          </View>
-        ) : isIntroAuthor ? (
-          <View style={styles.introIllustrationWrap}>
-            <IntroIllustration authorId={author.id} />
-          </View>
-        ) : isHelenisticas ? (
-          <View style={styles.portraitCircle}>
-            <HelenisticasIllustration size={120} isDark={isDark} />
-          </View>
-        ) : (
-          <View style={styles.portraitCircle}>
-            {portrait ? (
-              <Image source={portrait} style={styles.portraitImage} resizeMode="cover" />
-            ) : (
-              <Text style={styles.portraitInitial}>{author.name[0]}</Text>
-            )}
-          </View>
-        )}
-        <View style={styles.blockChip}>
-          <Text style={styles.blockChipText}>{block.name}</Text>
-        </View>
-        <Text style={styles.authorName}>{author.name}</Text>
-        <Text style={styles.authorDates}>{author.dates}</Text>
-      </View>
+      {cardMode && !hasStarted ? (
+        /* Welcome — header + Empezar centered together as one block */
+        <Animated.View style={[styles.welcomeContainer, { opacity: welcomeAnim }]}>
+          <View style={styles.header}>{authorHeaderInner}</View>
+          <TouchableOpacity style={styles.startButton} onPress={startCards} activeOpacity={0.85}>
+            <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
+            <Text style={styles.readButtonText}>Empezar →</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      ) : (
+      <>
+      {/* Centered header (reflexion / placeholder / locked — top-aligned) */}
+      {!hasStarted && (
+        <Animated.View style={{ opacity: welcomeAnim }}>
+          <View style={[styles.header, { paddingTop: insets.top + 48 }]}>{authorHeaderInner}</View>
+        </Animated.View>
+      )}
 
       {/* Tab bar */}
-      <View style={[styles.tabBar, { backgroundColor: tabBg }]}>
+      <View style={[styles.tabBar, { backgroundColor: tabBg, paddingTop: hasStarted ? insets.top + spacing.sm : spacing.sm }]}>
         {activeTabs.map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -700,8 +820,9 @@ export default function AutorScreen() {
         ))}
       </View>
 
-      {/* Scrollable content + lock overlay */}
+      {/* Content (scroll for header states, plain flex for the card flow) + lock overlay */}
       <View style={{ flex: 1 }}>
+        {!hasStarted ? (
         <ScrollView
           ref={scrollViewRef}
           style={styles.scroll}
@@ -756,24 +877,44 @@ export default function AutorScreen() {
                 El contenido de este autor estará disponible próximamente.
               </Text>
             </View>
-          ) : (
-            <>
-              <Text style={styles.question}>{content!.question}</Text>
-              <View style={styles.divider} />
-              {content!.text.split('\n\n').map((para, i) => (
-                <View key={i} style={styles.paragraph}>
-                  <HighlightedText
-                    text={para}
-                    terms={authorTerms}
-                    onTermPress={setSelectedTermId}
-                    styles={{ contentText: styles.contentText, termLink: styles.termLink }}
-                  />
-                </View>
-              ))}
-              <Text style={styles.closingLine}>{content!.closingLine}</Text>
-            </>
-          )}
+          ) : null}
         </ScrollView>
+        ) : (
+            (() => {
+              const card = cards[cardPos];
+              if (!card) return null;
+              return (
+                <Animated.View style={[styles.cardsFill, { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: insets.bottom + 88, opacity: cardsAnim, transform: [{ translateY: cardsAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
+                  <View style={styles.cardProgressRow}>
+                    <View style={styles.cardProgressTrack}>
+                      <View style={[styles.cardProgressFill, { width: `${((cardPos + 1) / cards.length) * 100}%` }]} />
+                    </View>
+                    <Text style={styles.cardProgressCount}>{cardPos + 1} de {cards.length}</Text>
+                  </View>
+                  <View style={styles.cardCenter}>
+                    {card.kind === 'question' ? (
+                      <View style={styles.cardGreen}>
+                        <Text style={styles.cardGreenText}>{card.text}</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.cardCream}>
+                        {card.kind === 'closing' ? (
+                          <Text style={styles.cardClosingText}>{card.text}</Text>
+                        ) : (
+                          <HighlightedText
+                            text={card.text}
+                            terms={authorTerms}
+                            onTermPress={setSelectedTermId}
+                            styles={{ contentText: styles.contentText, termLink: styles.termLink }}
+                          />
+                        )}
+                      </View>
+                    )}
+                  </View>
+                </Animated.View>
+              );
+            })()
+        )}
 
         {isContentLocked && (
           <View style={[StyleSheet.absoluteFillObject, styles.lockOverlay]}>
@@ -796,12 +937,39 @@ export default function AutorScreen() {
           </View>
         )}
       </View>
+      </>
+      )}
 
-      {/* Fixed bottom bar */}
+      {/* Fixed bottom bar — hidden during the card welcome state */}
+      {!(cardMode && !hasStarted) && (
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.sm }]}>
+        <View style={cardMode && cards.length > 1 ? { marginBottom: spacing.md } : undefined}>
         {isContentLocked ? (
           <TouchableOpacity style={styles.paywallButton} onPress={() => setShowPaywall(true)} activeOpacity={0.85}>
             <Text style={styles.paywallButtonText}>Ver planes →</Text>
+          </TouchableOpacity>
+        ) : cardMode && cardPos < cards.length - 1 ? (
+          <TouchableOpacity
+            style={styles.deeperButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setCardIndex(i => i + 1);
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.deeperButtonText}>Continuar →</Text>
+          </TouchableOpacity>
+        ) : cardMode && nextContentTab ? (
+          <TouchableOpacity
+            style={styles.readButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setActiveTab(nextContentTab.key);
+            }}
+            activeOpacity={0.85}
+          >
+            <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
+            <Text style={styles.readButtonText}>{nextContentTab.label} →</Text>
           </TouchableOpacity>
         ) : activeTab === 'surface' ? (
           <TouchableOpacity
@@ -849,7 +1017,16 @@ export default function AutorScreen() {
             )}
           </>
         )}
+        </View>
+        {cardMode && cards.length > 1 && (
+          <View style={styles.cardDots}>
+            {cards.map((_, i) => (
+              <View key={i} style={[styles.cardDot, i === cardPos && styles.cardDotActive]} />
+            ))}
+          </View>
+        )}
       </View>
+      )}
 
       {/* Celebration modal */}
       <Modal visible={showCelebration} transparent statusBarTranslucent animationType="none">
@@ -1262,6 +1439,7 @@ function makeStyles(theme: Theme) {
     },
     scrollContent: {
       padding: spacing.lg,
+      flexGrow: 1,
     },
     question: {
       ...typography.h4,
@@ -1296,6 +1474,103 @@ function makeStyles(theme: Theme) {
       paddingTop: spacing.lg,
       borderTopWidth: 1,
       borderTopColor: theme.border,
+    },
+    // Flashcards (one-card-at-a-time layer view)
+    cardProgressRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    cardProgressTrack: {
+      flex: 1,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: theme.bg3,
+      overflow: 'hidden',
+    },
+    cardProgressFill: {
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: theme.green,
+    },
+    cardProgressCount: {
+      ...typography.label,
+      color: theme.text3,
+      minWidth: 44,
+      textAlign: 'right',
+    },
+    cardGreen: {
+      backgroundColor: theme.green,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.xxl,
+      paddingHorizontal: spacing.xl,
+      flex: 1,
+      justifyContent: 'center',
+    },
+    cardGreenText: {
+      ...typography.h4,
+      fontSize: 21,
+      color: '#ffffff',
+      fontFamily: 'PlayfairDisplay_400Regular_Italic',
+      lineHeight: 30,
+    },
+    cardCream: {
+      backgroundColor: theme.bg2,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.xl,
+      borderWidth: 1,
+      borderColor: theme.border,
+      flex: 1,
+      justifyContent: 'center',
+    },
+    cardClosingText: {
+      ...typography.bodyS,
+      fontSize: 16,
+      color: theme.text3,
+      fontFamily: 'PlayfairDisplay_400Regular_Italic',
+      lineHeight: 26,
+    },
+    // Welcome state (before the card flow starts)
+    welcomeContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    startButton: {
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xxxl,
+      alignItems: 'center',
+      overflow: 'hidden',
+      marginTop: spacing.md,
+    },
+    // Card state fill/center
+    cardsFill: {
+      flex: 1,
+    },
+    cardCenter: {
+      flex: 1,
+    },
+    // Page dots (card position within the current layer)
+    cardDots: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 5,
+      marginTop: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    cardDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.bg3,
+    },
+    cardDotActive: {
+      backgroundColor: theme.green,
     },
     // Bottom bar
     bottomBar: {
