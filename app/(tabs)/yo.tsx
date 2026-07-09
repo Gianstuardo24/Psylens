@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { colors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
+import { cardShadow } from '../../constants/shadows';
 import { authors } from '../../constants/data';
 import { useTheme } from '../../hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -825,11 +826,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       borderWidth: 1,
       borderColor: theme.border,
       marginBottom: spacing.lg,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     stat: {
       flex: 1,
@@ -861,11 +858,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       borderWidth: 1,
       borderColor: theme.border,
       marginBottom: spacing.lg,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
 
     // ── Name modal

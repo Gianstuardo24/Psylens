@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../constants/colors';
 import { typography, spacing, radius } from '../constants/typography';
+import { cardShadow } from '../constants/shadows';
 import { authors, returningContent, savableQuotes } from '../constants/data';
 import { useTheme } from '../hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -255,9 +256,15 @@ function resolveDebugForcedSelection(
   }
 }
 
-function PortraitCircle({ authorId, size, theme, isDark, borderWidth = 2 }: { authorId: string; size: number; theme: Theme; isDark: boolean; borderWidth?: number }) {
+function PortraitCircle({ authorId, size, theme, isDark }: { authorId: string; size: number; theme: Theme; isDark: boolean }) {
   const [errored, setErrored] = useState(false);
   const source = PORTRAITS[authorId];
+
+  const halo = {
+    borderRadius: size / 2,
+    backgroundColor: theme.bg3,
+    ...cardShadow(isDark),
+  };
 
   if (authorId === 'helenisticas') {
     return (
@@ -270,25 +277,27 @@ function PortraitCircle({ authorId, size, theme, isDark, borderWidth = 2 }: { au
   if (!source || errored) {
     const initial = (AUTHOR_NAMES[authorId] ?? '?').trim().charAt(0).toUpperCase();
     return (
-      <View style={{
-        width: size, height: size, borderRadius: size / 2,
-        borderWidth, borderColor: theme.green,
-        backgroundColor: theme.bg3, alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Text style={{ fontSize: size * 0.36, fontFamily: 'PlayfairDisplay_700Bold', color: theme.green }}>
-          {initial}
-        </Text>
+      <View style={halo}>
+        <View style={{
+          width: size, height: size, borderRadius: size / 2,
+          backgroundColor: theme.bg3, alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Text style={{ fontSize: size * 0.36, fontFamily: 'PlayfairDisplay_700Bold', color: theme.green }}>
+            {initial}
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <View style={{
-      width: size, height: size, borderRadius: size / 2,
-      borderWidth, borderColor: theme.green,
-      backgroundColor: theme.bg3, overflow: 'hidden',
-    }}>
-      <Image source={source} style={{ width: size, height: size }} resizeMode="cover" onError={() => setErrored(true)} />
+    <View style={halo}>
+      <View style={{
+        width: size, height: size, borderRadius: size / 2,
+        backgroundColor: theme.bg3, overflow: 'hidden',
+      }}>
+        <Image source={source} style={{ width: size, height: size }} resizeMode="cover" onError={() => setErrored(true)} />
+      </View>
     </View>
   );
 }
@@ -360,7 +369,7 @@ export default function ReturningScreen() {
           {selection.kind === 3 && (
             <View style={styles.quoteBlock}>
               <View style={{ marginBottom: 28 }}>
-                <PortraitCircle authorId={selection.authorId} size={140} borderWidth={4} theme={theme} isDark={isDark} />
+                <PortraitCircle authorId={selection.authorId} size={140} theme={theme} isDark={isDark} />
               </View>
               {selection.recentlyCompleted ? (
                 <Text style={styles.introLine}>
@@ -401,7 +410,7 @@ export default function ReturningScreen() {
           {selection.kind === 5 && (
             <View style={styles.quoteBlock}>
               <View style={{ marginBottom: 28 }}>
-                <PortraitCircle authorId={selection.authorId} size={140} borderWidth={4} theme={theme} isDark={isDark} />
+                <PortraitCircle authorId={selection.authorId} size={140} theme={theme} isDark={isDark} />
               </View>
               <Text style={[styles.authorName, { marginBottom: 10 }]}>{AUTHOR_NAMES[selection.authorId]}</Text>
               {previousReflection && (

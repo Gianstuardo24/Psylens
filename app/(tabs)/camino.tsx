@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
+import { cardShadow } from '../../constants/shadows';
 import { authors, blocks, subBlocks, revolutionCards, isSubBlockFree } from '../../constants/data';
 import { PaywallSheet } from '../../components/PaywallSheet';
 import { HelenisticasIllustration } from '../../components/IntroIllustrations';
@@ -767,11 +768,7 @@ function makeAcStyles(theme: Theme, isDark: boolean) {
       borderWidth: 1,
       borderColor: 'transparent',
       marginBottom: spacing.sm,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     cardActive: {
       borderWidth: 1.5,
@@ -916,11 +913,7 @@ function makeBnStyles(theme: Theme, isDark: boolean) {
       marginBottom: spacing.lg,
       borderRadius: radius.xl,
       backgroundColor: theme.bg2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     wrapperLocked: {
       opacity: 0.55,
@@ -1015,11 +1008,7 @@ function makeBnStyles(theme: Theme, isDark: boolean) {
       borderRadius: 2,
       backgroundColor: theme.bg3,
       overflow: 'hidden',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     progressFill: {
       height: 3,
@@ -1081,11 +1070,7 @@ function makeSbhStyles(theme: Theme, isDark: boolean) {
       paddingBottom: spacing.sm,
       marginBottom: spacing.xs,
       marginTop: spacing.md,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     containerLocked: {
       opacity: 0.4,

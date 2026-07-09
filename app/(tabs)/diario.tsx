@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography, spacing } from '../../constants/typography';
+import { cardShadow } from '../../constants/shadows';
 import { useTheme } from '../../hooks/useTheme';
 import { JournalEntry, JOURNAL_PREFIX } from '../../utils/journal';
 import { getSavedQuotes, SavedQuote, unsaveQuote } from '../../utils/savedQuotes';
@@ -298,11 +299,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       borderRadius: 12,
       padding: spacing.md,
       marginBottom: spacing.sm,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     journalEntryHeader: {
       flexDirection: 'row',
@@ -372,11 +369,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       borderRadius: 12,
       padding: spacing.md,
       marginBottom: spacing.sm,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     savedQuoteRow: {
       flexDirection: 'row',

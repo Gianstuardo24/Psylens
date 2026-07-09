@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
+import { cardShadow } from '../../constants/shadows';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
@@ -208,7 +209,7 @@ export default function AutorScreen() {
   const [savedQuotesCount,  setSavedQuotesCount]  = useState(0);
   const savedJournalEntry = journalEntries[journalEntries.length - 1] ?? null;
 
-  const styles = useMemo(() => makeStyles(theme), [theme]);
+  const styles = useMemo(() => makeStyles(theme, isDark), [theme, isDark]);
 
   useEffect(() => {
     Promise.all([
@@ -238,19 +239,24 @@ export default function AutorScreen() {
     });
   }, [id]);
 
+  // Show the welcome ("Empezar") screen fresh once per author. Keyed on id so
+  // navigating between authors (which re-renders rather than remounts) resets it.
   useEffect(() => {
     setCardIndex(0);
     setHasStarted(false);
     welcomeAnim.setValue(1);
     cardsAnim.setValue(0);
+  }, [id]);
+
+  // On tab/layer change, only jump to card 0 — keep hasStarted so we skip the
+  // welcome screen and land directly on the new layer's first card.
+  useEffect(() => {
+    setCardIndex(0);
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [activeTab]);
 
   useEffect(() => {
     setCardIndex(0);
-    setHasStarted(false);
-    welcomeAnim.setValue(1);
-    cardsAnim.setValue(0);
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [revTab]);
 
@@ -385,7 +391,7 @@ export default function AutorScreen() {
           </Animated.View>
         ) : (
           <>
-            <View style={[styles.tabBar, { paddingTop: hasStarted ? insets.top + spacing.sm : spacing.sm }]}>
+            <View style={[styles.tabBar, { paddingTop: hasStarted ? insets.top + spacing.md + spacing.xxxl : spacing.sm }]}>
               {([{ key: 'surface', label: 'Entrada' }, { key: 'concept', label: 'Profundidad' }] as const).map(tab => (
                 <TouchableOpacity
                   key={tab.key}
@@ -409,7 +415,7 @@ export default function AutorScreen() {
                 const card = revCards[idx];
                 if (!card) return null;
                 return (
-                  <Animated.View style={[styles.cardsFill, { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: insets.bottom + 88, opacity: cardsAnim, transform: [{ translateY: cardsAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
+                  <Animated.View style={[styles.cardsFill, { paddingHorizontal: 32, paddingTop: 28, paddingBottom: 28, opacity: cardsAnim, transform: [{ translateY: cardsAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
                     <View style={styles.cardProgressRow}>
                       <View style={styles.cardProgressTrack}>
                         <View style={[styles.cardProgressFill, { width: `${((idx + 1) / revCards.length) * 100}%` }]} />
@@ -461,13 +467,26 @@ export default function AutorScreen() {
             }
             if (!atLastCard) {
               return (
-                <TouchableOpacity
-                  style={styles.deeperButton}
-                  onPress={() => setCardIndex(i => i + 1)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.deeperButtonText}>Continuar →</Text>
-                </TouchableOpacity>
+                <View style={styles.cardNavRow}>
+                  {cardIndex > 0 && (
+                    <TouchableOpacity
+                      style={styles.cardBackButton}
+                      onPress={() => setCardIndex(i => i - 1)}
+                      activeOpacity={0.85}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.cardBackButtonText}>←</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={[styles.deeperButton, styles.cardNavContinue]}
+                    onPress={() => setCardIndex(i => i + 1)}
+                    activeOpacity={0.85}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.deeperButtonText}>Continuar →</Text>
+                  </TouchableOpacity>
+                </View>
               );
             }
             if (revTab === 'surface') {
@@ -757,6 +776,42 @@ export default function AutorScreen() {
     </>
   );
 
+  const welcomeHeaderInner = (
+    <>
+      {isDual ? (
+        <View style={[styles.dualPortraitWrap, { marginBottom: spacing.lg }]}>
+          <View style={styles.dualPortraitCircle}>
+            <Image source={PORTRAIT_HERACLITO} style={styles.dualPortraitImage} resizeMode="cover" />
+          </View>
+          <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight]}>
+            <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
+          </View>
+        </View>
+      ) : isIntroAuthor ? (
+        <View style={styles.introIllustrationWrap}>
+          <IntroIllustration authorId={author.id} />
+        </View>
+      ) : (
+        <View style={styles.welcomePortraitShadow}>
+          <View style={[styles.portraitCircle, { width: 160, height: 160, borderRadius: 80, marginBottom: 0 }]}>
+            {isHelenisticas ? (
+              <HelenisticasIllustration size={160} isDark={isDark} />
+            ) : portrait ? (
+              <Image source={portrait} style={[styles.portraitImage, { width: 160, height: 160 }]} resizeMode="cover" />
+            ) : (
+              <Text style={[styles.portraitInitial, { fontSize: 64, lineHeight: 72 }]}>{author.name[0]}</Text>
+            )}
+          </View>
+        </View>
+      )}
+      <View style={styles.blockChip}>
+        <Text style={[styles.blockChipText, { fontSize: 15, lineHeight: 18 }]}>{block.name}</Text>
+      </View>
+      <Text style={[styles.authorName, { fontSize: 38, lineHeight: 46 }]}>{author.name}</Text>
+      <Text style={[styles.authorDates, { fontSize: 16, lineHeight: 22 }]}>{author.dates}</Text>
+    </>
+  );
+
   return (
     <View style={styles.container}>
       {/* Back button */}
@@ -785,10 +840,10 @@ export default function AutorScreen() {
       {cardMode && !hasStarted ? (
         /* Welcome — header + Empezar centered together as one block */
         <Animated.View style={[styles.welcomeContainer, { opacity: welcomeAnim }]}>
-          <View style={styles.header}>{authorHeaderInner}</View>
-          <TouchableOpacity style={styles.startButton} onPress={startCards} activeOpacity={0.85}>
+          <View style={styles.header}>{welcomeHeaderInner}</View>
+          <TouchableOpacity style={[styles.startButton, { paddingVertical: 20 }]} onPress={startCards} activeOpacity={0.85}>
             <LinearGradient colors={['#1a8a6a', '#0F6E56', '#0a5a45']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFillObject} />
-            <Text style={styles.readButtonText}>Empezar →</Text>
+            <Text style={[styles.readButtonText, { fontSize: 18 }]}>Empezar →</Text>
           </TouchableOpacity>
         </Animated.View>
       ) : (
@@ -801,7 +856,7 @@ export default function AutorScreen() {
       )}
 
       {/* Tab bar */}
-      <View style={[styles.tabBar, { backgroundColor: tabBg, paddingTop: hasStarted ? insets.top + spacing.sm : spacing.sm }]}>
+      <View style={[styles.tabBar, { backgroundColor: tabBg, paddingTop: hasStarted ? insets.top + spacing.md + spacing.xxxl : spacing.sm }]}>
         {activeTabs.map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -884,7 +939,7 @@ export default function AutorScreen() {
               const card = cards[cardPos];
               if (!card) return null;
               return (
-                <Animated.View style={[styles.cardsFill, { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: insets.bottom + 88, opacity: cardsAnim, transform: [{ translateY: cardsAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
+                <Animated.View style={[styles.cardsFill, { paddingHorizontal: 32, paddingTop: 28, paddingBottom: 28, opacity: cardsAnim, transform: [{ translateY: cardsAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
                   <View style={styles.cardProgressRow}>
                     <View style={styles.cardProgressTrack}>
                       <View style={[styles.cardProgressFill, { width: `${((cardPos + 1) / cards.length) * 100}%` }]} />
@@ -949,16 +1004,32 @@ export default function AutorScreen() {
             <Text style={styles.paywallButtonText}>Ver planes →</Text>
           </TouchableOpacity>
         ) : cardMode && cardPos < cards.length - 1 ? (
-          <TouchableOpacity
-            style={styles.deeperButton}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setCardIndex(i => i + 1);
-            }}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.deeperButtonText}>Continuar →</Text>
-          </TouchableOpacity>
+          <View style={styles.cardNavRow}>
+            {cardIndex > 0 && (
+              <TouchableOpacity
+                style={styles.cardBackButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCardIndex(i => i - 1);
+                }}
+                activeOpacity={0.85}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.cardBackButtonText}>←</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[styles.deeperButton, styles.cardNavContinue]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setCardIndex(i => i + 1);
+              }}
+              activeOpacity={0.85}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.deeperButtonText}>Continuar →</Text>
+            </TouchableOpacity>
+          </View>
         ) : cardMode && nextContentTab ? (
           <TouchableOpacity
             style={styles.readButton}
@@ -1042,20 +1113,26 @@ export default function AutorScreen() {
                 </View>
               </View>
             ) : isIntroAuthor ? (
-              <View style={styles.celebIntroCircle}>
-                <IntroIllustration authorId={author.id} size={80} />
+              <View style={styles.celebHalo}>
+                <View style={styles.celebIntroCircle}>
+                  <IntroIllustration authorId={author.id} size={80} />
+                </View>
               </View>
             ) : isHelenisticas ? (
-              <View style={styles.celebCircle}>
-                <HelenisticasIllustration size={96} isDark={isDark} />
+              <View style={styles.celebHalo}>
+                <View style={styles.celebCircle}>
+                  <HelenisticasIllustration size={96} isDark={isDark} />
+                </View>
               </View>
             ) : (
-              <View style={styles.celebCircle}>
-                {portrait ? (
-                  <Image source={portrait} style={styles.celebPortrait} resizeMode="cover" />
-                ) : (
-                  <Text style={styles.celebInitial}>{author.name[0]}</Text>
-                )}
+              <View style={styles.celebHalo}>
+                <View style={styles.celebCircle}>
+                  {portrait ? (
+                    <Image source={portrait} style={styles.celebPortrait} resizeMode="cover" />
+                  ) : (
+                    <Text style={styles.celebInitial}>{author.name[0]}</Text>
+                  )}
+                </View>
               </View>
             )}
             <Text style={styles.celebBadge}>Completado</Text>
@@ -1266,7 +1343,7 @@ export default function AutorScreen() {
   );
 }
 
-function makeStyles(theme: Theme) {
+function makeStyles(theme: Theme, isDark: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -1347,6 +1424,31 @@ function makeStyles(theme: Theme) {
       justifyContent: 'center',
       marginBottom: spacing.lg,
     },
+    welcomePortraitShadow: {
+      width: 160,
+      height: 160,
+      borderRadius: 80,
+      backgroundColor: theme.bg3,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+      ...cardShadow(isDark),
+    },
+    welcomeDivider: {
+      width: 38,
+      height: 2,
+      backgroundColor: theme.green,
+      borderRadius: 2,
+      alignSelf: 'center',
+      marginVertical: spacing.md,
+    },
+    welcomeSubtitle: {
+      color: theme.text2,
+      fontSize: 15,
+      fontFamily: 'PlayfairDisplay_400Regular_Italic',
+      textAlign: 'center',
+      marginBottom: spacing.lg,
+    },
     portraitImage: {
       width: 120,
       height: 120,
@@ -1418,6 +1520,8 @@ function makeStyles(theme: Theme) {
     },
     tabLabel: {
       ...typography.bodyS,
+      fontSize: 16,
+      lineHeight: 22,
       color: theme.text3,
     },
     tabLabelActive: {
@@ -1479,34 +1583,41 @@ function makeStyles(theme: Theme) {
     cardProgressRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      marginBottom: spacing.lg,
+      gap: 16,
+      marginBottom: 28,
     },
     cardProgressTrack: {
       flex: 1,
-      height: 3,
-      borderRadius: 2,
+      height: 9,
+      borderRadius: 20,
       backgroundColor: theme.bg3,
       overflow: 'hidden',
     },
     cardProgressFill: {
-      height: 3,
-      borderRadius: 2,
+      height: 9,
+      borderRadius: 20,
       backgroundColor: theme.green,
     },
     cardProgressCount: {
       ...typography.label,
+      fontSize: 15,
+      lineHeight: 20,
       color: theme.text3,
       minWidth: 44,
       textAlign: 'right',
     },
     cardGreen: {
       backgroundColor: theme.green,
-      borderRadius: radius.lg,
+      borderRadius: 28,
       paddingVertical: spacing.xxl,
       paddingHorizontal: spacing.xl,
       flex: 1,
       justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDark ? 0.4 : 0.25,
+      shadowRadius: 12,
+      elevation: 4,
     },
     cardGreenText: {
       ...typography.h4,
@@ -1517,20 +1628,21 @@ function makeStyles(theme: Theme) {
     },
     cardCream: {
       backgroundColor: theme.bg2,
-      borderRadius: radius.lg,
+      borderRadius: 28,
       paddingVertical: spacing.xl,
       paddingHorizontal: spacing.xl,
       borderWidth: 1,
       borderColor: theme.border,
       flex: 1,
       justifyContent: 'center',
+      ...cardShadow(isDark),
     },
     cardClosingText: {
       ...typography.bodyS,
-      fontSize: 16,
+      fontSize: 21,
       color: theme.text3,
       fontFamily: 'PlayfairDisplay_400Regular_Italic',
-      lineHeight: 26,
+      lineHeight: 30,
     },
     // Welcome state (before the card flow starts)
     welcomeContainer: {
@@ -1560,13 +1672,13 @@ function makeStyles(theme: Theme) {
       justifyContent: 'center',
       alignItems: 'center',
       gap: 5,
-      marginTop: spacing.sm,
+      marginTop: 28,
       marginBottom: spacing.sm,
     },
     cardDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
       backgroundColor: theme.bg3,
     },
     cardDotActive: {
@@ -1575,9 +1687,7 @@ function makeStyles(theme: Theme) {
     // Bottom bar
     bottomBar: {
       backgroundColor: theme.bg,
-      borderTopWidth: 1,
-      borderTopColor: theme.border,
-      paddingHorizontal: spacing.lg,
+      paddingHorizontal: 32,
       paddingTop: spacing.md,
     },
     deeperButton: {
@@ -1587,6 +1697,28 @@ function makeStyles(theme: Theme) {
       alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.border,
+    },
+    cardNavRow: {
+      flexDirection: 'row',
+    },
+    cardNavContinue: {
+      flex: 1,
+      marginLeft: spacing.sm,
+    },
+    cardBackButton: {
+      width: 52,
+      backgroundColor: theme.bg3,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    cardBackButtonText: {
+      ...typography.body,
+      color: theme.text,
+      fontWeight: '600',
     },
     deeperButtonText: {
       ...typography.body,
@@ -1747,6 +1879,16 @@ function makeStyles(theme: Theme) {
       paddingVertical: spacing.xxxl,
       paddingHorizontal: spacing.xxl,
     },
+    celebHalo: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: theme.bg3,
+      marginBottom: spacing.xl,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...cardShadow(isDark),
+    },
     celebCircle: {
       width: 96,
       height: 96,
@@ -1755,9 +1897,6 @@ function makeStyles(theme: Theme) {
       overflow: 'hidden',
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: spacing.xl,
-      borderWidth: 2,
-      borderColor: theme.green,
     },
     celebIntroCircle: {
       width: 96,
@@ -1766,9 +1905,6 @@ function makeStyles(theme: Theme) {
       backgroundColor: theme.bg3,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: spacing.xl,
-      borderWidth: 2,
-      borderColor: theme.green,
       overflow: 'hidden',
     },
     celebPortrait: {

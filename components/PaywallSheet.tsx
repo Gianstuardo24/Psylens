@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,8 +20,6 @@ type Theme = typeof colors.dark;
 
 const PREMIUM_KEY = 'psylens_is_premium';
 
-type Plan = 'monthly' | 'annual';
-
 const VALUE_PROPS = [
   '+40 autores desde Wundt hasta Van der Kolk',
   'Todas las capas Concepto y Fondo',
@@ -38,7 +36,6 @@ export function PaywallSheet({ visible, onClose, onUnlock }: Props) {
   const { height: screenH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const [selectedPlan, setSelectedPlan] = useState<Plan>('annual');
 
   const translateY      = useRef(new Animated.Value(screenH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -120,9 +117,10 @@ export function PaywallSheet({ visible, onClose, onUnlock }: Props) {
           contentContainerStyle={s.content}
         >
           {/* Title */}
-          <Text style={s.title}>Continúa el camino completo</Text>
+          <Text style={s.title}>Ya diste los primeros pasos</Text>
           <Text style={s.subtitle}>
-            Desbloquea todos los bloques, autores y conexiones.
+            Desde aquí empieza la psicología científica. Continúa con todo
+            desbloqueado.
           </Text>
 
           {/* Value props */}
@@ -137,38 +135,19 @@ export function PaywallSheet({ visible, onClose, onUnlock }: Props) {
             ))}
           </View>
 
-          {/* Plan options */}
-          <View style={s.plans}>
-            <TouchableOpacity
-              style={[s.plan, selectedPlan === 'monthly' && s.planSelected]}
-              onPress={() => setSelectedPlan('monthly')}
-              activeOpacity={0.8}
-            >
-              <View style={[s.radio, selectedPlan === 'monthly' && s.radioSelected]} />
-              <View style={s.planInfo}>
-                <Text style={[s.planName, selectedPlan === 'monthly' && s.planNameSelected]}>
-                  Mensual
-                </Text>
-                <Text style={s.planPrice}>$4.99/mes</Text>
+          {/* Price */}
+          <View style={s.priceBlock}>
+            <View style={s.priceTopRow}>
+              <Text style={s.priceRef}>$14.99</Text>
+              <View style={s.discountBadge}>
+                <Text style={s.discountText}>~47% OFF</Text>
               </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[s.plan, selectedPlan === 'annual' && s.planSelected]}
-              onPress={() => setSelectedPlan('annual')}
-              activeOpacity={0.8}
-            >
-              <View style={[s.radio, selectedPlan === 'annual' && s.radioSelected]} />
-              <View style={s.planInfo}>
-                <Text style={[s.planName, selectedPlan === 'annual' && s.planNameSelected]}>
-                  Anual
-                </Text>
-                <Text style={s.planPrice}>$39.99/año</Text>
-              </View>
-              <View style={s.savingsBadge}>
-                <Text style={s.savingsText}>Ahorra 33%</Text>
-              </View>
-            </TouchableOpacity>
+            </View>
+            <Text style={s.priceReal}>$7.99</Text>
+            <Text style={s.priceReassure}>
+              Pago único. El camino es tuyo para siempre — sin suscripciones, sin
+              cobros recurrentes.
+            </Text>
           </View>
 
           {/* Primary CTA */}
@@ -177,7 +156,7 @@ export function PaywallSheet({ visible, onClose, onUnlock }: Props) {
           </TouchableOpacity>
 
           {/* Footer */}
-          <Text style={s.footer}>Cancelar cuando quieras · Restaurar compra</Text>
+          <Text style={s.footer}>Acceso de por vida · Restaurar compra</Text>
         </ScrollView>
       </Animated.View>
     </Modal>
@@ -263,54 +242,23 @@ function makeStyles(theme: Theme) {
       lineHeight: 22,
     },
 
-    // Plan options
-    plans: {
-      gap: spacing.sm,
+    // Price
+    priceBlock: {
+      alignItems: 'center',
       marginBottom: spacing.xl,
     },
-    plan: {
+    priceTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.bg3,
-      borderRadius: radius.lg,
-      borderWidth: 1.5,
-      borderColor: theme.border,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      gap: spacing.md,
+      gap: spacing.sm,
+      marginBottom: spacing.xs,
     },
-    planSelected: {
-      borderColor: theme.purple,
-      backgroundColor: theme.purpleBg,
-    },
-    radio: {
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      borderWidth: 2,
-      borderColor: theme.text3,
-    },
-    radioSelected: {
-      borderColor: theme.purple,
-      backgroundColor: theme.purple,
-    },
-    planInfo: {
-      flex: 1,
-    },
-    planName: {
+    priceRef: {
       ...typography.bodyS,
-      color: theme.text2,
-      fontWeight: '600',
-    },
-    planNameSelected: {
-      color: theme.text,
-    },
-    planPrice: {
-      ...typography.bodyXS,
       color: theme.text3,
-      marginTop: 2,
+      textDecorationLine: 'line-through',
     },
-    savingsBadge: {
+    discountBadge: {
       backgroundColor: theme.purpleBg,
       borderRadius: radius.full,
       paddingHorizontal: spacing.sm,
@@ -318,9 +266,20 @@ function makeStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: theme.purple,
     },
-    savingsText: {
+    discountText: {
       ...typography.label,
       color: theme.purple,
+    },
+    priceReal: {
+      ...typography.h1,
+      color: theme.green,
+      fontWeight: '700',
+    },
+    priceReassure: {
+      ...typography.bodyXS,
+      color: theme.text3,
+      textAlign: 'center',
+      marginTop: spacing.xs,
     },
 
     // CTA

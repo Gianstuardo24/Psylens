@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
+import { cardShadow } from '../../constants/shadows';
 import { authors, blocks, glossaryTerms, subBlocks, revolutionCards } from '../../constants/data';
 import { HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
@@ -794,11 +795,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       backgroundColor: theme.bg2,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     streakChipDone: {
       backgroundColor: theme.green,
@@ -819,11 +816,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       borderColor: theme.border,
       paddingVertical: spacing.lg,
       paddingHorizontal: 16,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     continuePortrait: {
       position: 'absolute',
@@ -912,11 +905,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       paddingVertical: spacing.lg,
       paddingHorizontal: spacing.sm,
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     statValue: {
       ...typography.h2,
@@ -943,11 +932,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       borderWidth: 1,
       borderColor: theme.border,
       padding: spacing.md,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     conceptBlock: {
       ...typography.bodyXS,
@@ -973,11 +958,7 @@ function makeStyles(theme: Theme, isDark: boolean) {
       borderColor: theme.border,
       padding: spacing.lg,
       opacity: 0.7,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
-      elevation: 3,
+      ...cardShadow(isDark),
     },
     nextBlockChip: {
       alignSelf: 'flex-start',
