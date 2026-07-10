@@ -23,7 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { cardShadow } from '../../constants/shadows';
-import { authors, blocks, glossaryTerms, subBlocks, revolutionCards } from '../../constants/data';
+import { authors, blocks, glossaryTerms, subBlocks, revolutionCards, isBlockReleased } from '../../constants/data';
 import { HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -57,6 +57,7 @@ const _revBySubBlock = Object.fromEntries(revolutionCards.map(r => [r.subBlockId
 function buildAllEntries(): CEntry[] {
   const result: CEntry[] = [];
   for (const block of blocks) {
+    if (!isBlockReleased(block.id)) continue;
     const blockAuthorSet  = new Set(block.authors);
     const blockSubBlocks  = subBlocks.filter(sb => sb.blockId === block.id);
     if (blockSubBlocks.length > 0) {

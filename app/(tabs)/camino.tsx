@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, blockColors } from '../../constants/colors';
 import { typography, spacing, radius } from '../../constants/typography';
 import { cardShadow } from '../../constants/shadows';
-import { authors, blocks, subBlocks, revolutionCards, isSubBlockFree } from '../../constants/data';
+import { authors, blocks, subBlocks, revolutionCards, isSubBlockFree, isBlockReleased } from '../../constants/data';
 import { PaywallSheet } from '../../components/PaywallSheet';
 import { HelenisticasIllustration } from '../../components/IntroIllustrations';
 import { useTheme } from '../../hooks/useTheme';
@@ -82,10 +82,11 @@ function isRevCardDone(subBlockId: string, progress: ProgressMap): boolean {
   return !!progress[rev.id]?.concept;
 }
 
-// Blocks beyond b1 aren't built yet — always shown as "coming soon",
-// regardless of premium status (this isn't a paywall, it's missing content).
+// Blocks not yet released are always shown as "coming soon", regardless of
+// premium status (this isn't a paywall, it's missing content). The released
+// set lives in constants/data.ts as the single source of truth.
 function isComingSoonBlock(blockId: string): boolean {
-  return !['intro', 'b0', 'b1'].includes(blockId);
+  return !isBlockReleased(blockId);
 }
 
 function getBlockStatus(block: typeof blocks[0], isPremium: boolean, progress: ProgressMap): BlockStatus {

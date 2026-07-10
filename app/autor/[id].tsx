@@ -18,7 +18,7 @@ import { cardShadow } from '../../constants/shadows';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import Svg, { Path } from 'react-native-svg';
-import { authors, blocks, glossaryTerms, isContentFree, revolutionCards, savableQuotes, subBlocks, QuizQuestion } from '../../constants/data';
+import { authors, blocks, glossaryTerms, isContentFree, isBlockReleased, revolutionCards, savableQuotes, subBlocks, QuizQuestion } from '../../constants/data';
 import BottomSheet from '../../components/BottomSheet';
 import { BlockCompleteModal } from '../../components/BlockCompleteModal';
 import { PaywallSheet } from '../../components/PaywallSheet';
@@ -34,13 +34,12 @@ const GLOBAL_SEQUENCE: string[] = (() => {
   const introBlock = blocks.find(b => b.id === 'intro');
   const seq: string[] = introBlock ? [...introBlock.authors] : [];
   for (const sb of subBlocks) {
+    const blk = blocks.find(b => b.id === sb.blockId);
+    if (!blk || !isBlockReleased(blk.id)) continue;
     const rev = revolutionCards.find(r => r.subBlockId === sb.id);
     if (rev) seq.push(rev.id);
-    const blk = blocks.find(b => b.id === sb.blockId);
-    const blockAuthorSet = blk ? new Set(blk.authors) : null;
-    const visibleIds = blockAuthorSet
-      ? sb.authorIds.filter(aid => blockAuthorSet.has(aid))
-      : sb.authorIds;
+    const blockAuthorSet = new Set(blk.authors);
+    const visibleIds = sb.authorIds.filter(aid => blockAuthorSet.has(aid));
     seq.push(...visibleIds);
   }
   return seq;
@@ -81,6 +80,9 @@ const PORTRAITS: Record<string, number | null> = {
   'schopenhauer':  require('../../assets/portraits/schopenhauer.png'),
   'darwin':        require('../../assets/portraits/darwin.png'),
   'ebbinghaus':    require('../../assets/portraits/ebbinghaus.png'),
+  'fechner':       require('../../assets/portraits/fechner.png'),
+  'wundt':         require('../../assets/portraits/wundt.png'),
+  'james':         require('../../assets/portraits/james.png'),
   'thorndike':     require('../../assets/portraits/thorndike.png'),
 };
 

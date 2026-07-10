@@ -354,6 +354,32 @@ export default function YoScreen() {
     router.replace('/splash');
   }
 
+  async function handleCompleteUntilThorndike() {
+    const rawProgress = await AsyncStorage.getItem(PROGRESS_KEY).catch(() => null);
+    const prog: ProgressMap = rawProgress ? JSON.parse(rawProgress) : {};
+    const ids = ['intro-1', 'intro-2', 'intro-3', 'intro-4',
+                 'heraclito-democrito', 'hipocrates', 'platon', 'aristoteles', 'helenisticas', 'avicena',
+                 'descartes', 'spinoza', 'kant', 'schopenhauer', 'darwin',
+                 'ebbinghaus', 'fechner', 'wundt', 'james', 'thorndike'];
+    for (const id of ids) {
+      prog[id] = { surface: true, concept: true, fondo: true };
+    }
+    const revIds = ['rev-0a', 'rev-0b', 'rev-0c', 'rev-0d', 'rev-1a', 'rev-1b'];
+    for (const id of revIds) {
+      prog[id] = { concept: true };
+    }
+    await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(prog)).catch(() => {});
+    const unlockedIds = ['intro-2', 'intro-3', 'intro-4',
+                         'rev-0a', 'heraclito-democrito', 'hipocrates', 'platon',
+                         'rev-0b', 'aristoteles', 'helenisticas', 'avicena',
+                         'rev-0c', 'descartes', 'spinoza', 'kant',
+                         'rev-0d', 'schopenhauer', 'darwin',
+                         'rev-1a', 'ebbinghaus', 'fechner', 'wundt',
+                         'rev-1b', 'james', 'thorndike'];
+    await AsyncStorage.setItem('psylens_unlocked', JSON.stringify(unlockedIds)).catch(() => {});
+    router.replace('/splash');
+  }
+
   async function handleResetDarwinProgress() {
     const rawProgress = await AsyncStorage.getItem(PROGRESS_KEY).catch(() => null);
     if (rawProgress) {
@@ -573,6 +599,12 @@ export default function YoScreen() {
               label="Debug: Completar hasta Avicena"
               labelColor={theme.text2}
               onPress={handleCompleteUntilAvicena}
+            />
+            <SettingRow
+              theme={theme}
+              label="Debug: Desbloquear hasta Thorndike"
+              labelColor={theme.text2}
+              onPress={handleCompleteUntilThorndike}
             />
             <SettingRow
               theme={theme}

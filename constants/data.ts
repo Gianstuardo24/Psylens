@@ -62,6 +62,16 @@ export type QuizQuestion =
   | { type: 'true_false'; question: string; correct: boolean; explanation: string }
   | { type: 'open'; question: string };
 
+// Single source of truth for which blocks have real, approved content live in the
+// app. Any block not listed is treated as "coming soon" everywhere: excluded from
+// the Inicio "Continuar" sequence, locked on Camino, and left out of the author
+// navigation chain. Add an id here ONLY when that block's content is approved.
+export const RELEASED_BLOCKS = ['intro', 'b0', 'b1'];
+
+export function isBlockReleased(blockId: string): boolean {
+  return RELEASED_BLOCKS.includes(blockId);
+}
+
 // Free/premium boundary. b0 is split at the sub-block level (sb-0a/sb-0b free,
 // sb-0c/sb-0d premium); every other block is uniformly free or premium.
 const B0_FREE_SUB_BLOCK_IDS = new Set(['sb-0a', 'sb-0b']);
@@ -876,7 +886,7 @@ export const authors = [
     },
     fondo: {
       question: '¿Por qué importa alguien que pasó años pidiendo a personas que compararan pesos y luces?',
-      text: `Porque demostró que era posible hacer lo que muchos creían imposible: estudiar lo que ocurre dentro de una persona con métodos científicos.\n\nAntes de Fechner, lo que cada uno siente, ve o escucha — esa experiencia íntima y personal — se consideraba algo que no podía medirse. Era demasiado personal, demasiado distinto de persona a persona. Fechner demostró que no — que incluso algo tan personal como lo que notas o dejas de notar sigue patrones que pueden describirse con precisión. Y eso cambió lo que la psicología creía que podía hacer.\n\nSu influencia más directa fue sobre Wilhelm Wundt, quien usó los métodos de Fechner como base para construir el primer laboratorio de psicología experimental del mundo — el primer lugar dedicado exclusivamente a estudiar la mente con experimentos y mediciones, igual que un laboratorio de química estudia las reacciones entre sustancias. Pero su impacto llegó mucho más lejos: el campo que Fechner fundó sigue siendo activo hoy, con aplicaciones en el diseño de pantallas y aplicaciones digitales — cuánto tiene que cambiar algo en una pantalla para que lo notes —, en la audiología — el estudio de la audición y cómo se mide cuándo alguien empieza a perderla —, y en la neurociencia — el estudio de cómo el cerebro recibe y responde a los cambios en el entorno.\n\nHay algo más en Fechner que vale mencionar. Su motivación más profunda no era técnica — era casi filosófica. Quería demostrar que lo que ocurre afuera en el mundo físico y lo que vivimos adentro no son dos mundos separados sin conexión. Que hay un puente entre ellos, y que ese puente puede estudiarse.\n\nEn ese sentido, Fechner estaba respondiendo, desde la ciencia, a la misma pregunta que Descartes había dejado abierta siglos antes: ¿cómo se relacionan el mundo físico y la experiencia humana?`,
+      text: `Porque demostró que era posible hacer lo que muchos creían imposible: estudiar lo que ocurre dentro de una persona con métodos científicos.\n\nAntes de Fechner, lo que cada uno siente, ve o escucha — esa experiencia íntima y personal — se consideraba algo que no podía medirse. Era demasiado personal, demasiado distinto de persona a persona. Fechner demostró que no — que incluso algo tan personal como lo que notas o dejas de notar sigue patrones que pueden describirse con precisión. Y eso cambió lo que la psicología creía que podía hacer.\n\nSu influencia más directa fue sobre Wilhelm Wundt, quien usó los métodos de Fechner como base para construir el primer laboratorio de psicología experimental del mundo — el primer lugar dedicado exclusivamente a estudiar la mente con experimentos y mediciones, igual que un laboratorio de química estudia las reacciones entre sustancias.\n\nPero su impacto llegó mucho más lejos: el campo que Fechner fundó sigue siendo activo hoy, con aplicaciones en el diseño de pantallas y aplicaciones digitales — cuánto tiene que cambiar algo en una pantalla para que lo notes —, en la audiología — el estudio de la audición y cómo se mide cuándo alguien empieza a perderla —, y en la neurociencia — el estudio de cómo el cerebro recibe y responde a los cambios en el entorno.\n\nHay algo más en Fechner que vale mencionar. Su motivación más profunda no era técnica — era casi filosófica. Quería demostrar que lo que ocurre afuera en el mundo físico y lo que vivimos adentro no son dos mundos separados sin conexión. Que hay un puente entre ellos, y que ese puente puede estudiarse.\n\nEn ese sentido, Fechner estaba respondiendo, desde la ciencia, a la misma pregunta que Descartes había dejado abierta siglos antes: ¿cómo se relacionan el mundo físico y la experiencia humana?`,
       closingLine: 'Lo que Fechner sembró en el laboratorio de las mediciones, otro alemán, a pocos kilómetros de ahí, lo cosecharía a gran escala: no con un experimento más, sino con el primer laboratorio del mundo dedicado por completo a estudiar la mente.',
     },
     quiz: [
@@ -1462,7 +1472,7 @@ export const subBlocks = [
   { id: 'sb-0c', blockId: 'b0', name: 'Pensar no es suficiente para entenderse',                  authorIds: ['descartes', 'spinoza', 'kant'] },
   { id: 'sb-0d', blockId: 'b0', name: 'Algo nos mueve antes de que lo decidamos',                 authorIds: ['schopenhauer', 'darwin'] },
   { id: 'sb-1a', blockId: 'b1', name: 'Por primera vez, la mente entra al laboratorio',           authorIds: ['ebbinghaus', 'fechner', 'wundt'] },
-  { id: 'sb-1b', blockId: 'b1', name: 'Si no puedes verlo, no puedes estudiarlo',                 authorIds: ['james', 'thorndike', 'watson', 'skinner'] },
+  { id: 'sb-1b', blockId: 'b1', name: 'Si no puedes verlo, no puedes estudiarlo',                 authorIds: ['james', 'thorndike'] },
 ];
 
 export const revolutionCards = [
