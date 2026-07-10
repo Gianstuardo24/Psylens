@@ -1563,7 +1563,7 @@ export const revolutionCards = [
   },
   {
     id: 'rev-1b',
-    name: 'Si no puedes verlo, no puedes estudiarlo',
+    name: '¿Para qué sirve la mente?',
     subtitle: 'Introducción al sub-bloque',
     dates: '',
     blockId: 'b1',
@@ -1576,7 +1576,7 @@ export const revolutionCards = [
     },
     concept: {
       question: '',
-      text: 'Lo que viene a continuación, a través de cuatro pensadores, es la lógica del conductismo — la propuesta de que la psicología debe estudiar únicamente lo que puede verse y medirse desde afuera: el comportamiento.\n\nEl primero demostró que el aprendizaje ocurre por consecuencias, no por comprensión. El segundo radicalizó esa idea: propuso que todo lo que no puede observarse — los pensamientos, las emociones, la conciencia — no debería estudiarse en absoluto. El tercero construyó el sistema más completo de todos.\n\nEl conductismo dominó la psicología durante décadas. Sus ideas siguen activas hoy — en cómo se diseñan apps y sistemas de aprendizaje.',
+      text: 'Los dos pensadores que siguen respondieron esa pregunta desde ángulos muy distintos.\n\nEl primero propuso que la conciencia no está hecha de piezas separadas, sino que es un flujo continuo — y que existe porque cumple una función: nos ayuda a adaptarnos. El segundo se hizo una pregunta más práctica: ¿qué hace que un comportamiento se repita? Su respuesta — que las consecuencias moldean la conducta — sería, décadas después, el punto de partida del conductismo: la idea de que la psicología debía estudiar solo lo que puede observarse desde afuera.\n\nDos caminos distintos. Uno mira hacia adentro. El otro, hacia afuera.',
       closingLine: '',
     },
   },
