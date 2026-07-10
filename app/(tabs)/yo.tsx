@@ -378,6 +378,11 @@ export default function YoScreen() {
     router.push('/autor/darwin');
   }
 
+  async function handleUnlockPremium() {
+    await AsyncStorage.setItem('psylens_is_premium', 'true').catch(() => {});
+    router.replace('/splash');
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -574,6 +579,12 @@ export default function YoScreen() {
               label="Debug: Reset darwin progress"
               labelColor={theme.text2}
               onPress={handleResetDarwinProgress}
+            />
+            <SettingRow
+              theme={theme}
+              label="Debug: Desbloquear Premium"
+              labelColor={theme.text2}
+              onPress={handleUnlockPremium}
             />
           </>
         )}
