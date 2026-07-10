@@ -780,12 +780,9 @@ export default function AutorScreen() {
   const welcomeHeaderInner = (
     <>
       {isDual ? (
-        <View style={[styles.dualPortraitWrap, { marginBottom: spacing.lg }]}>
-          <View style={[styles.dualPortraitCircle, { width: 110, height: 110, borderRadius: 55 }]}>
-            <Image source={PORTRAIT_HERACLITO} style={[styles.dualPortraitImage, { width: 110, height: 110 }]} resizeMode="cover" />
-          </View>
-          <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight, { width: 110, height: 110, borderRadius: 55, marginLeft: -28 }]}>
-            <Image source={PORTRAIT_DEMOCRITO} style={[styles.dualPortraitImage, { width: 110, height: 110 }]} resizeMode="cover" />
+        <View style={styles.welcomePortraitShadow}>
+          <View style={[styles.portraitCircle, { width: 160, height: 160, borderRadius: 80, marginBottom: 0 }]}>
+            <Image source={PORTRAIT_HERACLITO} style={[styles.portraitImage, { width: 160, height: 160 }]} resizeMode="cover" />
           </View>
         </View>
       ) : isIntroAuthor ? (
