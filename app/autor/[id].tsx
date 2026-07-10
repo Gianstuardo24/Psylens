@@ -73,6 +73,7 @@ const PORTRAITS: Record<string, number | null> = {
   'heraclito-democrito': PORTRAIT_HERACLITO,
   'platon':        require('../../assets/portraits/platon.png'),
   'aristoteles':   require('../../assets/portraits/aristoteles.png'),
+  'avicena':       require('../../assets/portraits/avicena.png'),
   'hipocrates':    require('../../assets/portraits/hipocrates.png'),
   'descartes':     require('../../assets/portraits/descartes.png'),
   'spinoza':       require('../../assets/portraits/spinoza.png'),
@@ -780,11 +781,11 @@ export default function AutorScreen() {
     <>
       {isDual ? (
         <View style={[styles.dualPortraitWrap, { marginBottom: spacing.lg }]}>
-          <View style={styles.dualPortraitCircle}>
-            <Image source={PORTRAIT_HERACLITO} style={styles.dualPortraitImage} resizeMode="cover" />
+          <View style={[styles.dualPortraitCircle, { width: 110, height: 110, borderRadius: 55 }]}>
+            <Image source={PORTRAIT_HERACLITO} style={[styles.dualPortraitImage, { width: 110, height: 110 }]} resizeMode="cover" />
           </View>
-          <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight]}>
-            <Image source={PORTRAIT_DEMOCRITO} style={styles.dualPortraitImage} resizeMode="cover" />
+          <View style={[styles.dualPortraitCircle, styles.dualPortraitCircleRight, { width: 110, height: 110, borderRadius: 55, marginLeft: -28 }]}>
+            <Image source={PORTRAIT_DEMOCRITO} style={[styles.dualPortraitImage, { width: 110, height: 110 }]} resizeMode="cover" />
           </View>
         </View>
       ) : isIntroAuthor ? (
